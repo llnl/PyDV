@@ -783,6 +783,8 @@ def readsina(fname, verbose=False):
                         for name_ind, v_ind in curve_set['independent'].items():
                             independent_name = name_ind
                             independent_value = v_ind['value']
+                            if not isinstance(independent_value, list):
+                                independent_value = [independent_value, ]
                             for name, v in curve_set['dependent'].items():
                                 # TODO: Save the name x and y names with the curves
                                 dependent_variable_name = name
@@ -792,6 +794,8 @@ def readsina(fname, verbose=False):
                                     full_name = curve_set_name + '__SINA_DEP__' + dependent_variable_name + \
                                         '__SINA_INDEP__' + independent_name
                                 dependent_variable_value = v['value']
+                                if not isinstance(dependent_variable_value, list):
+                                    dependent_variable_value = [dependent_variable_value, ]
                                 curve_name = dependent_variable_name + ' vs ' + independent_name + " (" + \
                                     curve_set_name + ")"
                                 if library != '':
