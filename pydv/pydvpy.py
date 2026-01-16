@@ -3194,7 +3194,7 @@ def fit(c, n=1, logx=False, logy=False):
     if logy:
         y = np.log10(y)
 
-    coeffs = scipy.polyfit(x, y, n)
+    coeffs = np.polyfit(x, y, n)
     if len(coeffs) == 2:
         print("slope = ", coeffs[0], " intercept = ", coeffs[1])
     else:
@@ -3210,7 +3210,7 @@ def fit(c, n=1, logx=False, logy=False):
         oString = "%dth " % n
 
     x = np.array(x)
-    y = scipy.polyval(coeffs, x)
+    y = np.polyval(coeffs, x)
 
     if logx:
         x = 10.0**x

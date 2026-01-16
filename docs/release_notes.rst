@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.9.0
+------
+* Bugfix for `fit`
+
 3.8.2
 ------
 * Bugfix for xminmax mask 
