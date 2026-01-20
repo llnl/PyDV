@@ -275,3 +275,21 @@ def test_BIG_file():
     os.remove(big_file)
 
     assert end < 10
+
+
+@pytest.mark.parametrize(("hdf5_file", "json_file"),
+                         zip(["test.hdf5", "medium_recs_test.hdf5"],
+                             ["test.json", "medium_recs_test.json"]))
+def test_sina_hdf5(hdf5_file, json_file):
+
+    curves_hdf5 = pydvpy.read(os.path.join(TEST_DIR, hdf5_file))
+
+    curves_json = pydvpy.read(os.path.join(TEST_DIR, json_file))
+
+    for cur_hdf5, cur_json in zip(curves_hdf5, curves_json):
+        assert cur_hdf5.record_id == cur_json.record_id
+        assert cur_hdf5.name == cur_json.name
+        assert cur_hdf5.xlabel == cur_json.xlabel
+        assert cur_hdf5.ylabel == cur_json.ylabel
+        np.testing.assert_array_equal(cur_hdf5.x, cur_json.x)
+        np.testing.assert_array_equal(cur_hdf5.y, cur_json.y)
