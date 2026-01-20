@@ -1,0 +1,49 @@
+
+{
+  "records": 
+  [
+    
+    {
+      "curve_sets": 
+      {
+        "set_1": 
+        {
+          "independent": 
+          {
+            "time": 
+            {
+              "value": [4.0, 5.0, 6.0]
+            }
+          },
+          "dependent": 
+          {
+            "i_am_first": 
+            {
+              "value": [1.4, 2.6, 3.2]
+            },
+            "must_be_second": 
+            {
+              "value": [-1.4, -2.0, -3.7]
+            },
+            "ordered_third": 
+            {
+              "value": [70.0, 80.1125, 90.0]
+            },
+            "am_i_fourth": 
+            {
+              "value": [-100.25, -110.18, -120.4]
+            }
+          }
+        }
+      },
+      "type": "run",
+      "local_id": "bar1",
+      "application": "test",
+      "version": "",
+      "user": ""
+    }
+  ],
+  "relationships": 
+  [
+  ]
+}
