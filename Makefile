@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-PYDV_ENV := $(if $(PYDV_ENV),$(PYDV_ENV),$(HOME)/pydv_env)
+PYDV_ENV := $(if $(PYDV_ENV),$(PYDV_ENV),/usr/workspace/$(USER)/pydv_env)
 
 PKG_REGISTRY_URL = $(CI_API_V4_URL)/projects/$(CI_PROJECT_ID)/packages/generic/archive
 DEPLOY_PATH = /usr/gapps/pydv

@@ -2,6 +2,11 @@
 
 Release Notes
 =============
+3.9.0
+------
+* Support for sina hdf5 files
+* Bugfix for `fit`
+
 3.8.2
 ------
 * Bugfix for xminmax mask 
