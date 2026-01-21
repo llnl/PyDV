@@ -510,6 +510,9 @@ class Command(cmd.Cmd, object):
     def do_rdsina(self, line):
         self.do_readsina(line)
 
+    def do_rdsinah5(self, line):
+        self.do_readsinahdf5(line)
+
     def do_cur(self, line):
         self.do_curve(line)
 
@@ -636,6 +639,8 @@ class Command(cmd.Cmd, object):
             arg = 'readcsv'
         elif (arg == 'rdsina'):
             arg = 'readsina'
+        elif (arg == 'rdsinah5'):
+            arg = 'readsinahdf5'
         elif (arg == 'convol'):
             arg = 'convolve'
         elif (arg == 'convolb'):
@@ -1110,6 +1115,9 @@ class Command(cmd.Cmd, object):
             elif line[-1].endswith(".json"):
                 self.do_readsina(" ".join(line))
                 return
+            elif line[-1].endswith(".hdf5") or line[-1].endswith(".h5") or line[-1].endswith(".hdf"):
+                self.do_readsinahdf5(" ".join(line))
+                return
 
             if n == 1:
                 self.load(line[0])
@@ -1174,10 +1182,8 @@ class Command(cmd.Cmd, object):
 
     def do_readsina(self, line):
         """
-        Read all curves from Sina data file. PyDV assumes there is only one record in the Sina file, and if there are
-        more than one then PyDV only reads the first. PyDV also assumes there is only one independent variable per
-        curve_set; if there are more than one then PyDV may exhibit undefined behavior. The next available prefix
-        (see the prefix command) is automatically assigned the menu index of the first curve in each data file read.
+        Read all curves from Sina data file. The next available prefix (see the prefix command) is automatically
+        assigned the menu index of the first curve in each data file read.
 
         .. code::
 
@@ -1190,6 +1196,28 @@ class Command(cmd.Cmd, object):
         try:
             line = line.split()
             self.load_sina(line[0])
+        except:
+            pdvutil.print_own_docstring(self)
+        finally:
+            self.redraw = False
+            self.plotter.updateDialogs()
+
+    def do_readsinahdf5(self, line):
+        """
+        Read all curves from Sina hdf5 data file. The next available prefix (see the prefix command) is automatically
+        assigned the menu index of the first curve in each data file read.
+
+        .. code::
+
+            [PyDV]: <readsinahdf5 | rdsinah5> <filename.hdf5>
+
+            Ex:
+                [PyDV]: readsinahdf5 my_file.hdf5
+        """
+
+        try:
+            line = line.split()
+            self.load_sinahdf5(line[0])
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -9436,6 +9464,16 @@ class Command(cmd.Cmd, object):
         """
 
         curves = pydvpy.readsina(fname, self.debug)
+        if len(curves) > 0:
+            self.curvelist += curves
+            self.filelist.append((fname, len(curves)))
+
+    def load_sinahdf5(self, fname):
+        """
+        Load a Sina HDF5 data file, add parsed curves to the curvelist
+        """
+
+        curves = pydvpy.readsinahdf5(fname, self.debug)
         if len(curves) > 0:
             self.curvelist += curves
             self.filelist.append((fname, len(curves)))

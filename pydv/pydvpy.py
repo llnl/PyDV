@@ -66,6 +66,7 @@ import re
 import copy
 from multiprocessing import Pool, cpu_count
 import subprocess
+import h5py
 
 from distutils.version import LooseVersion
 
@@ -566,6 +567,8 @@ def read(fname, gnu=False, xcol=0, verbose=False, pattern=None, matches=None):
         return readcsv(fname=fname, xcol=xcol, verbose=verbose)
     elif str(fname).endswith(".json"):
         return readsina(fname=fname, verbose=verbose)
+    elif str(fname).endswith(".hdf5") or str(fname).endswith(".h5") or str(fname).endswith(".hdf"):
+        return readsinahdf5(fname, verbose=verbose)
     elif gnu or str(fname).endswith(".gnu"):
         return __loadcolumns(fname, xcol)
     elif pdbLoaded:
@@ -743,7 +746,7 @@ def readcsv(fname, xcol=0, verbose=False):
     return curvelist
 
 
-def readsina(fname, verbose=False):
+def readsina(fname, verbose=False, hdf5_path=None):
     """
     Load a Sina JSON data file, add parsed curves to a curvelist.
 
@@ -758,77 +761,97 @@ def readsina(fname, verbose=False):
     :type fname: str
     :param verbose: prints the error stacktrace when True
     :type verbose: bool
+    :param hdf5_path: File path for HDF5 sina file. Should not be set by user, only used internally, defaults to None.
+    :type hdf5_path: str, optional.
     :returns: list: the list of curves from the sina file
     """
-    curves = {}
-    listed_order = []
-    try:
-        # Try to load the order in which the user wants to load the curves into PyDV
-        with open(fname, 'r') as fp:
+    def add_curve_set(curve_sets, record_id, order_options, library=''):
+
+        curves = {}
+        listed_order = []
+        for curve_set_name, curve_set in curve_sets.items():
+            for name_ind, v_ind in curve_set['independent'].items():
+                independent_name = name_ind
+                independent_value = v_ind['value']
+                for name, v in curve_set['dependent'].items():
+                    # TODO: Save the name x and y names with the curves
+                    dependent_variable_name = name
+                    if order_options:
+                        full_name = curve_set_name + '__SINA_DEP__' + dependent_variable_name
+                    else:
+                        full_name = curve_set_name + '__SINA_DEP__' + dependent_variable_name + \
+                            '__SINA_INDEP__' + independent_name
+                    dependent_variable_value = v['value']
+                    curve_name = dependent_variable_name + ' vs ' + independent_name + " (" + \
+                        curve_set_name + ")"
+                    if library != '':
+                        curve_name += ' ' + library
+                        full_name += '__LIBRARY__' + library
+                    c = makecurve(x=independent_value,
+                                  y=dependent_variable_value,
+                                  name=curve_name,
+                                  filename=fname if hdf5_path is None else hdf5_path,
+                                  xlabel=independent_name,
+                                  ylabel=dependent_variable_name,
+                                  title=curve_name,
+                                  record_id=record_id)
+                    c.step = False
+                    c.xticks_labels = {}
+                    if verbose:
+                        print(f"Appended curve: {curve_name}, len x,y: {len(c.x)},{len(c.y)}")
+                    curves[full_name] = c
+                    listed_order.append(full_name)
+
+        if order_options:
             try:
-                order_options = json.load(fp)['records'][0]['data']['SINA_timeplot_order']['value']
-            except:
-                order_options = []
-
-        # Load the curve data from the curve_sets
-        with open(fname, 'r') as fp:
-            try:
-                sina_file = json.load(fp)
-                record_id = sina_file['records'][0]['id']
-                curve_sets = sina_file['records'][0]['curve_sets']
-                library_data = sina_file['records'][0].get('library_data', {})
-
-                def add_curve_set(curve_sets, curves, listed_order, library=''):
-                    for curve_set_name, curve_set in curve_sets.items():
-                        for name_ind, v_ind in curve_set['independent'].items():
-                            independent_name = name_ind
-                            independent_value = v_ind['value']
-                            for name, v in curve_set['dependent'].items():
-                                # TODO: Save the name x and y names with the curves
-                                dependent_variable_name = name
-                                if order_options:
-                                    full_name = curve_set_name + '__SINA_DEP__' + dependent_variable_name
-                                else:
-                                    full_name = curve_set_name + '__SINA_DEP__' + dependent_variable_name + \
-                                        '__SINA_INDEP__' + independent_name
-                                dependent_variable_value = v['value']
-                                curve_name = dependent_variable_name + ' vs ' + independent_name + " (" + \
-                                    curve_set_name + ")"
-                                if library != '':
-                                    curve_name += ' ' + library
-                                    full_name += '__LIBRARY__' + library
-                                c = makecurve(x=independent_value,
-                                              y=dependent_variable_value,
-                                              name=curve_name,
-                                              filename=fname,
-                                              xlabel=independent_name,
-                                              ylabel=dependent_variable_name,
-                                              title=curve_name,
-                                              record_id=record_id)
-                                c.step = False
-                                c.xticks_labels = {}
-                                if verbose:
-                                    print("Appended curve: {}, len x,y: {},{}"
-                                          .format(curve_name, len(c.x), len(c.y)))
-                                curves[full_name] = c
-                                listed_order.append(full_name)
-                    return curves, listed_order
-
-                curves, listed_order = add_curve_set(curve_sets, curves, listed_order)
-
-                for library in library_data:
-                    if 'curve_sets' in library_data[library]:
-                        curve_sets = library_data[library]['curve_sets']
-                        curves, listed_order = add_curve_set(curve_sets, curves, listed_order, library=library)
+                curves_lst_temp = [curves[name] for name in order_options]
             except KeyError:
-                print('readsina: Sina file {} is malformed'.format(fname))
+                print('readsina: mismatch between dependent variable names in the curve_sets and the '
+                      'ordering specified in SINA_timeplot_order. Using default ordering instead.')
+                curves_lst_temp = [curves[name] for name in listed_order]
                 if verbose:
-                    traceback.print_exc(file=sys.stdout)
-                return []
+                    traceback.print_exc(File=sys.stdout)
+        else:
+            curves_lst_temp = [curves[name] for name in listed_order]
 
-        # Try to load the order in which the user wants to load the curves into PyDV
-        if not order_options:
-            order_options = listed_order
+        return curves_lst_temp
+
+    def cycle_thru_recs(sina_file):
+        curves_lst = []
+
+        for rec in sina_file['records']:
+
+            record_id = rec.get('id', rec.get("local_id", ""))
+            curve_sets = rec.get('curve_sets', {})
+            library_data = rec.get('library_data', {})
+            order_options = rec.get('data', {}).get('SINA_timeplot_order', {}).get('value', [])
+
+            curves_lst_temp = add_curve_set(curve_sets, record_id, order_options)
+            curves_lst.extend(curves_lst_temp)
+
+            for library in library_data:
+                if 'curve_sets' in library_data[library]:
+                    curve_sets = library_data[library].get('curve_sets', {})
+                    order_options = library_data[library].get('data',
+                                                              {}).get('SINA_timeplot_order',
+                                                                      {}).get('value', [])
+                    curves_lst_temp = add_curve_set(curve_sets, record_id, order_options, library=library)
+                    curves_lst.extend(curves_lst_temp)
+        return curves_lst
+
+    try:
+        # Load the curve data from the curve_sets
+        try:
+            if not isinstance(fname, dict):
+                with open(fname, 'r') as fp:
+                    curves_lst = cycle_thru_recs(json.load(fp))
+            else:
+                curves_lst = cycle_thru_recs(fname)
+        except KeyError:
+            print('readsina: Sina file {} is malformed'.format(fname))
+            if verbose:
+                traceback.print_exc(file=sys.stdout)
+            return []
 
     except IOError:
         print('readsina: could not load file: {}'.format(fname))
@@ -836,15 +859,73 @@ def readsina(fname, verbose=False):
             traceback.print_exc(file=sys.stdout)
         return []
 
-    try:
-        curves_lst = [curves[name] for name in order_options]
-    except KeyError:
-        print('readsina: mismatch between dependent variable names in the curve_sets and the '
-              'ordering specified in SINA_timeplot_order. Using default ordering instead.')
-        if verbose:
-            traceback.print_exc(File=sys.stdout)
-        curves_lst = [curves[name] for name in listed_order]
     return curves_lst
+
+
+def readsinahdf5(hdf5_path, verbose=False):
+    # def load_document_hdf5(hdf5_path): Taken from sina/utils.py
+    """
+    Retrieves records and relationships from HDF5
+    """
+    reconstructed_doc = {}
+
+    def coerce_numpy_to_json(val):
+        # There's no single quick way to do this when numpy and hdf5 combine,
+        # so we have a manual method...
+        if isinstance(val, bytes):
+            val = val.decode("utf-8")
+        if isinstance(val, h5py.Empty):
+            val = dict()
+        if isinstance(val, np.integer):
+            val = int(val)
+        elif isinstance(val, np.floating):
+            val = float(val)
+        elif isinstance(val, np.ndarray):
+            is_word = len(np.shape(val)) == 1 and isinstance(val[0], bytes)
+            val = [x.decode("utf-8") if isinstance(x, bytes)
+                   else x for x in val.tolist()]
+            if is_word:
+                val = ''.join(val)
+            elif np.shape(val)[0] == 1:
+                val = val[0]
+        return val
+
+    def add_arbitrary_path_to_dict(some_path, val):
+        chunk = reconstructed_doc
+        layers = some_path.split("/")
+        for depth, layer in enumerate(layers):
+            if not layer:
+                continue
+            if layer not in chunk:
+                chunk[layer] = dict()
+            if depth == len(layers) - 1:
+                if isinstance(val, list):
+                    chunk[layer] = [coerce_numpy_to_json(x) for x in val]
+                else:
+                    chunk[layer] = coerce_numpy_to_json(val)
+            else:
+                chunk = chunk[layer]
+
+    def yoink_dataset_or_recurse(path, chunk):
+        if isinstance(chunk, h5py.Group):
+            for key, val in chunk.items():
+                # Recovery for common wonky HDF5 issue
+                if (isinstance(val, h5py.Group) and '0' in val.keys() and key in ("value", "tags")):
+                    add_arbitrary_path_to_dict(path + "/" + key, [chunk[key][x][()] for x in val])
+                else:
+                    yoink_dataset_or_recurse(path + "/" + key, val)
+        else:
+            add_arbitrary_path_to_dict(path, chunk[()])
+    with h5py.File(hdf5_path, 'r') as src:
+        yoink_dataset_or_recurse("", src)
+    # Now we have to (temporarily!) smooth the object->list thing between our hdf5
+    # and JSON entries...
+    reconstructed_doc["records"] = ([x for x in reconstructed_doc["records"].values()]
+                                    if "records" in reconstructed_doc else list())
+    # reconstructed_doc["relationships"] = ([x for x in reconstructed_doc["relationships"].values()]
+    #                                       if "relationships" in reconstructed_doc else list())
+
+    return readsina(reconstructed_doc, hdf5_path=hdf5_path)
 
 
 ########################################################
@@ -3190,7 +3271,7 @@ def fit(c, n=1, logx=False, logy=False):
     if logy:
         y = np.log10(y)
 
-    coeffs = scipy.polyfit(x, y, n)
+    coeffs = np.polyfit(x, y, n)
     if len(coeffs) == 2:
         print("slope = ", coeffs[0], " intercept = ", coeffs[1])
     else:
@@ -3206,7 +3287,7 @@ def fit(c, n=1, logx=False, logy=False):
         oString = "%dth " % n
 
     x = np.array(x)
-    y = scipy.polyval(coeffs, x)
+    y = np.polyval(coeffs, x)
 
     if logx:
         x = 10.0**x
