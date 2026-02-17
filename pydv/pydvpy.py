@@ -68,8 +68,6 @@ from multiprocessing import Pool, cpu_count
 import subprocess
 import h5py
 
-from distutils.version import LooseVersion
-
 import numpy as np
 import scipy
 import scipy.special
@@ -2923,16 +2921,11 @@ def fft(c, n=None, axis=-1, norm=None):
     :type norm: None, "ortho", optional
     :return: Curve tuple -- Two curves with the real and imaginary parts.
     """
-    numpy1_10 = LooseVersion(np.__version__) >= LooseVersion("1.10.0")
     cnorm = c.normalize()
     clen = len(c.x)
 
-    if numpy1_10:
-        complex_array = np.fft.fft(cnorm.y, n, axis, norm)
-        complex_array = np.fft.fftshift(complex_array)
-    else:
-        complex_array = np.fft.fft(cnorm.y, n, axis)
-        complex_array = np.fft.fftshift(complex_array)
+    complex_array = np.fft.fft(cnorm.y, n, axis, norm)
+    complex_array = np.fft.fftshift(complex_array)
 
     val = 1.0 / (float(max(cnorm.x) - min(cnorm.x)) / 2.0)
     x = np.fft.fftfreq(clen, d=val)
@@ -3983,12 +3976,7 @@ def __ifft(cr, ci):
     """
     carray = cr.y + 1j * ci.y
 
-    numpy1_10 = LooseVersion(np.__version__) >= LooseVersion("1.10.0")
-
-    if numpy1_10:
-        complex_array = np.fft.ifft(carray)
-    else:
-        complex_array = np.fft.ifft(carray)
+    complex_array = np.fft.ifft(carray)
 
     # nc1.x = np.array(cr.x)
     nc1y = complex_array.real
