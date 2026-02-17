@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.9.1
+------
+* Remove `distutils`
+
 3.9.0
 ------
 * Support for sina hdf5 files
