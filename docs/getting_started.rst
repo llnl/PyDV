@@ -8,7 +8,7 @@ This section gives a tutorial introduction to PyDV. A sample session is run whic
 .. note::
    In PyDV commands, spaces are used to delimit items on the input line. More precisely items on a command line are
    either space delimited, are preceded by a left parenthesis if the first item in a list, or terminated by a right
-   parenthesis if the last item in a list. In interactive mode, ranges of curve numbers or data-id’s may be indicated using colon notation. 
+   parenthesis if the last item in a list. In interactive mode, ranges of curve numbers or data-id’s may be indicated using colon notation.
    For example, a:f or 5:9
 
 Run PyDV (LLNL)
@@ -111,4 +111,3 @@ Exit PyDV
 .. code::
 
    [PyDV]: quit
-

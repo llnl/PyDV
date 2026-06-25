@@ -59,47 +59,49 @@
 # endorsement purposes.
 
 import sys
+
 import numpy as np
-from scipy import interpolate, integrate
+from scipy import integrate, interpolate
 
 
 class Curve(object):
-
-    def __init__(self,
-                 x=np.empty(0),
-                 y=np.empty(0),
-                 name='',
-                 filename='',
-                 xlabel='',
-                 ylabel='',
-                 title='',
-                 record_id='',
-                 step=False,
-                 step_original_x=np.empty(0),
-                 step_original_y=np.empty(0),
-                 xticks_labels=None,
-                 plotname='',
-                 color='',
-                 edited=False,
-                 scatter=False,
-                 linespoints=False,
-                 linewidth=None,
-                 linestyle='-',
-                 drawstyle='default',
-                 dashes=None,
-                 hidden=False,
-                 ebar=None,  # errorbar
-                 erange=None,  # errorrange
-                 marker='.',  # Use matplotlib markers when setting directly
-                 markerstyle=None,
-                 markersize=3,
-                 markerfacecolor=None,
-                 markeredgecolor=None,
-                 plotprecedence=0,
-                 legend_show=True,
-                 math_interp_left=None,
-                 math_interp_right=None,
-                 math_interp_period=None):
+    def __init__(
+        self,
+        x=np.empty(0),
+        y=np.empty(0),
+        name="",
+        filename="",
+        xlabel="",
+        ylabel="",
+        title="",
+        record_id="",
+        step=False,
+        step_original_x=np.empty(0),
+        step_original_y=np.empty(0),
+        xticks_labels=None,
+        plotname="",
+        color="",
+        edited=False,
+        scatter=False,
+        linespoints=False,
+        linewidth=None,
+        linestyle="-",
+        drawstyle="default",
+        dashes=None,
+        hidden=False,
+        ebar=None,  # errorbar
+        erange=None,  # errorrange
+        marker=".",  # Use matplotlib markers when setting directly
+        markerstyle=None,
+        markersize=3,
+        markerfacecolor=None,
+        markeredgecolor=None,
+        plotprecedence=0,
+        legend_show=True,
+        math_interp_left=None,
+        math_interp_right=None,
+        math_interp_period=None,
+    ):
         self.x = np.array(x, dtype=float)
         self.y = np.array(y, dtype=float)
         self.name = name
@@ -109,8 +111,8 @@ class Curve(object):
         self.title = title
         self.record_id = record_id
         self.step = step
-        self.step_original_x = step_original_x,
-        self.step_original_y = step_original_y,
+        self.step_original_x = step_original_x
+        self.step_original_y = step_original_y
         self.xticks_labels = xticks_labels
         self.plotname = plotname
         self.color = color
@@ -141,10 +143,17 @@ class Curve(object):
     def __add__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + ' + ' + b.plotname + ' ').strip('  ')
-        ia, ib = getinterp(a, b,
-                           a.math_interp_left, a.math_interp_right, a.math_interp_period,
-                           b.math_interp_left, b.math_interp_right, b.math_interp_period)
+        c.plotname = str(a.plotname + " + " + b.plotname + " ").strip("  ")
+        ia, ib = getinterp(
+            a,
+            b,
+            a.math_interp_left,
+            a.math_interp_right,
+            a.math_interp_period,
+            b.math_interp_left,
+            b.math_interp_right,
+            b.math_interp_period,
+        )
         if ia.x is not None and ib.x is not None:
             c.x = ia.x
             c.y = ia.y + ib.y
@@ -155,10 +164,17 @@ class Curve(object):
     def __sub__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + ' - ' + b.plotname + ' ').strip('  ')
-        ia, ib = getinterp(a, b,
-                           a.math_interp_left, a.math_interp_right, a.math_interp_period,
-                           b.math_interp_left, b.math_interp_right, b.math_interp_period)
+        c.plotname = str(a.plotname + " - " + b.plotname + " ").strip("  ")
+        ia, ib = getinterp(
+            a,
+            b,
+            a.math_interp_left,
+            a.math_interp_right,
+            a.math_interp_period,
+            b.math_interp_left,
+            b.math_interp_right,
+            b.math_interp_period,
+        )
         if ia.x is not None and ib.x is not None:
             c.x = ia.x
             c.y = ia.y - ib.y
@@ -169,10 +185,17 @@ class Curve(object):
     def __mul__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + ' * ' + b.plotname + ' ').strip('  ')
-        ia, ib = getinterp(a, b,
-                           a.math_interp_left, a.math_interp_right, a.math_interp_period,
-                           b.math_interp_left, b.math_interp_right, b.math_interp_period)
+        c.plotname = str(a.plotname + " * " + b.plotname + " ").strip("  ")
+        ia, ib = getinterp(
+            a,
+            b,
+            a.math_interp_left,
+            a.math_interp_right,
+            a.math_interp_period,
+            b.math_interp_left,
+            b.math_interp_right,
+            b.math_interp_period,
+        )
         if ia.x is not None and ib.x is not None:
             c.x = ia.x
             c.y = ia.y * ib.y
@@ -183,10 +206,17 @@ class Curve(object):
     def __div__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + ' / ' + b.plotname + ' ').strip('  ')
-        ia, ib = getinterp(a, b,
-                           a.math_interp_left, a.math_interp_right, a.math_interp_period,
-                           b.math_interp_left, b.math_interp_right, b.math_interp_period)
+        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip("  ")
+        ia, ib = getinterp(
+            a,
+            b,
+            a.math_interp_left,
+            a.math_interp_right,
+            a.math_interp_period,
+            b.math_interp_left,
+            b.math_interp_right,
+            b.math_interp_period,
+        )
         if ia.x is not None and ib.x is not None:
             c.x = ia.x
 
@@ -205,10 +235,17 @@ class Curve(object):
     def __truediv__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + ' / ' + b.plotname + ' ').strip('  ')
-        ia, ib = getinterp(a, b,
-                           a.math_interp_left, a.math_interp_right, a.math_interp_period,
-                           b.math_interp_left, b.math_interp_right, b.math_interp_period)
+        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip("  ")
+        ia, ib = getinterp(
+            a,
+            b,
+            a.math_interp_left,
+            a.math_interp_right,
+            a.math_interp_period,
+            b.math_interp_left,
+            b.math_interp_right,
+            b.math_interp_period,
+        )
         if ia.x is not None and ib.x is not None:
             c.x = ia.x
 
@@ -227,7 +264,7 @@ class Curve(object):
     def __pow__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + '^' + str(b)).strip('  ')
+        c.plotname = str(a.plotname + "^" + str(b)).strip("  ")
         c.x = np.array(a.x)
         c.y = np.power(a.y, b)
         nans = np.isnan(c.y)  # remove NaNs
@@ -238,7 +275,7 @@ class Curve(object):
     def __neg__(a):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str('-' + a.plotname)
+        c.plotname = str("-" + a.plotname)
         c.x = np.array(a.x)
         c.y = np.array(-a.y)
         return c
@@ -248,40 +285,42 @@ class Curve(object):
         Return a new copy of the curve object
         """
 
-        c = Curve(x=np.array(self.x, dtype=float),
-                  y=np.array(self.y, dtype=float),
-                  name=self.name,
-                  filename=self.filename,
-                  xlabel=self.xlabel,
-                  ylabel=self.ylabel,
-                  title=self.title,
-                  record_id=self.record_id,
-                  step=self.step,
-                  step_original_x=self.step_original_x,
-                  step_original_y=self.step_original_y,
-                  xticks_labels=self.xticks_labels,
-                  plotname=self.plotname,
-                  color=self.color,
-                  edited=self.edited,
-                  scatter=self.scatter,
-                  linespoints=self.linespoints,
-                  linewidth=self.linewidth,
-                  linestyle=self.linestyle,
-                  drawstyle=self.drawstyle,
-                  dashes=self.dashes,
-                  hidden=self.hidden,
-                  ebar=self.ebar,
-                  erange=self.erange,
-                  marker=self.marker,
-                  markerstyle=self.markerstyle,
-                  markersize=self.markersize,
-                  markerfacecolor=self.markerfacecolor,
-                  markeredgecolor=self.markeredgecolor,
-                  plotprecedence=self.plotprecedence,
-                  legend_show=self.legend_show,
-                  math_interp_left=self.math_interp_left,
-                  math_interp_right=self.math_interp_right,
-                  math_interp_period=self.math_interp_period)
+        c = Curve(
+            x=np.array(self.x, dtype=float),
+            y=np.array(self.y, dtype=float),
+            name=self.name,
+            filename=self.filename,
+            xlabel=self.xlabel,
+            ylabel=self.ylabel,
+            title=self.title,
+            record_id=self.record_id,
+            step=self.step,
+            step_original_x=self.step_original_x,
+            step_original_y=self.step_original_y,
+            xticks_labels=self.xticks_labels,
+            plotname=self.plotname,
+            color=self.color,
+            edited=self.edited,
+            scatter=self.scatter,
+            linespoints=self.linespoints,
+            linewidth=self.linewidth,
+            linestyle=self.linestyle,
+            drawstyle=self.drawstyle,
+            dashes=self.dashes,
+            hidden=self.hidden,
+            ebar=self.ebar,
+            erange=self.erange,
+            marker=self.marker,
+            markerstyle=self.markerstyle,
+            markersize=self.markersize,
+            markerfacecolor=self.markerfacecolor,
+            markeredgecolor=self.markeredgecolor,
+            plotprecedence=self.plotprecedence,
+            legend_show=self.legend_show,
+            math_interp_left=self.math_interp_left,
+            math_interp_right=self.math_interp_right,
+            math_interp_period=self.math_interp_period,
+        )
 
         return c
 
@@ -300,10 +339,18 @@ class Curve(object):
         return c
 
 
-def getinterp(a, b,
-              a_left=None, a_right=None, a_period=None,
-              b_left=None, b_right=None, b_period=None,
-              samples=100, match='domain'):
+def getinterp(
+    a,
+    b,
+    a_left=None,
+    a_right=None,
+    a_period=None,
+    b_left=None,
+    b_right=None,
+    b_period=None,
+    samples=100,
+    match="domain",
+):
     """
     Gets the interpolated and domain matched versions of the two curves.
 
@@ -327,7 +374,7 @@ def getinterp(a, b,
     :type match: str
     :returns: curve pair -- the interpolated and domain matched versions of a and b
     """
-    if match == 'domain':
+    if match == "domain":
         ux = list(set(a.x).union(set(b.x)))  # get union of xvals
         ux.sort()
 
@@ -340,7 +387,7 @@ def getinterp(a, b,
         ib.y = np.interp(ux, b.x, b.y, b_left, b_right, b_period)  # interpolate y vals
 
         return ia, ib
-    elif match == 'step':
+    elif match == "step":
         ax, step = np.linspace(min(a.x), max(a.x), num=samples, retstep=True)
 
         bxsamples = int((max(b.x) - min(b.x)) / step)
@@ -376,7 +423,7 @@ def interp1d(a, num=100, retstep=False):
               step: float, optional -- only returned if retstep is True. Size of the spacing between samples
     """
     num = int(num)
-    f = interpolate.interp1d(a.x, a.y, kind='linear', bounds_error=False, fill_value=0)
+    f = interpolate.interp1d(a.x, a.y, kind="linear", bounds_error=False, fill_value=0)
 
     ia = a.copy()
 

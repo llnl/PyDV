@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: name-tests-test
+        args: [--pytest-test-first]
+        exclude: |
+          (?x)^(
+            tests/convolution_create_pydv_and_ultra_commands\.py|
+            tests/my_custom_functions\.py|
+            tests/generate_ultra_curves_big\.py
+          )$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.11
+    hooks:
+      - id: ruff
+        args: [--show-fixes]
+        name: ruff check --show-fixes >> Fix issues with `ruff check --fix .` from the top of the repo.
+      - id: ruff-format
+        args: [--check, --diff]
+        name: ruff format --check --diff >> Fix issues with `ruff format .` from the top of the repo.
+
+  # - repo: https://github.com/astral-sh/ty-pre-commit
+  #   rev: v0.0.53
+  #   hooks:
+  #     - id: ty

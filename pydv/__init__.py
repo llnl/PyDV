@@ -1,1 +1,1 @@
-__all__ = ["curve", "pdv", "pdvutil", "pdvnavbar", "pdvplot", "pydvpy"]
+__all__ = ["curve", "pdv", "pdvnavbar", "pdvplot", "pdvutil", "pydvpy"]

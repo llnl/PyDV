@@ -49,4 +49,3 @@ pdvnavbar module
     :members:
     :undoc-members:
     :show-inheritance:
-

@@ -2,6 +2,13 @@
 
 Release Notes
 =============
+3.10.0
+------
+* Switched to `PySide6`
+* Updated `pyproject.toml`
+* Added `pre-commit` with `ruff` and other tools
+* Removed `requirements.txt` and `flake8`
+
 3.9.1
 ------
 * Remove `distutils`
@@ -13,7 +20,7 @@ Release Notes
 
 3.8.2
 ------
-* Bugfix for xminmax mask 
+* Bugfix for xminmax mask
 * Added `stats()` to pydvpy which prints statistics of the curve
 
 3.8.1
