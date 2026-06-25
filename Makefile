@@ -19,9 +19,16 @@ define do_create_env
 	if [ -d $(PYDV_ENV) ]; then rm -Rf $(PYDV_ENV); fi
 	/usr/apps/weave/tools/create_venv.sh -p cpu -e $(PYDV_ENV) -v latest-develop
 	source $(PYDV_ENV)/bin/activate && \
-	pip install . && \
+	pip install ".[dev]" && \
 	which pytest && \
 	pip list
+endef
+
+define pre_commit
+	# call from the top repository directory
+	# arg1: full path to venv
+	source $(PYDV_ENV)/bin/activate && which pip && which pytest && \
+	pre-commit run --all-files
 endef
 
 define run_pydv_tests
@@ -29,9 +36,9 @@ define run_pydv_tests
 	# arg1: full path to venv
 	source $(PYDV_ENV)/bin/activate && which pip && which pytest && \
 	if [ -z $(DISPLAY) ]; then \
-	  xvfb-run --auto-servernum pytest --capture=tee-sys -v tests/; \
+	  xvfb-run --auto-servernum pytest tests/ --cov=pydv --cov-report=term-missing --cov-fail-under=15 --capture=tee-sys -v; \
 	else \
-	  pytest --capture=tee-sys -v tests/; \
+	  pytest tests/ --cov=pydv --cov-report=term-missing --cov-fail-under=15 --capture=tee-sys -v; \
 	fi
 endef
 
@@ -50,6 +57,10 @@ endef
 create_env:
 	$(call do_create_env,$(PYDV_ENV))
 
+.PHONY: pre_commit
+pre_commit:
+	@echo "pre-commit...";
+	$(call pre_commit,$(PYDV_ENV))
 
 .PHONY: run_tests
 run_tests:

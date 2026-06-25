@@ -58,42 +58,53 @@
 # Security, LLC, and shall not be used for advertising or product
 # endorsement purposes.
 
+from os import path
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvas
 
-from os import path
-
 # HPC Import
 try:
-    from pdvnavbar import PyDVToolbar
     import pdvutil
+    from pdvnavbar import PyDVToolbar
 
 # Package Import
 except ImportError:
-    from pydv.pdvnavbar import PyDVToolbar
     from pydv import pdvutil
+    from pydv.pdvnavbar import PyDVToolbar
 
 try:
     from matplotlib import style
+
     stylesLoaded = True
 except:
     stylesLoaded = False
 
-from PyQt6.QtCore import Qt, QRect, pyqtSlot
-from PyQt6.QtGui import QIcon, QAction
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QTextEdit, QScrollArea, QHBoxLayout, QPushButton,
-                             QMessageBox, QTableWidgetItem, QAbstractItemView, QTableWidget,
-                             QMainWindow)
+from PySide6.QtCore import QRect, Qt, Slot
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QHBoxLayout,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 PYDV_DIR = path.dirname(path.abspath(__file__))
 try:
-    version_file = path.join(PYDV_DIR, '../scripts/version.txt')
-    with open(version_file, 'r') as fp:
+    version_file = path.join(PYDV_DIR, "../scripts/version.txt")
+    with open(version_file, "r") as fp:
         pydv_version = fp.read()
 
 except:
-    version_file = path.join(PYDV_DIR, 'scripts/version.txt')
-    with open(version_file, 'r') as fp:
+    version_file = path.join(PYDV_DIR, "scripts/version.txt")
+    with open(version_file, "r") as fp:
         pydv_version = fp.read()
 
 
@@ -111,13 +122,13 @@ class Plotter(QMainWindow):
     _menuAction = None
     _geomAction = None
 
-    _geometry = 'de'
+    _geometry = "de"
 
     canvas = None
-    style = 'ggplot'
+    style = "ggplot"
     plotChanged = False
     fig = None
-    figcolor = 'white'
+    figcolor = "white"
     defaultPlotLayout = None
 
     def __init__(self, pydvcmd):
@@ -126,8 +137,8 @@ class Plotter(QMainWindow):
         here = path.abspath(path.dirname(__file__))
 
         # Setup Application
-        self.setWindowTitle(f'Python Data Visualizer {pydv_version}')
-        self.setWindowIcon(QIcon(path.join(here, 'img/app_icon3.png')))
+        self.setWindowTitle(f"Python Data Visualizer {pydv_version}")
+        self.setWindowIcon(QIcon(path.join(here, "img/app_icon3.png")))
         self._pydvcmd = pydvcmd
 
         # Window geometry action
@@ -135,30 +146,30 @@ class Plotter(QMainWindow):
         self._geomAction.triggered.connect(self.__setgeometry)
 
         # View Menu
-        viewMenu = self.menuBar().addMenu('View')
+        viewMenu = self.menuBar().addMenu("View")
 
-        self._listAction = QAction('List...', self)
+        self._listAction = QAction("List...", self)
         self._listAction.triggered.connect(self.showCurvelistDialog)
         viewMenu.addAction(self._listAction)
 
-        self._menuAction = QAction('Menu...', self)
+        self._menuAction = QAction("Menu...", self)
         self._menuAction.triggered.connect(self.showMenuDialog)
         viewMenu.addAction(self._menuAction)
 
         # Help Menu
-        helpMenu = self.menuBar().addMenu('Help')
+        helpMenu = self.menuBar().addMenu("Help")
 
         # Copyright
-        copyrightAction = QAction('Copyright...', self)
+        copyrightAction = QAction("Copyright...", self)
         copyrightAction.triggered.connect(self.__viewCopyright)
         helpMenu.addAction(copyrightAction)
         # About PyDV
-        aboutAction = QAction('&About PyDV', self)
-        aboutAction.setShortcut('ctrl+a')
+        aboutAction = QAction("&About PyDV", self)
+        aboutAction.setShortcut("ctrl+a")
         aboutAction.triggered.connect(self.__aboutPyDV)
         helpMenu.addAction(aboutAction)
         # About QT
-        aboutQtAction = QAction('About &Qt', self)
+        aboutQtAction = QAction("About &Qt", self)
         aboutQtAction.triggered.connect(self.__aboutQt)
         helpMenu.addAction(aboutQtAction)
 
@@ -184,10 +195,10 @@ class Plotter(QMainWindow):
         self.canvas = FigureCanvas(self.fig)
         self.setCentralWidget(self.canvas)
 
-        toolbar = PyDVToolbar(self.canvas, self, True)   # Add False as third parameter to turn off coordinates
+        toolbar = PyDVToolbar(self.canvas, self, True)  # Add False as third parameter to turn off coordinates
         self.addToolBar(toolbar)
 
-    def updatePlotGeometry(self, geometry='de'):
+    def updatePlotGeometry(self, geometry="de"):
         """
         Updates the size and location of the window. Using an action to trigger the update to
         ensure that the resizing is happening on the main GUI thread.
@@ -211,7 +222,7 @@ class Plotter(QMainWindow):
     # SLOTS
     ########################################################################################################
 
-    @pyqtSlot()
+    @Slot()
     def showCurvelistDialog(self):
         """
         Shows a dialog with the output of the list command in a table.
@@ -225,8 +236,18 @@ class Plotter(QMainWindow):
             self._listDialog.setModal(False)
 
         # Curves List
-        headerLabels = ['Plot Name', 'Label', 'X Label', 'Y Label', 'XMIN', 'XMAX',
-                        'YMIN', 'YMAX', 'File Name', 'Sina Record ID']
+        headerLabels = [
+            "Plot Name",
+            "Label",
+            "X Label",
+            "Y Label",
+            "XMIN",
+            "XMAX",
+            "YMIN",
+            "YMAX",
+            "File Name",
+            "Sina Record ID",
+        ]
         rows = len(self._pydvcmd.plotlist)
         cols = len(headerLabels)
 
@@ -253,9 +274,9 @@ class Plotter(QMainWindow):
             col = 0
 
             # Plot Name
-            prefix = ''
+            prefix = ""
             if c.edited:
-                prefix = '*'
+                prefix = "*"
             plotnameItem = QTableWidgetItem(self.tr("%s%s" % (prefix, c.plotname)))
             plotnameItem.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
             self._tableWidget.setItem(row, col, plotnameItem)
@@ -331,7 +352,7 @@ class Plotter(QMainWindow):
             okButton.clicked.connect(self._listDialog.close)
             okButton.setMinimumSize(100, 20)
             okButton.setMaximumSize(100, 20)
-            okButton.setText('Dismiss')
+            okButton.setText("Dismiss")
             hbox.addWidget(okButton)
 
             vbox.addLayout(hbox)
@@ -340,7 +361,7 @@ class Plotter(QMainWindow):
         if not self._listDialog.isVisible():
             self._listDialog.show()
 
-    @pyqtSlot()
+    @Slot()
     def showMenuDialog(self):
         """
         Shows a dialog with the output of the menu command in a table.
@@ -354,7 +375,7 @@ class Plotter(QMainWindow):
             self._menuDialog.setModal(False)
 
         # Available Curves
-        headerLabels = ['Label', 'X Label', 'Y Label', 'XMIN', 'XMAX', 'YMIN', 'YMAX', 'File Name', 'Sina Record ID']
+        headerLabels = ["Label", "X Label", "Y Label", "XMIN", "XMAX", "YMIN", "YMAX", "File Name", "Sina Record ID"]
         rows = len(self._pydvcmd.curvelist)
         cols = len(headerLabels)
 
@@ -463,7 +484,7 @@ class Plotter(QMainWindow):
             okButton.clicked.connect(self._menuDialog.close)
             okButton.setMinimumSize(100, 20)
             okButton.setMaximumSize(100, 20)
-            okButton.setText('Dismiss')
+            okButton.setText("Dismiss")
             hbox.addWidget(okButton)
 
             vbox.addLayout(hbox)
@@ -473,7 +494,8 @@ class Plotter(QMainWindow):
             self._menuDialog.show()
 
     def __viewCopyright(self):
-        msg = self.tr('<b> \
+        msg = self.tr(
+            '<b> \
                       <p style="font-family:verdana;">Copyright &copy; Lawrence Livermore National Security, LLC.</p> \
                       <p style="font-family:verdana;">Produced at the Lawrence Livermore National Laboratory.</p> \
                       <p style="font-family:verdana;">See top-level LICENSE AND COPYRIGHT files for dates and other \
@@ -531,7 +553,8 @@ class Plotter(QMainWindow):
                       of authors expressed herein do not necessarily state or reflect \
                       those of the United States Government or Lawrence Livermore National \
                       Security, LLC, and shall not be used for advertising or product \
-                      endorsement purposes.</p>')
+                      endorsement purposes.</p>'
+        )
 
         # Copyright Dialog
         copy_dialog = QDialog(self)
@@ -559,7 +582,7 @@ class Plotter(QMainWindow):
         okButton.clicked.connect(copy_dialog.close)
         okButton.setMinimumSize(100, 20)
         okButton.setMaximumSize(100, 20)
-        okButton.setText('OK')
+        okButton.setText("OK")
         hbox.addWidget(okButton, Qt.AlignmentFlag.AlignCenter)
         vbox.addLayout(hbox)
 
@@ -570,18 +593,22 @@ class Plotter(QMainWindow):
         QMessageBox.aboutQt(self)
 
     def __aboutPyDV(self):
-        QMessageBox.about(self,
-                          self.tr('About PyDV'),
-                          self.tr('<h2>About PyDV</h2>'
-                                  f'<p style="font-family:courier; font-size:40%;">version {pydv_version}</p>'
-                                  '<p style="font-family:verdana;"><a href="https://pydv.readthedocs.io/en/latest/"> \
+        QMessageBox.about(
+            self,
+            self.tr("About PyDV"),
+            self.tr(
+                "<h2>About PyDV</h2>"
+                f'<p style="font-family:courier; font-size:40%;">version {pydv_version}</p>'
+                '<p style="font-family:verdana;"><a href="https://pydv.readthedocs.io/en/latest/"> \
                                    PyDV</a> is a 1D graphics tool, heavily based on the ULTRA plotting tool.</p> \
                                    <p style="font-family:verdana;">Produced at the Lawrence Livermore National \
                                    Laboratory.</p> \
                                    <p style="font-family:verdana;">See top-level LICENSE AND COPYRIGHT files for \
                                    dates and other details.</p> \
                                    <p style="font-family:verdana;">LLNL-CODE-507071</p> \
-                                   <p style="font-family:verdana;">All rights reserved.</p>'))
+                                   <p style="font-family:verdana;">All rights reserved.</p>'
+            ),
+        )
 
     def __deleteCurve(self):
         rowcnt = len(self._tableWidget.selectionModel().selectedRows())
@@ -633,17 +660,17 @@ class Plotter(QMainWindow):
 
     def __setgeometry(self):
         geometry = self._geometry
-        if geometry != 'de':
+        if geometry != "de":
             self.setGeometry(int(geometry[2]), int(geometry[3]), int(geometry[0]), int(geometry[1]))
         else:
             self.setGeometry(50, 50, 600, 500)
 
     def closeEvent(self, event):
 
-        if hasattr(self, 'plot_updater') and self.plot_updater.is_alive():
+        if hasattr(self, "plot_updater") and self.plot_updater.is_alive():
             self.plot_updater.stop()
             self.plot_updater.join()
 
-        plt.close('all')
+        plt.close("all")
 
         event.accept()

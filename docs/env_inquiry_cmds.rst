@@ -53,4 +53,3 @@ shell
 
 .. autofunction:: pydv.pdv.Command.do_shell
    :noindex:
-
