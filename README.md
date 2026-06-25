@@ -1,4 +1,4 @@
-# PyDV 
+# PyDV
 
 A 1D graphics and data analysis tool, heavily based on the ULTRA plotting tool.
 

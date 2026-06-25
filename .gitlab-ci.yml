@@ -2,15 +2,20 @@ include: [component: $CI_SERVER_FQDN/lc-components/id_tokens/id_tokens-component
 
 stages:
   - create_env
+  - pre_commit
   - run_tests
   - run_rz_tests
   - release
   - deploy
   - deploy_to_develop
-    
+
 .create_env:
   script:
     - make create_env
+
+.pre_commit:
+  script:
+    - make pre_commit
 
 .run_tests:
   script:
@@ -32,7 +37,7 @@ stages:
   tags:
     - shell
     - dane
-    
+
 .on_rz:
   tags:
     - shell
@@ -42,7 +47,7 @@ stages:
   tags:
     - shell
     - magma
-    
+
 .run_on_cz:
   rules:
     - if: '$SOURCE_ZONE == "CZ" && $CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_TAG == null && $CI_COMMIT_MESSAGE !~ "/^DO NOT CREATE A TAG/"'
@@ -54,8 +59,8 @@ stages:
 .run_on_scf:
   rules:
     - if: '$SOURCE_ZONE == "SCF" && $CI_PIPELINE_SOURCE != "merge_request_event" && $CI_COMMIT_TAG == null && $CI_COMMIT_MESSAGE !~ "/^DO NOT CREATE A TAG/"'
-    
-    
+
+
 .tag_on_cz:
   rules:
     - if: '$SOURCE_ZONE == "CZ" && $CI_COMMIT_TAG =~ "/^pydv-[0-9]+.[0-9]+.[0-9]+$/"'
@@ -63,10 +68,10 @@ stages:
 .tag_on_rz:
   rules:
     - if: '$SOURCE_ZONE == "RZ" && $CI_COMMIT_TAG =~ "/^pydv-[0-9]+.[0-9]+.[0-9]+$/"'
-    
+
 .tag_on_scf:
   rules:
-    - if: '$SOURCE_ZONE == "SCF" && $CI_COMMIT_TAG =~ "/^pydv-[0-9]+.[0-9]+.[0-9]+$/"'    
+    - if: '$SOURCE_ZONE == "SCF" && $CI_COMMIT_TAG =~ "/^pydv-[0-9]+.[0-9]+.[0-9]+$/"'
 
 .deploy_to_develop_on_cz:
   rules:
@@ -79,11 +84,15 @@ stages:
 .deploy_to_develop_on_scf:
   rules:
     - if: '$SOURCE_ZONE == "SCF" && $CI_COMMIT_BRANCH == "develop"'
-    
+
 create_env_on_cz:
   stage: create_env
   extends: [ .on_cz, .run_on_cz, .create_env ]
-  
+
+pre_commit_on_cz:
+  stage: pre_commit
+  extends: [ .on_cz, .run_on_cz, .pre_commit ]
+
 run_tests_on_cz:
   stage: run_tests
   extends: [ .on_cz, .run_on_cz, .run_tests ]
@@ -96,7 +105,7 @@ deploy_on_cz:
   stage: deploy
   variables:
     DEPLOY_TO: "prod"
-  extends: [ .on_cz, .tag_on_cz, .deploy ]    
+  extends: [ .on_cz, .tag_on_cz, .deploy ]
 
 deploy_to_develop_on_cz:
   stage: deploy_to_develop
@@ -104,11 +113,15 @@ deploy_to_develop_on_cz:
   script:
     - make deploy_to_develop
     - make create_and_upload_wheels
-          
+
 create_env_on_rz:
   stage: create_env
   extends: [ .on_rz, .run_on_rz, .create_env ]
-  
+
+pre_commit_on_rz:
+  stage: pre_commit
+  extends: [ .on_rz, .run_on_rz, .pre_commit ]
+
 run_tests_on_rz:
   stage: run_tests
   extends: [ .on_rz, .run_on_rz, .run_tests ]
@@ -126,7 +139,7 @@ deploy_on_rz:
   stage: deploy
   variables:
     DEPLOY_TO: "prod"
-  extends: [ .on_rz, .tag_on_rz, .deploy ]    
+  extends: [ .on_rz, .tag_on_rz, .deploy ]
 
 deploy_to_develop_on_rz:
   stage: deploy_to_develop
@@ -134,11 +147,15 @@ deploy_to_develop_on_rz:
   script:
     - make deploy_to_develop
     - make create_and_upload_wheels
-    
+
 create_env_on_scf:
   stage: create_env
   extends: [ .on_scf, .run_on_scf, .create_env ]
-  
+
+pre_commit_on_scf:
+  stage: pre_commit
+  extends: [ .on_scf, .run_on_scf, .pre_commit ]
+
 run_tests_on_scf:
   stage: run_tests
   extends: [ .on_scf, .run_on_scf, .run_tests ]

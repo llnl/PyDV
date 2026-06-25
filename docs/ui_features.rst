@@ -15,7 +15,7 @@ The PyDV User Interface (UI) has many different windows and toolbar items that p
 Toolbar
 -------
 
-An annotated toolbar for the PyDV UI is shown in :numref:`Figure %s<toolbar>`. Button **1** allows the user to reset the plot window to the original view, button **2** allows the user to step back to the previous view, and button **3** allows the user to step through to the next view. Button **4** allows panning the axis with the left mouse button and zooming the axis with the right mouse button. Button **5** allows zooming to a rectangle. Button **6** allows configuring of the subplots, button **7** is for saving the displayed figure, and button **8** is for editing curve lines and axes parameters. The area highlighted in **9** tracks the mouse location over the plot.  
+An annotated toolbar for the PyDV UI is shown in :numref:`Figure %s<toolbar>`. Button **1** allows the user to reset the plot window to the original view, button **2** allows the user to step back to the previous view, and button **3** allows the user to step through to the next view. Button **4** allows panning the axis with the left mouse button and zooming the axis with the right mouse button. Button **5** allows zooming to a rectangle. Button **6** allows configuring of the subplots, button **7** is for saving the displayed figure, and button **8** is for editing curve lines and axes parameters. The area highlighted in **9** tracks the mouse location over the plot.
 
 .. _toolbar:
 
@@ -62,7 +62,7 @@ The **View** menu contains the **List** and **Menu** dialogs. The **List** dialo
 
    List of plotted curves
 
-The **Menu** dialog lists the available curves read from a file. The user can delete or plot curves from this dialog (see :numref:`Figure %s<menu>`). 
+The **Menu** dialog lists the available curves read from a file. The user can delete or plot curves from this dialog (see :numref:`Figure %s<menu>`).
 
 .. _menu:
 

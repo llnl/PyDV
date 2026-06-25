@@ -12,18 +12,18 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(".."))
 
 DOCS_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.join(os.path.dirname(DOCS_DIR),'pydv')
-version_file = os.path.join(os.path.dirname(DOCS_DIR), 'pydv/scripts/version.txt')
-with open(version_file, 'r') as fp:
+PYDV_DIR = os.path.join(os.path.dirname(DOCS_DIR), "pydv")
+version_file = os.path.join(os.path.dirname(DOCS_DIR), "pydv/scripts/version.txt")
+with open(version_file, "r") as fp:
     pydv_version = fp.read()
 
 
@@ -36,36 +36,38 @@ with open(version_file, 'r') as fp:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
+    "sphinx.ext.autodoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'PyDV'
-copyright = u'Copyright (c) Lawrence Livermore National Security, LLC.' + \
-             ' Produced at the Lawrence Livermore National Laboratory.' + \
-             ' See top-level LICENSE AND COPYRIGHT files for dates and other details.'
-author = u'PyDV Developers'
+project = "PyDV"
+copyright = (
+    "Copyright (c) Lawrence Livermore National Security, LLC."
+    + " Produced at the Lawrence Livermore National Laboratory."
+    + " See top-level LICENSE AND COPYRIGHT files for dates and other details."
+)
+author = "PyDV Developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '.'.join(pydv_version.split('.')[:2])
+version = ".".join(pydv_version.split(".")[:2])
 # The full version, including alpha/beta/rc tags.
 release = pydv_version
 
@@ -74,7 +76,7 @@ release = pydv_version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -84,7 +86,7 @@ language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ["_build"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -102,7 +104,7 @@ exclude_patterns = ['_build']
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -120,7 +122,7 @@ numfig = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'furo'
+html_theme = "furo"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -212,20 +214,17 @@ html_theme = 'furo'
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyDVdoc'
+htmlhelp_basename = "PyDVdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     # 'preamble': '',
-
     # Latex figure (float) alignment
     # 'figure_align': 'htbp',
 }
@@ -234,8 +233,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PyDV.tex', u'PyDV Documentation',
-     u'PyDV Developers', 'manual'),
+    (master_doc, "PyDV.tex", "PyDV Documentation", "PyDV Developers", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -263,10 +261,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'pydv', u'PyDV Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, "pydv", "PyDV Documentation", [author], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -278,9 +273,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'PyDV', u'PyDV Documentation',
-     author, 'PyDV', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, "PyDV", "PyDV Documentation", author, "PyDV", "One line description of project.", "Miscellaneous"),
 ]
 
 # Documents to append as an appendix to all manuals.

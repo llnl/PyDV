@@ -3,7 +3,7 @@
 Curve Control Commands
 ======================
 
-These functions control the individual curves that are currently being displayed. They range in type from controlling the appearance of the curve to deleting it. They also include the "non-mathematical" mechanisms which may generate curves. 
+These functions control the individual curves that are currently being displayed. They range in type from controlling the appearance of the curve to deleting it. They also include the "non-mathematical" mechanisms which may generate curves.
 
 .. note::
    **< >** = Required user input.
