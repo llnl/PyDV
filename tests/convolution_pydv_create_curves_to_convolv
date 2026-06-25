@@ -51,4 +51,3 @@ subsample a 10
 add a d
 
 save tests/convolution_created_curves_to_convol.ult a:z
-
