@@ -12,7 +12,7 @@ import sys
 sys.path.append("/usr/gapps/pydv/current")
 import pydvpy
 
-curves = list()
+curves = []
 curves.append(pydvpy.span(1,10,6))
 pydvpy.save('myFile.txt', curves)
 ```
@@ -22,7 +22,7 @@ pydvpy.save('myFile.txt', curves)
 ```
 from pydv import pydvpy
 
-curves = list()
+curves = []
 curves.append(pydvpy.span(1,10,6))
 pydvpy.save('myFile.txt', curves)
 ```

@@ -9,7 +9,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 # Get the version number from the version file
 version_file = os.path.join(SCRIPTS_DIR, "version.txt")
-with open(version_file, "r") as fp:
+with open(version_file) as fp:
     version = fp.read().replace("\n", "")
     version_list = version.split(".")
     major, minor, patch = int(version_list[0]), int(version_list[1]), int(version_list[2])

@@ -99,12 +99,12 @@ from PySide6.QtWidgets import (
 PYDV_DIR = path.dirname(path.abspath(__file__))
 try:
     version_file = path.join(PYDV_DIR, "../scripts/version.txt")
-    with open(version_file, "r") as fp:
+    with open(version_file) as fp:
         pydv_version = fp.read()
 
 except:
     version_file = path.join(PYDV_DIR, "scripts/version.txt")
-    with open(version_file, "r") as fp:
+    with open(version_file) as fp:
         pydv_version = fp.read()
 
 
@@ -210,13 +210,11 @@ class Plotter(QMainWindow):
         """
         Updates the list and menu dialogs if visible.
         """
-        if self._listDialog is not None:
-            if self._listDialog.isVisible():
-                self._listAction.trigger()
+        if self._listDialog is not None and self._listDialog.isVisible():
+            self._listAction.trigger()
 
-        if self._menuDialog is not None:
-            if self._menuDialog.isVisible():
-                self._menuAction.trigger()
+        if self._menuDialog is not None and self._menuDialog.isVisible():
+            self._menuAction.trigger()
 
     ########################################################################################################
     # SLOTS
@@ -269,15 +267,14 @@ class Plotter(QMainWindow):
             self._tableWidget.setRowCount(rows)
 
         # Populate table with curves
-        row = 0
-        for c in self._pydvcmd.plotlist:
+        for row, c in enumerate(self._pydvcmd.plotlist):
             col = 0
 
             # Plot Name
             prefix = ""
             if c.edited:
                 prefix = "*"
-            plotnameItem = QTableWidgetItem(self.tr("%s%s" % (prefix, c.plotname)))
+            plotnameItem = QTableWidgetItem(self.tr(f"{prefix}{c.plotname}"))
             plotnameItem.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
             self._tableWidget.setItem(row, col, plotnameItem)
             col += 1
@@ -298,22 +295,22 @@ class Plotter(QMainWindow):
             col += 1
 
             # xmin
-            xminItem = QTableWidgetItem(self.tr("%.2e" % min(c.x)))
+            xminItem = QTableWidgetItem(self.tr(f"{min(c.x):.2e}"))
             self._tableWidget.setItem(row, col, xminItem)
             col += 1
 
             # xmax
-            xmaxItem = QTableWidgetItem(self.tr("%.2e" % max(c.x)))
+            xmaxItem = QTableWidgetItem(self.tr(f"{max(c.x):.2e}"))
             self._tableWidget.setItem(row, col, xmaxItem)
             col += 1
 
             # ymin
-            yminItem = QTableWidgetItem(self.tr("%.2e" % min(c.y)))
+            yminItem = QTableWidgetItem(self.tr(f"{min(c.y):.2e}"))
             self._tableWidget.setItem(row, col, yminItem)
             col += 1
 
             # ymax
-            ymaxItem = QTableWidgetItem(self.tr("%.2e" % max(c.y)))
+            ymaxItem = QTableWidgetItem(self.tr(f"{max(c.y):.2e}"))
             self._tableWidget.setItem(row, col, ymaxItem)
             col += 1
 
@@ -325,8 +322,6 @@ class Plotter(QMainWindow):
             # Sina Record ID
             recidItem = QTableWidgetItem(self.tr(c.record_id))
             self._tableWidget.setItem(row, col, recidItem)
-
-            row += 1
 
         maxrows = rows
         if rows > 10:
@@ -401,18 +396,8 @@ class Plotter(QMainWindow):
             self._menuTableWidget.setRowCount(rows)
 
         # Populate table with curves
-        row = 0
-        for c in self._pydvcmd.curvelist:
+        for row, c in enumerate(self._pydvcmd.curvelist):
             col = 0
-
-            # Plot Name
-            # prefix = ''
-            # if c.edited:
-            #     prefix = '*'
-            # plotnameItem = QTableWidgetItem(self.tr("%s%s" % (prefix, c.plotname)))
-            # plotnameItem.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            # self._menuTableWidget.setItem(row, col, plotnameItem)
-            # col += 1
 
             # Label
             labelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.name, self._pydvcmd.namewidth)))
@@ -430,22 +415,22 @@ class Plotter(QMainWindow):
             col += 1
 
             # xmin
-            xminItem = QTableWidgetItem(self.tr("%.2e" % min(c.x)))
+            xminItem = QTableWidgetItem(self.tr(f"{min(c.x):.2e}"))
             self._menuTableWidget.setItem(row, col, xminItem)
             col += 1
 
             # xmax
-            xmaxItem = QTableWidgetItem(self.tr("%.2e" % max(c.x)))
+            xmaxItem = QTableWidgetItem(self.tr(f"{max(c.x):.2e}"))
             self._menuTableWidget.setItem(row, col, xmaxItem)
             col += 1
 
             # ymin
-            yminItem = QTableWidgetItem(self.tr("%.2e" % min(c.y)))
+            yminItem = QTableWidgetItem(self.tr(f"{min(c.y):.2e}"))
             self._menuTableWidget.setItem(row, col, yminItem)
             col += 1
 
             # ymax
-            ymaxItem = QTableWidgetItem(self.tr("%.2e" % max(c.y)))
+            ymaxItem = QTableWidgetItem(self.tr(f"{max(c.y):.2e}"))
             self._menuTableWidget.setItem(row, col, ymaxItem)
             col += 1
 
@@ -457,8 +442,6 @@ class Plotter(QMainWindow):
             # Sina Record ID
             recidItem = QTableWidgetItem(self.tr(c.record_id))
             self._menuTableWidget.setItem(row, col, recidItem)
-
-            row += 1
 
         maxrows = rows
         if rows > 10:
@@ -618,15 +601,15 @@ class Plotter(QMainWindow):
                 print("erase")
                 self._pydvcmd.do_erase("erase")
             else:
-                plotnames = str()
+                plotnames = ""
                 for index in self._tableWidget.selectionModel().selectedRows():
                     row = index.row()
-                    plotnames += "%s " % self._pydvcmd.plotlist[row].plotname
+                    plotnames += f"{self._pydvcmd.plotlist[row].plotname} "
 
-                print("delete %s" % plotnames)
-                self._pydvcmd.do_delete("%s" % plotnames)
+                print(f"delete {plotnames}")
+                self._pydvcmd.do_delete(f"{plotnames}")
 
-            self._pydvcmd.updateplot
+            self._pydvcmd.updateplot  # noqa: B018
 
     def __deleteMenuCurve(self):
         rowcnt = len(self._menuTableWidget.selectionModel().selectedRows())
@@ -636,27 +619,27 @@ class Plotter(QMainWindow):
                 print("kill all")
                 self._pydvcmd.do_kill("all")
             else:
-                menuindexes = str()
+                menuindexes = ""
                 for index in self._menuTableWidget.selectionModel().selectedRows():
                     row = index.row()
-                    menuindexes += "%d " % (row + 1)
+                    menuindexes += f"{row + 1} "
 
-                print("kill %s" % menuindexes)
-                self._pydvcmd.do_kill("%s" % menuindexes)
+                print(f"kill {menuindexes}")
+                self._pydvcmd.do_kill(f"{menuindexes}")
 
     def __plotMenuCurve(self):
         rowcnt = len(self._menuTableWidget.selectionModel().selectedRows())
 
         if rowcnt > 0:
-            plotnames = str()
+            plotnames = ""
 
             for index in self._menuTableWidget.selectionModel().selectedRows():
                 row = index.row()
-                plotnames += " %d" % (row + 1)
+                plotnames += f" {row + 1}"
 
-            print("curve%s" % plotnames)
-            self._pydvcmd.do_curve("%s" % plotnames)
-            self._pydvcmd.updateplot
+            print(f"curve{plotnames}")
+            self._pydvcmd.do_curve(f"{plotnames}")
+            self._pydvcmd.updateplot  # noqa: B018
 
     def __setgeometry(self):
         geometry = self._geometry

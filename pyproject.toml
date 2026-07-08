@@ -47,18 +47,20 @@ pdv = "pydv.pdv:main"
 
 [project.optional-dependencies]
 dev = [
-  "sphinx_rtd_theme",
-  "sphinx",
   "pytest",
-  "sphinx-autoapi",
-  "six",
+  "pytest-cov",
   "scikit-image",
   "imageio",
   "pre-commit",
   "ruff",
   "ty",
-  "coverage",
-  "pytest-cov"
+]
+
+docs = [
+  "sphinx",
+  "sphinx_rtd_theme",
+  "sphinx-autoapi",
+  "furo"
 ]
 
 [tool.setuptools]
@@ -72,5 +74,5 @@ pydv = ["img/*"]
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "RUF"]
+select = ["E", "F", "I", "W", "RUF", "B", "UP", "SIM", "C4", "ERA", "A", "ISC", "ICN", "PIE", "PT", "TID", "FLY", "PGH"]
 ignore = ["E722"]

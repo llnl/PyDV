@@ -8,7 +8,7 @@ These commands access disk files either for reading or writing.
 .. note::
    **< >** = Required user input.
 
-   **[< >]** = Optional user input.
+   **[ ]** = Optional user input.
 
    **[PyDV]** = Python Data Visualizer command-line prompt.
 

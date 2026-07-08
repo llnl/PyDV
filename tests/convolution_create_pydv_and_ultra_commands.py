@@ -30,7 +30,6 @@ for sw in ["pydv", "ultra"]:
         file1.write(f"cur 1:{total_curves}\n")
 
         for i in list(combinations(curve_letters, 2)):
-            # print (i)
             file1.write(f"convolc {i[0]} {i[1]}\n")
             file1.write(f"convolc {i[1]} {i[0]}\n")
             file1.write(f"convolb {i[0]} {i[1]}\n")
