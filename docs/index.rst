@@ -17,8 +17,8 @@ Users
    :maxdepth: 1
 
    release_notes
-   pdvrc
    getting_started
+   pdvrc
    io_commands
    math_operations
    env_inquiry_cmds

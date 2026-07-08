@@ -87,8 +87,8 @@ def test_read_regex(test_file):
 #     3. pydv/pdv -i tests/convolution_pydv_commands
 #     4. export PATH=$PATH:/usr/apps/pact/bin/
 #     5. ultra -l tests/convolution_ultra_commands
-# convolb: (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))
-# convolc: (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))
+# convolb is (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))
+# convolc is (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))
 curves_pydv = pydvpy.read(os.path.join(TEST_DIR, "convol_pydv.ult"))
 curves_ultra = pydvpy.read(os.path.join(TEST_DIR, "convol_ultra.ult"))
 convol_plot_path = os.path.join(TEST_DIR, "convolution_plots")
@@ -112,6 +112,7 @@ def convol_curves():
 @pytest.mark.parametrize("i", list(range(len(curves_pydv))))
 def convol(i):
 
+    # This is not a test since data will never truly align. Instead see the plots in tests/convolution_plots/
     # for cp, cu in zip(curves_pydv, curves_ultra):
     cp = curves_pydv[i]
     cu = curves_ultra[i]
@@ -141,10 +142,7 @@ def convol(i):
     print(f"\tUltra: {max(cu.y)}")
 
     # Ultra sometimes has 99 points for some reason
-    if len(cu.y) == 99:
-        start = 1
-    else:
-        start = 0
+    start = 1 if len(cu.y) == 99 else 0
 
     plot_details = ""
 
@@ -191,10 +189,6 @@ def convol(i):
     ax.legend()
     fig.savefig(os.path.join(TEST_DIR, "convolution_plots", f"convol_plot_{i + 1}{plot_details}.png"))
     plt.close(fig)
-
-    # All these tests will never pass but see the plots in tests/convolution_plots/
-    # np.testing.assert_array_less(area_percent, 1)
-    # np.testing.assert_array_less(diff_percent, 1)
 
 
 def test_read_labels():

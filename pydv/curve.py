@@ -64,11 +64,11 @@ import numpy as np
 from scipy import integrate, interpolate
 
 
-class Curve(object):
+class Curve:
     def __init__(
         self,
-        x=np.empty(0),
-        y=np.empty(0),
+        x=None,
+        y=None,
         name="",
         filename="",
         xlabel="",
@@ -76,8 +76,8 @@ class Curve(object):
         title="",
         record_id="",
         step=False,
-        step_original_x=np.empty(0),
-        step_original_y=np.empty(0),
+        step_original_x=None,
+        step_original_y=None,
         xticks_labels=None,
         plotname="",
         color="",
@@ -102,8 +102,8 @@ class Curve(object):
         math_interp_right=None,
         math_interp_period=None,
     ):
-        self.x = np.array(x, dtype=float)
-        self.y = np.array(y, dtype=float)
+        self.x = np.empty(0) if x is None else np.array(x, dtype=float)
+        self.y = np.empty(0) if y is None else np.array(y, dtype=float)
         self.name = name
         self.filename = filename
         self.xlabel = xlabel
@@ -111,8 +111,8 @@ class Curve(object):
         self.title = title
         self.record_id = record_id
         self.step = step
-        self.step_original_x = step_original_x
-        self.step_original_y = step_original_y
+        self.step_original_x = np.empty(0) if step_original_x is None else np.array(step_original_x, dtype=float)
+        self.step_original_y = np.empty(0) if step_original_y is None else np.array(step_original_y, dtype=float)
         self.xticks_labels = xticks_labels
         self.plotname = plotname
         self.color = color
@@ -143,7 +143,7 @@ class Curve(object):
     def __add__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " + " + b.plotname + " ").strip("  ")
+        c.plotname = str(a.plotname + " + " + b.plotname + " ").strip()
         ia, ib = getinterp(
             a,
             b,
@@ -164,7 +164,7 @@ class Curve(object):
     def __sub__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " - " + b.plotname + " ").strip("  ")
+        c.plotname = str(a.plotname + " - " + b.plotname + " ").strip()
         ia, ib = getinterp(
             a,
             b,
@@ -185,7 +185,7 @@ class Curve(object):
     def __mul__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " * " + b.plotname + " ").strip("  ")
+        c.plotname = str(a.plotname + " * " + b.plotname + " ").strip()
         ia, ib = getinterp(
             a,
             b,
@@ -206,7 +206,7 @@ class Curve(object):
     def __div__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip("  ")
+        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip()
         ia, ib = getinterp(
             a,
             b,
@@ -235,7 +235,7 @@ class Curve(object):
     def __truediv__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip("  ")
+        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip()
         ia, ib = getinterp(
             a,
             b,
@@ -264,7 +264,7 @@ class Curve(object):
     def __pow__(a, b):
         c = Curve()
         c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + "^" + str(b)).strip("  ")
+        c.plotname = str(a.plotname + "^" + str(b)).strip()
         c.x = np.array(a.x)
         c.y = np.power(a.y, b)
         nans = np.isnan(c.y)  # remove NaNs
@@ -335,7 +335,7 @@ class Curve(object):
         except:
             area0 = np.trapz(c.y, c.x)
         c.y /= float(area0)
-        c.name = "Normalized %s" % self.plotname
+        c.name = f"Normalized {self.plotname}"
         return c
 
 
@@ -406,7 +406,7 @@ def getinterp(
 
         return ia, ib
     else:
-        raise ValueError("{} is not a supported option for match".format(match))
+        raise ValueError(f"{match} is not a supported option for match")
 
 
 def interp1d(a, num=100, retstep=False):
@@ -464,19 +464,19 @@ def append(a, b):
         has_a = len(aidx) != 0
         has_b = len(bidx) != 0
 
-        sum = float(0)
+        sums = float(0)
         tot = 0
 
         if has_a:
             for idx in aidx:
-                sum += float(a.y[idx])
+                sums += float(a.y[idx])
                 tot += 1
 
         if has_b:
             for idx in bidx:
-                sum += float(b.y[idx])
+                sums += float(b.y[idx])
                 tot += 1
 
-        aub.y[i] = sum / float(tot)
+        aub.y[i] = sums / float(tot)
 
     return aub

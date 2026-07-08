@@ -513,12 +513,10 @@ def test_image(i):
     output = color.rgb2gray(imageio.v2.imread(os.path.join(output_dir, test_image))[:, :, :3])
 
     # Image 64 contains file paths
-    if i == 64:
-        score_to_beat = 0.85
-    else:
-        score_to_beat = 0.90
+    score_to_beat = 0.85 if i == 64 else 0.9
+
     (score, diff) = structural_similarity(baseline, output, full=True, data_range=1.0)
-    print("Image Similarity {}: {:.4f}%".format(i, score * 100))
+    print(f"Image Similarity {i}: {score * 100:.4f}%")
 
     io.imsave(os.path.join(diff_dir, test_image), (diff * 255).astype("uint8"))
 

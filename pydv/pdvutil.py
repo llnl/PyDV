@@ -177,7 +177,6 @@ def parsemath(line, plotlist, commander, xdomain):
     else:
         plotlist.insert((int(c.plotname[1:]) - 1), c)
     return c
-    # pultry.updateplot()
 
 
 def getnumberargs(line, filelist):
@@ -196,13 +195,12 @@ def getnumberargs(line, filelist):
             nolist = " ".join(nolist)
             arglist += nolist + " "
         for i in range(len(line) - 1):
-            if i > 0:
-                if len(line[i].split()) > 2:  # check for non list args
-                    nolist = line[i].split()
-                    nolist.pop(-1)
-                    nolist.pop(0)
-                    nolist = " ".join(nolist)
-                    arglist += nolist + " "
+            if i > 0 and len(line[i].split()) > 2:  # check for non list args
+                nolist = line[i].split()
+                nolist.pop(-1)
+                nolist.pop(0)
+                nolist = " ".join(nolist)
+                arglist += nolist + " "
             start = line[i].split()[-1]
             end = line[i + 1].split()[0]
             # File notation e.g. a.1:a.10 and @#.
@@ -329,28 +327,21 @@ def getletterargs(line):
             arglist += nolist + " "
 
         for i in range(len(line) - 1):
-            if i > 0:
-                # check for non list args
-                if len(line[i].split()) > 2:
-                    nolist = line[i].split()
-                    nolist.pop(-1)
-                    nolist.pop(0)
-                    nolist = " ".join(nolist)
-                    arglist += nolist + " "
+            # check for non list args
+            if i > 0 and len(line[i].split()) > 2:
+                nolist = line[i].split()
+                nolist.pop(-1)
+                nolist.pop(0)
+                nolist = " ".join(nolist)
+                arglist += nolist + " "
 
             start = line[i].split()[-1].upper()
 
-            if start[0] == "@":
-                start = int(start[1:]) - 1
-            else:
-                start = ord(start[0]) - ord("A")
+            start = int(start[1:]) - 1 if start[0] == "@" else ord(start[0]) - ord("A")
 
             end = line[i + 1].split()[0].upper()
 
-            if end[0] == "@":
-                end = int(end[1:]) - 1
-            else:
-                end = ord(end[0]) - ord("A")
+            end = int(end[1:]) - 1 if end[0] == "@" else ord(end[0]) - ord("A")
 
             args = ""
             for j in range((int(end) - int(start)) + 1):
