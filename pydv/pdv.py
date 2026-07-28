@@ -63,6 +63,7 @@ import os
 import re
 import sys
 import warnings
+from importlib.metadata import version
 from threading import Thread
 
 import matplotlib as mpl
@@ -89,15 +90,15 @@ import scipy.stats
 from PySide6.QtCore import QObject, QtMsgType, Signal, qInstallMessageHandler
 from PySide6.QtWidgets import QApplication
 
+# Package Import
+if __package__:
+    from pydv import pdvplot, pdvutil, pydvpy
+
 # HPC Import
-try:
+else:
     import pdvplot
     import pdvutil
     import pydvpy
-
-# Package Import
-except ImportError:
-    from pydv import pdvplot, pdvutil, pydvpy
 
 try:
     from matplotlib import style
@@ -110,23 +111,18 @@ from enum import Enum
 
 warnings.filterwarnings("ignore", category=Warning)
 
-PYDV_DIR = os.path.dirname(os.path.abspath(__file__))
-try:
-    version_file = os.path.join(PYDV_DIR, "../scripts/version.txt")
-    with open(version_file) as fp:
-        pydv_version = fp.read().replace("\n", "")
+# Package Import
+if __package__:
+    pydv_version = version("pydv")
 
-    date_file = os.path.join(PYDV_DIR, "../scripts/date.txt")
-    with open(date_file) as fp:
-        pydv_date = fp.read()
-except:
-    version_file = os.path.join(PYDV_DIR, "scripts/version.txt")
-    with open(version_file) as fp:
-        pydv_version = fp.read().replace("\n", "")
+# HPC Import
+else:
+    import tomllib
 
-    date_file = os.path.join(PYDV_DIR, "scripts/date.txt")
-    with open(date_file) as fp:
-        pydv_date = fp.read()
+    PYDV_DIR = os.path.dirname(os.path.abspath(__file__))
+    toml_file = os.path.join(PYDV_DIR, "pyproject.toml")
+    with open(toml_file, "rb") as fp:
+        pydv_version = tomllib.load(fp)["project"]["version"]
 
 
 class LogEnum(Enum):
@@ -2162,7 +2158,7 @@ class Command(cmd.Cmd):
                 xmax = max(c.x)
             if args[2].lower() == "inf":
                 Linf = 0.0
-                for xi, yi in zip(c.x, c.y):
+                for xi, yi in zip(c.x, c.y, strict=False):
                     if xmin <= xi <= xmax:
                         Linf = max(Linf, yi)
                 print(f"Linf norm = {Linf:.4f}")
@@ -8626,7 +8622,7 @@ class Command(cmd.Cmd):
                     x_labels,
                     x_new,
                     y_new,
-                ) = zip(*sorted(zip(x_labels, x_new, y_new)))
+                ) = zip(*sorted(zip(x_labels, x_new, y_new, strict=False)), strict=False)
 
                 labeled_curve.x = np.array(x_new)
                 labeled_curve.y = np.array(y_new)
@@ -9704,7 +9700,7 @@ class Command(cmd.Cmd):
     def console_run(self):
         while True:
             self.cmdloop(
-                f"\n\tPython Data Visualizer {pydv_version}  -  {pydv_date}\n"
+                f"\n\tPython Data Visualizer {pydv_version} - https://pypi.org/project/LLNL-PyDV/\n"
                 f'\tType "help" for more information.\n'
                 f"\tDocumentation can be found here:\n"
                 f"\t\tLLNL:   https://lc.llnl.gov/weave/pydv/html/index.html\n"

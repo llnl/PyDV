@@ -1,7 +1,6 @@
 import os
 import pathlib
 import subprocess
-import sys
 import time
 
 import matplotlib.pyplot as plt
@@ -9,11 +8,9 @@ import numpy as np
 import pytest
 import scipy
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.dirname(TEST_DIR)
+from pydv import pydvpy
 
-sys.path.append(os.path.join(PYDV_DIR, "pydv"))
-import pydvpy  # noqa: E402
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 test_files = list(pathlib.Path(TEST_DIR).glob("testData.*"))
 
@@ -277,7 +274,8 @@ def test_BIG_file():
 
 
 @pytest.mark.parametrize(
-    ("hdf5_file", "json_file"), zip(["test.hdf5", "medium_recs_test.hdf5"], ["test.json", "medium_recs_test.json"])
+    ("hdf5_file", "json_file"),
+    zip(["test.hdf5", "medium_recs_test.hdf5"], ["test.json", "medium_recs_test.json"], strict=False),
 )
 def test_sina_hdf5(hdf5_file, json_file):
 
@@ -285,7 +283,7 @@ def test_sina_hdf5(hdf5_file, json_file):
 
     curves_json = pydvpy.read(os.path.join(TEST_DIR, json_file))
 
-    for cur_hdf5, cur_json in zip(curves_hdf5, curves_json):
+    for cur_hdf5, cur_json in zip(curves_hdf5, curves_json, strict=False):
         assert cur_hdf5.record_id == cur_json.record_id
         assert cur_hdf5.name == cur_json.name
         assert cur_hdf5.xlabel == cur_json.xlabel

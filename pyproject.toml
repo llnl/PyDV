@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyDV"
-version = "3.10.0"
+version = "3.10.1"
 description = "PyDV: Python Data Visualizer"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "BSD" }
 authors = [
   { name = "Jorge Moreno", email = "moreno45@llnl.gov" },
@@ -51,7 +51,7 @@ dev = [
   "pytest-cov",
   "scikit-image",
   "imageio",
-  "pre-commit",
+  "pre-commit==4.6.0",
   "ruff",
   "ty",
 ]

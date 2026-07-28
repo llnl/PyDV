@@ -83,13 +83,13 @@ try:
 except:
     stylesLoaded = False
 
-# HPC Import
-try:
-    import curve
-
 # Package Import
-except ImportError:
+if __package__:
     from pydv import curve
+
+# HPC Import
+else:
+    import curve
 
 try:
     import pact.pdb as pdb
@@ -1755,7 +1755,7 @@ def norm(c1, c2, p, xmin=None, xmax=None):
 
     if p.lower() == "inf":
         Linf = 0.0
-        for xi, yi in zip(c.x, c.y):
+        for xi, yi in zip(c.x, c.y, strict=False):
             if xmin <= xi <= xmax:
                 Linf = max(Linf, yi)
         d = c
@@ -3505,7 +3505,7 @@ def getx(c, value, xmin=None, xmax=None):
         xr = c.x[-1] if xmax is None else xmax
         range_x = np.linspace(xl, xr, num=1000)
         y_interp = np.interp(range_x, c.x, c.y)
-        for x, y in zip(range_x, y_interp):
+        for x, y in zip(range_x, y_interp, strict=False):
             if y == value:
                 xypairs.append((x, y))
 

@@ -58,20 +58,20 @@
 # Security, LLC, and shall not be used for advertising or product
 # endorsement purposes.
 
-from os import path
+import os
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvas
 
-# HPC Import
-try:
-    import pdvutil
-    from pdvnavbar import PyDVToolbar
-
 # Package Import
-except ImportError:
+if __package__:
     from pydv import pdvutil
     from pydv.pdvnavbar import PyDVToolbar
+
+# HPC Import
+else:
+    import pdvutil
+    from pdvnavbar import PyDVToolbar
 
 try:
     from matplotlib import style
@@ -79,6 +79,8 @@ try:
     stylesLoaded = True
 except:
     stylesLoaded = False
+
+from importlib.metadata import version
 
 from PySide6.QtCore import QRect, Qt, Slot
 from PySide6.QtGui import QAction, QIcon
@@ -96,16 +98,18 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-PYDV_DIR = path.dirname(path.abspath(__file__))
-try:
-    version_file = path.join(PYDV_DIR, "../scripts/version.txt")
-    with open(version_file) as fp:
-        pydv_version = fp.read()
+# Package Import
+if __package__:
+    pydv_version = version("pydv")
 
-except:
-    version_file = path.join(PYDV_DIR, "scripts/version.txt")
-    with open(version_file) as fp:
-        pydv_version = fp.read()
+# HPC Import
+else:
+    import tomllib
+
+    PYDV_DIR = os.path.dirname(os.path.abspath(__file__))
+    toml_file = os.path.join(PYDV_DIR, "pyproject.toml")
+    with open(toml_file, "rb") as fp:
+        pydv_version = tomllib.load(fp)["project"]["version"]
 
 
 class Plotter(QMainWindow):
@@ -134,11 +138,11 @@ class Plotter(QMainWindow):
     def __init__(self, pydvcmd):
         QMainWindow.__init__(self)
 
-        here = path.abspath(path.dirname(__file__))
+        here = os.path.abspath(os.path.dirname(__file__))
 
         # Setup Application
         self.setWindowTitle(f"Python Data Visualizer {pydv_version}")
-        self.setWindowIcon(QIcon(path.join(here, "img/app_icon3.png")))
+        self.setWindowIcon(QIcon(os.path.join(here, "img/app_icon3.png")))
         self._pydvcmd = pydvcmd
 
         # Window geometry action

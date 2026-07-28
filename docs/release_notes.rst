@@ -2,6 +2,11 @@
 
 Release Notes
 =============
+3.10.1
+------
+* Bugfix: import errors in pdv/pdvplot
+* Remove update version and date script
+
 3.10.0
 ------
 * Switched to `PySide6`
