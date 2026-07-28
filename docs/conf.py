@@ -13,19 +13,14 @@
 
 import os
 import sys
-
-import tomllib
+from importlib.metadata import version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(".."))
 
-DOCS_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.dirname(DOCS_DIR)
-toml_file = os.path.join(PYDV_DIR, "pyproject.toml")
-with open(toml_file, "rb") as fp:
-    pydv_version = tomllib.load(fp)["project"]["version"]
+pydv_version = version("pydv")
 
 # -- General configuration ------------------------------------------------
 

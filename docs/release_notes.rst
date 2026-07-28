@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.10.3
+------
+* Bugfix: Python version 3.11 for `tomlib`
+
 3.10.2
 ------
 * Bugfix: updating github workflow
