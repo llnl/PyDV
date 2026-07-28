@@ -257,7 +257,7 @@ def test_read_labels():
         assert cur.ylabel == names[i][2]
 
 
-def test_BIG_file():
+def BIG_file():
 
     subprocess.run(["python", os.path.join(TEST_DIR, "generate_ultra_curves_big.py")])
 

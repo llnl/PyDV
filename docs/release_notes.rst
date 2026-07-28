@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.10.2
+------
+* Bugfix: updating github workflow
+
 3.10.1
 ------
 * Bugfix: import errors in pdv/pdvplot
