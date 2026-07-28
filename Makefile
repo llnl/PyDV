@@ -31,14 +31,24 @@ define pre_commit
 	pre-commit run --all-files
 endef
 
+define check_version
+	@v1=$$(grep -m1 '^version = "' pyproject.toml | sed -E 's/^version = "([^"]+)"/\1/'); \
+	v2=$$(grep -m1 '^\s*\d+\.\d+\.\d+\s*$$' -n docs/release_notes.rst >/dev/null; \
+	grep -m1 '^\s*[0-9]\+\.[0-9]\+\.[0-9]\+\s*$$' docs/release_notes.rst | head -n1 | sed -E 's/^\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$$/\1/'); \
+	v3=$$(grep -m1 'tag_name: pydv-' .github/workflows/release.yml | sed -E 's/.*tag_name: pydv-([0-9]+\.[0-9]+\.[0-9]+).*/\1/'); \
+	echo "pyproject.toml: $$v1"; \
+	echo "docs/release_notes.rst: $$v2"; \
+	echo ".github/workflows/release.yml: $$v3"; \
+	[ "$$v1" = "$$v2" ] && [ "$$v1" = "$$v3" ]
+endef
+
 define run_pydv_tests
 	# call from the top repository directory
 	# arg1: full path to venv
-	source $(PYDV_ENV)/bin/activate && which pip && which pytest && \
 	if [ -z $(DISPLAY) ]; then \
-	  xvfb-run --auto-servernum pytest tests/ --cov=pydv --cov-report=term-missing --cov-fail-under=15 --capture=tee-sys -v; \
+	  xvfb-run --auto-servernum $(PYDV_ENV)/bin/python -m pytest tests/ --cov=pydv --cov-report=term-missing --cov-fail-under=15 --capture=tee-sys -v; \
 	else \
-	  pytest tests/ --cov=pydv --cov-report=term-missing --cov-fail-under=15 --capture=tee-sys -v; \
+	  $(PYDV_ENV)/bin/python -m pytest tests/ --cov=pydv --cov-report=term-missing --cov-fail-under=15 --capture=tee-sys -v; \
 	fi
 endef
 
@@ -74,6 +84,10 @@ run_rz_tests:
 	echo "Run RZ tests...RZ_TESTS_WORKDIR: $(RZ_TESTS_WORKDIR)"
 	$(call do_run_rz_tests,$(PYDV_ENV))
 
+.PHONY: check_version
+check_version:
+	@echo "check_version...";
+	$(call check_version,$(PYDV_ENV))
 
 .PHONY: release
 release:
@@ -81,7 +95,7 @@ release:
 	$(eval TAG=$(shell  echo $(CI_COMMIT_TAG) | sed -e "s/^pydv-//")) \
 	env; \
 	$(CI_UTILS)/bin/release-cli create --name "PyDV $(CI_COMMIT_TAG)" --tag-name $(CI_COMMIT_TAG); \
-	tar -cvf $(TAG).tar pydv docs; \
+	tar -cvf $(TAG).tar pydv docs pyproject.toml; \
 	ls; \
 	gzip $(TAG).tar; \
 	curl --header "JOB-TOKEN: $(CI_JOB_TOKEN)" --upload-file $(TAG).tar.gz $(PKG_REGISTRY_URL)/$(CI_COMMIT_TAG)/$(TAG).tar.gz
@@ -104,6 +118,7 @@ deploy:
 		rm $(TAG).tar
 		mv pydv $(TAG)
 		mv docs $(TAG)
+		mv pyproject.toml $(TAG)
 		chmod -R 750 $(TAG)
 		rm -f current
 		ln -s $(TAG) current
@@ -115,11 +130,11 @@ deploy:
 .PHONY: deploy_to_develop
 .ONESHELL:
 deploy_to_develop:
-	$(eval VERSION=`cat $(CI_PROJECT_DIR)/pydv/scripts/version.txt`)
+	VERSION=$$(python3 -c "import tomllib; print(tomllib.load(open('$(CI_PROJECT_DIR)/pyproject.toml', 'rb'))['project']['version'])")
 	echo "...deploy_to_develop...VERSION: $(VERSION)"
 	cd pydv && rm -rf __pycache__
 	rm -f $(VERSION).tar.gz
-	tar -cvf $(VERSION).tar * ../docs && gzip $(VERSION).tar
+	tar -cvf $(VERSION).tar * ../docs ../pyproject.toml && gzip $(VERSION).tar
 	give --force weaveci $(VERSION).tar.gz
 	$(eval GIVE_USER=$(shell echo ${USER}))
 	xsu weaveci -c "sg us_cit" <<AS_WEAVECI_USER

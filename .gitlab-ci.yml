@@ -5,6 +5,7 @@ stages:
   - pre_commit
   - run_tests
   - run_rz_tests
+  - check_version
   - release
   - deploy
   - deploy_to_develop
@@ -24,6 +25,10 @@ stages:
 .run_rz_tests:
   script:
     - make run_rz_tests
+
+.check_version:
+  script:
+    - make check_version
 
 .release:
   script:
@@ -93,6 +98,10 @@ pre_commit_on_cz:
   stage: pre_commit
   extends: [ .on_cz, .run_on_cz, .pre_commit ]
 
+check_version_on_cz:
+  stage: check_version
+  extends: [ .on_cz, .run_on_cz, .check_version ]
+
 run_tests_on_cz:
   stage: run_tests
   extends: [ .on_cz, .run_on_cz, .run_tests ]
@@ -151,10 +160,6 @@ deploy_to_develop_on_rz:
 create_env_on_scf:
   stage: create_env
   extends: [ .on_scf, .run_on_scf, .create_env ]
-
-pre_commit_on_scf:
-  stage: pre_commit
-  extends: [ .on_scf, .run_on_scf, .pre_commit ]
 
 run_tests_on_scf:
   stage: run_tests

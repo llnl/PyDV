@@ -498,7 +498,7 @@ with open(commands_file, "w") as fp:
     fp.write("\nquit")
 
 # Execute PyDv
-exec_command = f"python {os.path.join(PYDV_DIR, 'pydv', 'pdv_launcher.py')} -i {commands_file}"
+exec_command = f"pdv -i {commands_file}"
 process = subprocess.Popen(exec_command.split(), stdout=subprocess.PIPE)
 output, error = process.communicate()
 print("Output:\n", output.decode())

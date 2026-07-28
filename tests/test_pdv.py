@@ -1,14 +1,11 @@
 import os
-import sys
 from contextlib import redirect_stdout
 
 import numpy as np
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.dirname(TEST_DIR)
+from pydv import pdv
 
-sys.path.append(os.path.join(PYDV_DIR, "pydv"))
-import pdv  # noqa: E402
+TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_read():
