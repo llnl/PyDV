@@ -113,7 +113,7 @@ warnings.filterwarnings("ignore", category=Warning)
 
 # Package Import
 if __package__:
-    pydv_version = version("pydv")
+    pydv_version = version("LLNL-PyDV")
 
 # HPC Import
 else:
