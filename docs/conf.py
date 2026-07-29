@@ -20,7 +20,7 @@ from importlib.metadata import version
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(".."))
 
-pydv_version = version("pydv")
+pydv_version = version("LLNL-PyDV")
 
 # -- General configuration ------------------------------------------------
 

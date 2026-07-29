@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.10.4
+------
+* Bugfix: package name for version
+
 3.10.3
 ------
 * Bugfix: Python version 3.11 for `tomlib`
