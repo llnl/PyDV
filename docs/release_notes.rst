@@ -2,6 +2,11 @@
 
 Release Notes
 =============
+3.11.0
+------
+* Added more `ruff` rules
+* Secondary y-axis
+
 3.10.3
 ------
 * Bugfix: Python version 3.11 for `tomlib`
