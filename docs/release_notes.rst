@@ -2,10 +2,9 @@
 
 Release Notes
 =============
-3.11.0
+3.10.4
 ------
-* Added more `ruff` rules
-* Secondary y-axis
+* Bugfix: package name for version
 
 3.10.3
 ------
