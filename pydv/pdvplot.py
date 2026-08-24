@@ -1,3 +1,5 @@
+"""Plotter class interface for Matplotlib and Qt."""
+
 # Copyright (c) Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # See top-level LICENSE AND COPYRIGHT files for dates and other details.
@@ -113,6 +115,8 @@ else:
 
 
 class Plotter(QMainWindow):
+    """Plotter with Matplotlib and Qt."""
+
     # PyDV
     _pydvcmd = None
     # Dialogs
@@ -136,6 +140,7 @@ class Plotter(QMainWindow):
     defaultPlotLayout = None
 
     def __init__(self, pydvcmd):
+        """Initialize the plotter."""
         QMainWindow.__init__(self)
 
         here = os.path.abspath(os.path.dirname(__file__))
@@ -203,17 +208,15 @@ class Plotter(QMainWindow):
         self.addToolBar(toolbar)
 
     def updatePlotGeometry(self, geometry="de"):
-        """
-        Updates the size and location of the window. Using an action to trigger the update to
-        ensure that the resizing is happening on the main GUI thread.
+        """Update the size and location of the window.
+
+        Using an action to trigger the update to ensure that the resizing is happening on the main GUI thread.
         """
         self._geometry = geometry
         self._geomAction.trigger()
 
     def updateDialogs(self):
-        """
-        Updates the list and menu dialogs if visible.
-        """
+        """Update the list and menu dialogs if visible."""
         if self._listDialog is not None and self._listDialog.isVisible():
             self._listAction.trigger()
 
@@ -226,9 +229,7 @@ class Plotter(QMainWindow):
 
     @Slot()
     def showCurvelistDialog(self):
-        """
-        Shows a dialog with the output of the list command in a table.
-        """
+        """Show a dialog with the output of the list command in a table."""
         refresh = True
 
         if self._listDialog is None:
@@ -362,9 +363,7 @@ class Plotter(QMainWindow):
 
     @Slot()
     def showMenuDialog(self):
-        """
-        Shows a dialog with the output of the menu command in a table.
-        """
+        """Show a dialog with the output of the menu command in a table."""
         refresh = True
 
         if self._menuDialog is None:
@@ -653,7 +652,7 @@ class Plotter(QMainWindow):
             self.setGeometry(50, 50, 600, 500)
 
     def closeEvent(self, event):
-
+        """Close the plotter."""
         if hasattr(self, "plot_updater") and self.plot_updater.is_alive():
             self.plot_updater.stop()
             self.plot_updater.join()

@@ -1,3 +1,5 @@
+"""Generate convolution command file for PyDV and Ultra."""
+
 import os
 import sys
 from itertools import combinations

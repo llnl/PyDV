@@ -1,3 +1,5 @@
+"""Defines the Curve class used throughout PyDV."""
+
 # Copyright (c) Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # See top-level LICENSE AND COPYRIGHT files for dates and other details.
@@ -65,6 +67,8 @@ from scipy import integrate, interpolate
 
 
 class Curve:
+    """The curve class that is the foundation for PyDV."""
+
     def __init__(
         self,
         x=None,
@@ -102,6 +106,7 @@ class Curve:
         math_interp_right=None,
         math_interp_period=None,
     ):
+        """Initialize the curve object with its attributes."""
         self.x = np.empty(0) if x is None else np.array(x, dtype=float)
         self.y = np.empty(0) if y is None else np.array(y, dtype=float)
         self.name = name
@@ -136,11 +141,10 @@ class Curve:
         self.math_interp_left = math_interp_left
         self.math_interp_right = math_interp_right
         self.math_interp_period = math_interp_period
-
-        # Other attributes
-        self._original_name = name
+        self.original_name = name
 
     def __add__(a, b):
+        """Return the addition of the y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str(a.plotname + " + " + b.plotname + " ").strip()
@@ -162,6 +166,7 @@ class Curve:
         return c
 
     def __sub__(a, b):
+        """Return the subtraction of the y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str(a.plotname + " - " + b.plotname + " ").strip()
@@ -183,6 +188,7 @@ class Curve:
         return c
 
     def __mul__(a, b):
+        """Return the multiplication of the y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str(a.plotname + " * " + b.plotname + " ").strip()
@@ -204,6 +210,7 @@ class Curve:
         return c
 
     def __div__(a, b):
+        """Return the division of the y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str(a.plotname + " / " + b.plotname + " ").strip()
@@ -233,6 +240,7 @@ class Curve:
         return c
 
     def __truediv__(a, b):
+        """Return the true division of the y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str(a.plotname + " / " + b.plotname + " ").strip()
@@ -262,6 +270,7 @@ class Curve:
         return c
 
     def __pow__(a, b):
+        """Return the power of the y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str(a.plotname + "^" + str(b)).strip()
@@ -273,6 +282,7 @@ class Curve:
         return c
 
     def __neg__(a):
+        """Return the negative y values of the curve."""
         c = Curve()
         c.drawstyle = a.drawstyle
         c.plotname = str("-" + a.plotname)
@@ -281,10 +291,7 @@ class Curve:
         return c
 
     def copy(self):
-        """
-        Return a new copy of the curve object
-        """
-
+        """Return a new copy of the curve object."""
         c = Curve(
             x=np.array(self.x, dtype=float),
             y=np.array(self.y, dtype=float),
@@ -325,15 +332,12 @@ class Curve:
         return c
 
     def normalize(self):
-        """
-        Return a new normalized copy of the curve object
-        """
-
+        """Return a new normalized copy of the curve object."""
         c = self.copy()
         try:
             area0 = integrate.simpson(c.y, c.x)
         except:
-            area0 = np.trapz(c.y, c.x)
+            area0 = np.trapz(c.y, c.x)  # noqa: NPY201
         c.y /= float(area0)
         c.name = f"Normalized {self.plotname}"
         return c
@@ -351,8 +355,7 @@ def getinterp(
     samples=100,
     match="domain",
 ):
-    """
-    Gets the interpolated and domain matched versions of the two curves.
+    """Get the interpolated and domain matched versions of the two curves.
 
     :param a: Curve A
     :type a: curve
@@ -410,8 +413,7 @@ def getinterp(
 
 
 def interp1d(a, num=100, retstep=False):
-    """
-    Gets the interpolated values of the curve with the specified number of samples.
+    """Get the interpolated values of the curve with the specified number of samples.
 
     :param a: Curve A
     :type a: curve
@@ -438,9 +440,9 @@ def interp1d(a, num=100, retstep=False):
 
 
 def append(a, b):
-    """
-    Merge curve a and curve b over the union of their domains. Where domains overlap, take
-    the average of the curve's y-values.
+    """Merge curve a and curve b over the union of their domains.
+
+    Where domains overlap, take the average of the curve's y-values.
 
     :param a: Curve A
     :type a: curve

@@ -1,4 +1,5 @@
-#
+"""Configuration file for PyDV Documentation."""
+
 # PyDV documentation build configuration file, created by
 # sphinx-quickstart on Fri Dec 18 11:38:25 2015.
 #

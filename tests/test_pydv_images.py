@@ -1,3 +1,5 @@
+"""Tests for the pdv module using the plot."""
+
 import os
 import shutil
 import subprocess
@@ -507,6 +509,7 @@ print("Error:\n", error)
 
 @pytest.mark.parametrize("i", list(range(1, len(commands) + 1)))
 def test_image(i):
+    """Compare plots between updates."""
     test_image = f"test_image_{i:02d}.png"
     # Load images and convert to grayscale
     baseline = color.rgb2gray(imageio.v2.imread(os.path.join(BASELINE_DIR, test_image))[:, :, :3])

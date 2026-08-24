@@ -1,3 +1,5 @@
+"""Tests for the pdv module using the attributes and returns."""
+
 import os
 from contextlib import redirect_stdout
 
@@ -9,6 +11,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_read():
+    """Read different file types to confirm curves and their attributes."""
     main = pdv.Command()
     main.app = pdv.QApplication([])
     main.plotter = pdv.pdvplot.Plotter(main)
@@ -97,7 +100,7 @@ def test_read():
 
 
 def test_getx_getymax_getymin():
-
+    """Get x and y with their min and max."""
     main = pdv.Command()
     if not pdv.QApplication.instance():
         main.app = pdv.QApplication([])

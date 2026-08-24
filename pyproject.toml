@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "LLNL-PyDV"
-version = "3.10.4"
+version = "3.10.5"
 description = "PyDV: Python Data Visualizer"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "BSD" }
+license = "BSD-3-Clause"
 authors = [
   { name = "Jorge Moreno", email = "moreno45@llnl.gov" },
   { name = "Sarah El-Jurf", email = "eljurf1@llnl.gov" },
@@ -19,7 +19,6 @@ maintainers = [
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
-  "License :: OSI Approved :: BSD License",
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
@@ -74,5 +73,31 @@ pydv = ["img/*"]
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "RUF", "B", "UP", "SIM", "C4", "ERA", "A", "ISC", "ICN", "PIE", "PT", "TID", "FLY", "PGH"]
+select = [
+  "E",
+  "F",
+  "I",
+  "W",
+  "RUF",
+  "B",
+  "UP",
+  "SIM",
+  "C4",
+  "ERA",
+  "A",
+  "ISC",
+  "ICN",
+  "PIE",
+  "PT",
+  "TID",
+  "FLY",
+  "PGH",
+  "FIX",
+  "SLF",
+  "FURB",
+  "ARG",
+  "NPY",
+  "PERF",
+  "D"
+]
 ignore = ["E722"]
