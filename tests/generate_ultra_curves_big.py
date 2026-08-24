@@ -1,3 +1,5 @@
+"""Generate large ultra curves for new multiprocessing reading function update."""
+
 import os
 import sys
 import time
@@ -40,6 +42,7 @@ _ufile = os.path.join(TEST_DIR, "BIG_ULTRA_FILE.ult")
 
 
 def create_curve_perproc(input_tuple):
+    """Create a large curve."""
     num_points = 2_000_000
     name, func, xmin, xmax = input_tuple
     print(f"Creating {name}")

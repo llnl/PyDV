@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.10.5
+------
+* Bugfix: More ruff
+
 3.10.4
 ------
 * Bugfix: package name for version

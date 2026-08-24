@@ -1,3 +1,5 @@
+"""Utilities shared throughout PyDV."""
+
 # Copyright (c) Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # See top-level LICENSE AND COPYRIGHT files for dates and other details.
@@ -66,25 +68,19 @@ import numpy as np
 
 
 class CurveIndexError(ValueError):
-    pass
+    """Index Error for Curves."""
 
 
 def getCurveIndex(plotname, plotlist):
-    """
-    Returns integer index to curve in plotlist from plotname
-    """
-
+    """Return integer index to curve in plotlist from plotname."""
     for j in range(len(plotlist)):
         if plotname.upper() == plotlist[j].plotname:
             return j
     raise CurveIndexError("pdvutil.py getCurveIndex - failed to find curve index")
 
 
-def parsemath(line, plotlist, commander, xdomain):
-    """
-    Parses and calculates mathematical input for curves, then updates plot
-    """
-
+def parsemath(line, plotlist, commander):
+    """Parse and calculates mathematical input for curves, then updates plot."""
     line = line.replace("+", " + ")
     line = line.replace("-", " - ")
     line = line.replace("*", " * ")
@@ -180,10 +176,7 @@ def parsemath(line, plotlist, commander, xdomain):
 
 
 def getnumberargs(line, filelist):
-    """
-    Get a full list of arguments from compact list or mixed notation (ex 4:11)
-    """
-
+    """Get a full list of arguments from compact list or mixed notation (ex 4:11)."""
     line = line.split(":")
     arglist = ""
     if len(line) > 1:
@@ -296,10 +289,7 @@ def getnumberargs(line, filelist):
 
 
 def getletterargs(line):
-    """
-    Get a full list of arguments from compact list or mixed notation (ex a:d)
-    """
-
+    """Get a full list of arguments from compact list or mixed notation (ex a:d)."""
     # list of multiple label names from do_label()
     if "`" in line:
         label_line = line.split("`", 1)
@@ -362,10 +352,7 @@ def getletterargs(line):
 
 
 def truncate(string, size, justify="left"):
-    """
-    Truncate a string to given length
-    """
-
+    """Truncate a string to given length."""
     if len(string) > size:
         if justify == "left":
             string = string[:size]
@@ -377,6 +364,7 @@ def truncate(string, size, justify="left"):
 
 
 def get_actual_index(origref, val):
+    """Get index."""
     for i in range(len(origref)):
         if origref[i] == val:
             return i
@@ -385,9 +373,7 @@ def get_actual_index(origref, val):
 
 
 def print_own_docstring(self):
-    """
-    Prints the docstring of the calling method.
-    """
+    """Print the docstring of the calling method."""
     frame = inspect.currentframe().f_back  # Get the caller's frame
     method_name = frame.f_code.co_name
     doc = getattr(self.__class__, method_name).__doc__

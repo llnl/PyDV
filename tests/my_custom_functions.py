@@ -1,8 +1,10 @@
+"""Some example custom functions."""
+
 import os
 
 
-def do_mycustomfunction(self, line):
-
+def do_mycustomfunction(self, line):  # noqa: ARG001
+    """Create different curves."""
     for i in range(4):
         x = [i, i + 1, i + 2]
         y = x
@@ -25,8 +27,8 @@ def do_mycustomfunction(self, line):
         self.curvelist.append(c)
 
 
-def do_myothercustomfunction(self, line):
-
+def do_myothercustomfunction(self, line):  # noqa: ARG001
+    """Automatically read different files."""
     TEST_DIR = os.path.dirname(os.path.abspath(__file__))
     self.do_read(os.path.join(TEST_DIR, "../tests", "step.ult"))
     self.do_readsina(os.path.join(TEST_DIR, "../tests", "testSinaData2.json"))

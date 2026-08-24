@@ -1,3 +1,5 @@
+"""Defines the PyDV Navigation Toolbar class for PyDV CLI."""
+
 # Copyright (c) Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # See top-level LICENSE AND COPYRIGHT files for dates and other details.
@@ -62,14 +64,19 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 
 
 class PyDVToolbar(NavigationToolbar2QT):
+    """PyDV Navigation toolbar class."""
+
     def __init__(self, canvas_, parent_, coordinates_):
+        """Initialize navigation tool bar."""
         self.parent = parent_
         NavigationToolbar2QT.__init__(self, canvas_, parent_, coordinates_)
 
     def edit_parameters(self):
+        """Edit parameters functionality."""
         self.parent.plotChanged = True
         NavigationToolbar2QT.edit_parameters(self)
 
     def zoom(self, *args):
+        """Zoom functionality."""
         self.parent.plotChanged = True
         NavigationToolbar2QT.zoom(self, *args)

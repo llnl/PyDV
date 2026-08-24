@@ -17,7 +17,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: pydv-3.10.4
-          release_name: PyDV 3.10.4
+          tag_name: pydv-3.10.5
+          release_name: PyDV 3.10.5
           draft: false
           prerelease: false

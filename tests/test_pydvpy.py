@@ -1,3 +1,5 @@
+"""Tests for the pydvpy module."""
+
 import os
 import pathlib
 import subprocess
@@ -17,6 +19,7 @@ test_files = list(pathlib.Path(TEST_DIR).glob("testData.*"))
 
 @pytest.mark.parametrize("test_file", test_files)
 def test_read(test_file):
+    """Read ultra files."""
     curves = pydvpy.read(test_file)
 
     # darkness
@@ -27,6 +30,7 @@ def test_read(test_file):
 
 
 def test_sinaread():
+    """Read sina files."""
     curves = pydvpy.readsina(os.path.join(TEST_DIR, "testSinaData.json"))
 
     # darkness curve
@@ -43,6 +47,7 @@ def test_sinaread():
 
 
 def test_sinaread_mult_ind():
+    """Read sina files with curvesets that have multiple independent curves."""
     curves = pydvpy.readsina(os.path.join(TEST_DIR, "testSinaData_mult_ind.json"))
 
     assert len(curves) == 6
@@ -53,7 +58,7 @@ test_files = list(pathlib.Path(TEST_DIR).glob("testDataregex.*"))
 
 @pytest.mark.parametrize("test_file", test_files)
 def test_read_regex(test_file):
-
+    """Read files and filter curves based on regex pattern."""
     # darkness
     curves = pydvpy.read(test_file, pattern="darkness")
     np.testing.assert_array_equal(curves[0].y, [0, 1, 4, 9, 16])
@@ -93,6 +98,7 @@ os.makedirs(convol_plot_path, exist_ok=True)
 
 
 def convol_curves():
+    """Plot the convoluted plots created in ultra."""
     curves = pydvpy.read(os.path.join(TEST_DIR, "convolution_created_curves_to_convol.ult"))
     start = ord("A")
 
@@ -108,7 +114,7 @@ def convol_curves():
 
 @pytest.mark.parametrize("i", list(range(len(curves_pydv))))
 def convol(i):
-
+    """Compare PyDV and Ultra convolution functions."""
     # This is not a test since data will never truly align. Instead see the plots in tests/convolution_plots/
     # for cp, cu in zip(curves_pydv, curves_ultra):
     cp = curves_pydv[i]
@@ -189,7 +195,7 @@ def convol(i):
 
 
 def test_read_labels():
-
+    """Read curves with various x and y labels."""
     test_file = os.path.join(TEST_DIR, "labels.txt")
     curves = pydvpy.read(test_file)
     # curve name, xlabel, ylabel
@@ -258,7 +264,7 @@ def test_read_labels():
 
 
 def BIG_file():
-
+    """Read 1GB+ big file with new multiprocessing file loading."""
     subprocess.run(["python", os.path.join(TEST_DIR, "generate_ultra_curves_big.py")])
 
     start = time.time()
@@ -278,7 +284,7 @@ def BIG_file():
     zip(["test.hdf5", "medium_recs_test.hdf5"], ["test.json", "medium_recs_test.json"], strict=False),
 )
 def test_sina_hdf5(hdf5_file, json_file):
-
+    """Read sina hdf5 files."""
     curves_hdf5 = pydvpy.read(os.path.join(TEST_DIR, hdf5_file))
 
     curves_json = pydvpy.read(os.path.join(TEST_DIR, json_file))

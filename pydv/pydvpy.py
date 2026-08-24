@@ -1,3 +1,5 @@
+"""Python API for PyDV data processing."""
+
 # Copyright (c) Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # See top-level LICENSE AND COPYRIGHT files for dates and other details.
@@ -57,7 +59,6 @@
 # those of the United States Government or Lawrence Livermore National
 # Security, LLC, and shall not be used for advertising or product
 # endorsement purposes.
-
 
 import copy
 import json
@@ -135,8 +136,7 @@ def makecurve(
     math_interp_right=None,
     math_interp_period=None,
 ):
-    """
-    Generate a curve from two lists of numbers.
+    """Generate a curve from two lists of numbers.
 
     >>> c1 = pydvpy.makecurve([1, 2, 3, 4], [5, 10, 15, 20])
 
@@ -257,9 +257,7 @@ def makecurve(
 
 
 def span(xmin, xmax, numpts=100):
-    """
-    Generates a straight line of slope 1 and y intercept 0 in the specified domain with an optional number
-    of points.
+    """Generate a straight line of slope 1 and y intercept 0 in the specified domain with an optional number of points.
 
     >>> c = pydvpy.span(1, 10)
 
@@ -283,8 +281,7 @@ def span(xmin, xmax, numpts=100):
 
 
 def get_styles():
-    """
-    Get the list of available plot styles.
+    """Get the list of available plot styles.
 
     :return: list -- the list of available style names or an empty list if no styles exist.
     """
@@ -295,8 +292,7 @@ def get_styles():
 
 
 def _convert_to_curvelist(curvelist):
-    """
-    Convert curve(s) to list of curves
+    """Convert curve(s) to list of curves.
 
     :param curvelist: The list of curves
     :type curvelist: list
@@ -460,8 +456,7 @@ def create_plot(
 
 
 def save(fname, curvelist, verbose=False, save_labels=False):
-    """
-    Saves the given Curve or list of Curves to a file named fname.
+    """Save the given Curve or list of Curves to a file named fname.
 
     >>> curves = []
 
@@ -488,8 +483,7 @@ def save(fname, curvelist, verbose=False, save_labels=False):
                     f.write("# " + cur.name + " # xlabel " + cur.xlabel + " # ylabel " + cur.ylabel + "\n")
                 else:
                     f.write("# " + cur.name + "\n")
-                for dex in range(len(cur.x)):
-                    f.write(" " + str(cur.x[dex]) + " " + str(cur.y[dex]) + "\n")
+                f.writelines(" " + str(cur.x[dex]) + " " + str(cur.y[dex]) + "\n" for dex in range(len(cur.x)))
     except:
         print("Error: Can not write to: " + fname)
         if verbose:
@@ -500,9 +494,9 @@ def save(fname, curvelist, verbose=False, save_labels=False):
 
 
 def savecsv(fname, curvelist, verbose=False):
-    """
-    Saves the Curve or list of Curves to file in comma separated values (csv) format. Assumes
-    all curves have the same x basis.
+    """Save the Curve or list of Curves to file in comma separated values (csv) format.
+
+    Assumes all curves have the same x basis.
 
     >>> curves = []
 
@@ -538,9 +532,8 @@ def savecsv(fname, curvelist, verbose=False):
             traceback.print_exc(file=sys.stdout)
 
 
-def read(fname, gnu=False, xcol=0, verbose=False, pattern=None, matches=None):
-    """
-    Read the file and add parsed curves to a curvelist
+def read(fname, gnu=False, xcol=0, verbose=False, pattern=None, matches=None):  # noqa: ARG001
+    """Read the file and add parsed curves to a curvelist.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -566,7 +559,7 @@ def read(fname, gnu=False, xcol=0, verbose=False, pattern=None, matches=None):
     elif str(fname).endswith(".json"):
         return readsina(fname=fname, verbose=verbose)
     elif str(fname).endswith(".hdf5") or str(fname).endswith(".h5") or str(fname).endswith(".hdf"):
-        return readsinahdf5(fname, verbose=verbose)
+        return readsinahdf5(fname)
     elif gnu or str(fname).endswith(".gnu"):
         return __loadcolumns(fname, xcol)
     elif pdbLoaded:
@@ -608,8 +601,7 @@ def read(fname, gnu=False, xcol=0, verbose=False, pattern=None, matches=None):
 
 
 def filtercurves(curvelist, pattern):
-    """
-    Filters the list of curves based on the regular expression pattern.
+    """Filter the list of curves based on the regular expression pattern.
 
     >>> curves = pydvpy.filtercurves(curves, "*_name")
 
@@ -619,20 +611,15 @@ def filtercurves(curvelist, pattern):
     :type pattern: str
     :return: list -- The list of filtered curves from curvelist based on the regular expression pattern
     """
-    results = []
     regex = re.compile(rf"{pattern}")
 
-    for c in curvelist:
-        if regex.search(c.name) is not None:
-            results.append(c)
-
-    return results
+    return [c for c in curvelist if regex.search(c.name) is not None]
 
 
 def readcsv(fname, xcol=0, verbose=False):
-    """
-    Load a csv (comma separated values) data file, add parsed curves to
-    a curvelist. '#' is the comment character.  First uncommented line must
+    """Load a csv (comma separated values) data file, add parsed curves to a curvelist.
+
+    '#' is the comment character.  First uncommented line must
     be the column labels.  We assume the first column is the x-data, every
     other column is y-data.  We also assume all columns are the same length.
 
@@ -646,7 +633,6 @@ def readcsv(fname, xcol=0, verbose=False):
     :type verbose: bool
     :returns: list -- the list of curves from the csv file
     """
-
     curvelist = []
 
     try:
@@ -681,9 +667,7 @@ def readcsv(fname, xcol=0, verbose=False):
 
             # Make the curves, append them to self.curvelist.
             # First, get data into lists of numbers
-            localCurves = []
-            for _ in range(numcurves + 1):
-                localCurves.append([])  # FIGURE OUT COOL WAY TO DO THIS LATER: localCurves = (numcurves+1)*[[]]
+            localCurves = [[] for _ in range(numcurves + 1)]
             # turn the strings into numbers
             for line in lines[iLine:]:
                 nums = [np.nan if not n or n == "\n" else float(n) for n in line.split(",")]
@@ -734,8 +718,7 @@ def readcsv(fname, xcol=0, verbose=False):
 
 
 def readsina(fname, verbose=False, hdf5_path=None):
-    """
-    Load a Sina JSON data file, add parsed curves to a curvelist.
+    """Load a Sina JSON data file, add parsed curves to a curvelist.
 
     We assume JSON conforming to the Sina schema, with each curve defined in a curve_set. We assume
     there is only one record, and if there are more then we only read the first one. We also assume
@@ -762,7 +745,6 @@ def readsina(fname, verbose=False, hdf5_path=None):
                 independent_name = name_ind
                 independent_value = v_ind["value"]
                 for name, v in curve_set["dependent"].items():
-                    # TODO: Save the name x and y names with the curves
                     dependent_variable_name = name
                     if order_options:
                         full_name = curve_set_name + "__SINA_DEP__" + dependent_variable_name
@@ -857,11 +839,9 @@ def readsina(fname, verbose=False, hdf5_path=None):
     return curves_lst
 
 
-def readsinahdf5(hdf5_path, verbose=False):
+def readsinahdf5(hdf5_path):
+    """Retrieve records and relationships from HDF5."""
     # def load_document_hdf5(hdf5_path): Taken from sina/utils.py
-    """
-    Retrieves records and relationships from HDF5
-    """
     reconstructed_doc = {}
 
     def coerce_numpy_to_json(val):
@@ -928,8 +908,7 @@ def readsinahdf5(hdf5_path, verbose=False):
 
 
 def cos(curvelist):
-    """
-    Take the cosine of y values of a Curve or list of Curves.
+    """Take the cosine of y values of a Curve or list of Curves.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -947,8 +926,7 @@ def cos(curvelist):
 
 
 def cosx(curvelist):
-    """
-    Take the cosine of x values of a Curve or list of Curves.
+    """Take the cosine of x values of a Curve or list of Curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -966,8 +944,7 @@ def cosx(curvelist):
 
 
 def cosh(curvelist):
-    """
-    Take the hyperbolic cosine of y values of a Curve or list of Curves.
+    """Take the hyperbolic cosine of y values of a Curve or list of Curves.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -985,8 +962,7 @@ def cosh(curvelist):
 
 
 def coshx(curvelist):
-    """
-    Take the hyperbolic cosine of x values of a Curve or list of Curves.
+    """Take the hyperbolic cosine of x values of a Curve or list of Curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1004,8 +980,7 @@ def coshx(curvelist):
 
 
 def acosh(curvelist):
-    """
-    Take the hyperbolic arccosine of y values of a Curve or list of Curves.
+    """Take the hyperbolic arccosine of y values of a Curve or list of Curves.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1023,8 +998,7 @@ def acosh(curvelist):
 
 
 def acoshx(curvelist):
-    """
-    Take the hyperbolic arccosine of x values of a Curve or list of Curves.
+    """Take the hyperbolic arccosine of x values of a Curve or list of Curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1042,8 +1016,7 @@ def acoshx(curvelist):
 
 
 def acos(curvelist):
-    """
-    Take the arccosine of y values of a Curve or list of Curves
+    """Take the arccosine of y values of a Curve or list of Curves.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1061,8 +1034,7 @@ def acos(curvelist):
 
 
 def acosx(curvelist):
-    """
-    Take the arccosine of x values of a Curve or list of Curves.
+    """Take the arccosine of x values of a Curve or list of Curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1080,8 +1052,7 @@ def acosx(curvelist):
 
 
 def sin(curvelist):
-    """
-    Take the sine of y values of a single curve or multiple curves in list.
+    """Take the sine of y values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1097,8 +1068,7 @@ def sin(curvelist):
 
 
 def sinx(curvelist):
-    """
-    Take the sine of x values of a single curve or multiple curves in list.
+    """Take the sine of x values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1114,8 +1084,7 @@ def sinx(curvelist):
 
 
 def sinh(curvelist):
-    """
-    Take the hyperbolic sine of y values of a single curve or multiple curves in list.
+    """Take the hyperbolic sine of y values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1131,8 +1100,7 @@ def sinh(curvelist):
 
 
 def sinhx(curvelist):
-    """
-    Take the hyperbolic sine of x values of a single curve or multiple curves in list.
+    """Take the hyperbolic sine of x values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1148,8 +1116,7 @@ def sinhx(curvelist):
 
 
 def asinh(curvelist):
-    """
-    Take the hyperbolic arcsine of y values of a single curve or curves in a list.
+    """Take the hyperbolic arcsine of y values of a single curve or curves in a list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1165,8 +1132,7 @@ def asinh(curvelist):
 
 
 def asinhx(curvelist):
-    """
-    Take the hyperbolic arcsine of x values of a single curve or curves in a list.
+    """Take the hyperbolic arcsine of x values of a single curve or curves in a list.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1182,8 +1148,7 @@ def asinhx(curvelist):
 
 
 def asin(curvelist):
-    """
-    Take the arcsine of y values of a single curve or curves in a list.
+    """Take the arcsine of y values of a single curve or curves in a list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1199,8 +1164,7 @@ def asin(curvelist):
 
 
 def asinx(curvelist):
-    """
-    Take the arcsine of x values of a single curve or curves in a list.
+    """Take the arcsine of x values of a single curve or curves in a list.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1216,8 +1180,7 @@ def asinx(curvelist):
 
 
 def tan(curvelist):
-    """
-    Take the tangent of y values of a single curve or multiple curves in list.
+    """Take the tangent of y values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1233,8 +1196,7 @@ def tan(curvelist):
 
 
 def tanx(curvelist):
-    """
-    Take the tangent of x values of a single curve or multiple curves in list.
+    """Take the tangent of x values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1250,8 +1212,7 @@ def tanx(curvelist):
 
 
 def tanh(curvelist):
-    """
-    Take the hyperbolic tangent of y values of a single curve or multiple curves in list.
+    """Take the hyperbolic tangent of y values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1267,8 +1228,7 @@ def tanh(curvelist):
 
 
 def tanhx(curvelist):
-    """
-    Take the hyperbolic tangent of x values of a single curve or multiple curves in list.
+    """Take the hyperbolic tangent of x values of a single curve or multiple curves in list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1284,8 +1244,7 @@ def tanhx(curvelist):
 
 
 def atan(curvelist):
-    """
-    Take the arctangent of y values of a single curve or curves in a list.
+    """Take the arctangent of y values of a single curve or curves in a list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1301,8 +1260,7 @@ def atan(curvelist):
 
 
 def atanx(curvelist):
-    """
-    Take the arctangent of x values of a single curve or curves in a list.
+    """Take the arctangent of x values of a single curve or curves in a list.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1318,8 +1276,7 @@ def atanx(curvelist):
 
 
 def atanh(curvelist):
-    """
-    Take the hyperbolic arctangent of y values of a single curve or curves in a list.
+    """Take the hyperbolic arctangent of y values of a single curve or curves in a list.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -1335,8 +1292,7 @@ def atanh(curvelist):
 
 
 def atanhx(curvelist):
-    """
-    Take the hyperbolic arctangent of x values of a single curve or curves in a list.
+    """Take the hyperbolic arctangent of x values of a single curve or curves in a list.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1352,8 +1308,7 @@ def atanhx(curvelist):
 
 
 def atan2(c1, c2, t=None):
-    """
-    Perform the atan2 method for a pair of curves.
+    """Perform the atan2 method for a pair of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1378,8 +1333,7 @@ def atan2(c1, c2, t=None):
 
 
 def add(curvelist):
-    """
-    Add one or more curves.
+    """Add one or more curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1389,7 +1343,6 @@ def add(curvelist):
     :type curvelist: list
     :returns: curve -- the curve containing the sum of the curves in curvelist
     """
-
     numcurves = len(curvelist)
     if numcurves > 1:
         name = curvelist[0].name
@@ -1413,8 +1366,7 @@ def add(curvelist):
 
 
 def subtract(curvelist):
-    """
-    Take difference of curves.
+    """Take difference of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1424,7 +1376,6 @@ def subtract(curvelist):
     :type curvelist: list
     :returns: curve -- the curve containing the difference of the curves
     """
-
     numcurves = len(curvelist)
     if numcurves > 1:
         name = curvelist[0].name
@@ -1448,8 +1399,7 @@ def subtract(curvelist):
 
 
 def multiply(curvelist):
-    """
-    Take product of curves.
+    """Take product of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1482,8 +1432,7 @@ def multiply(curvelist):
 
 
 def divide(curvelist):
-    """
-    Take quotient of curves.
+    """Take quotient of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1516,8 +1465,7 @@ def divide(curvelist):
 
 
 def divx(curvelist, value):
-    """
-    Divide x values of the curve(s) by a constant value.
+    """Divide x values of the curve(s) by a constant value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1537,8 +1485,7 @@ def divx(curvelist, value):
 
 
 def divy(curvelist, value):
-    """
-    Divide y values of the curve(s) by a constant value.
+    """Divide y values of the curve(s) by a constant value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1558,8 +1505,7 @@ def divy(curvelist, value):
 
 
 def dx(curvelist, value):
-    """
-    Shift x values of a curve or list of curves by a constant value.
+    """Shift x values of a curve or list of curves by a constant value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1580,8 +1526,7 @@ def dx(curvelist, value):
 
 
 def dy(curvelist, value):
-    """
-    Shift y values of a curve or list of curves by a constant value.
+    """Shift y values of a curve or list of curves by a constant value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1602,8 +1547,7 @@ def dy(curvelist, value):
 
 
 def mx(curvelist, value):
-    """
-    Scale x values of a curve or list of curves by a constant value.
+    """Scale x values of a curve or list of curves by a constant value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1624,8 +1568,7 @@ def mx(curvelist, value):
 
 
 def my(curvelist, value):
-    """
-    Scale y values of a curve or list of curves by a constant value.
+    """Scale y values of a curve or list of curves by a constant value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1646,9 +1589,9 @@ def my(curvelist, value):
 
 
 def l1(c1, c2, xmin=None, xmax=None):
-    r"""
-    Make a new curve that is the L1 norm of curve c1 and  curve c2.
-    The L1-norm is the integral(\|c1 - c2\|) over the interval [xmin, xmax].
+    """Make a new curve that is the L1 norm of curve c1 and  curve c2.
+
+    The L1-norm is the integral(|c1 - c2|) over the interval [xmin, xmax].
 
     >>> c = pydvpy.l1(curve1, curve2)
 
@@ -1681,8 +1624,8 @@ def l1(c1, c2, xmin=None, xmax=None):
 
 
 def l2(c1, c2, xmin=None, xmax=None):
-    """
-    Make a new curve that is the L2 norm of curve c1 and curve c2.
+    """Make a new curve that is the L2 norm of curve c1 and curve c2.
+
     The L2-norm is (integral((c1 - c2)**2)**(1/2) over the interval [xmin, xmax].
 
     >>> c = pydvpy.l2(curve1, curve2)
@@ -1718,8 +1661,7 @@ def l2(c1, c2, xmin=None, xmax=None):
 
 
 def norm(c1, c2, p, xmin=None, xmax=None):
-    """
-    Make a new curve that is the p-norm of curve c1 and curve c2.
+    """Make a new curve that is the p-norm of curve c1 and curve c2.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1772,8 +1714,7 @@ def norm(c1, c2, p, xmin=None, xmax=None):
 
 
 def abs_val(curvelist):
-    """
-    Take the absolute value of the y values of the Curve or list of curves.
+    """Take the absolute value of the y values of the Curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1791,8 +1732,7 @@ def abs_val(curvelist):
 
 
 def absx(curvelist):
-    """
-    Take the absolute value of the x values of the Curve or list of curves.
+    """Take the absolute value of the x values of the Curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1810,8 +1750,7 @@ def absx(curvelist):
 
 
 def log(curvelist, keep=True):
-    """
-    Take the natural logarithm of y values of the Curve or list of curves.
+    """Take the natural logarithm of y values of the Curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1842,8 +1781,7 @@ def log(curvelist, keep=True):
 
 
 def logx(curvelist, keep=True):
-    """
-    Take the natural logarithm of x values of the Curve or list of curves.
+    """Take the natural logarithm of x values of the Curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1874,8 +1812,7 @@ def logx(curvelist, keep=True):
 
 
 def log10(curvelist, keep=True):
-    """
-    Take the base 10 logarithm of y values of a Curve or list of curves.
+    """Take the base 10 logarithm of y values of a Curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1904,8 +1841,7 @@ def log10(curvelist, keep=True):
 
 
 def log10x(curvelist, keep=True):
-    """
-    Take the base 10 logarithm of x values of a Curve or list of curves.
+    """Take the base 10 logarithm of x values of a Curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1934,8 +1870,7 @@ def log10x(curvelist, keep=True):
 
 
 def exp(curvelist):
-    """
-    Exponentiate y values of the Curve or list of curves (e**y).
+    """Exponentiate y values of the Curve or list of curves (e**y).
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1953,8 +1888,7 @@ def exp(curvelist):
 
 
 def expx(curvelist):
-    """
-    Exponentiate x values of the Curve or list of curves (e**x).
+    """Exponentiate x values of the Curve or list of curves (e**x).
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1972,8 +1906,7 @@ def expx(curvelist):
 
 
 def powa(curvelist, a):
-    """
-    Raise a fixed value, a, to the power of the y values of the Curve or list of curves. y = a^y
+    """Raise a fixed value, a, to the power of the y values of the Curve or list of curves. y = a^y.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -1993,8 +1926,7 @@ def powa(curvelist, a):
 
 
 def powax(curvelist, a):
-    """
-    Raise a fixed value, a, to the power of the x values of the Curve or curves. x = a^x
+    """Raise a fixed value, a, to the power of the x values of the Curve or curves. x = a^x.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -2014,8 +1946,7 @@ def powax(curvelist, a):
 
 
 def powr(curvelist, a):
-    """
-    Raise a the y values of a curve or list of curves to a fixed power, y = y^a.
+    """Raise a the y values of a curve or list of curves to a fixed power, y = y^a.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -2035,8 +1966,7 @@ def powr(curvelist, a):
 
 
 def powrx(curvelist, a):
-    """
-    Raise a the x values of a curve or list of curves to a fixed power, x = x^a.
+    """Raise a the x values of a curve or list of curves to a fixed power, x = x^a.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -2056,8 +1986,7 @@ def powrx(curvelist, a):
 
 
 def sqr(curvelist):
-    """
-    Take the square of the y values in a curve or list of curves.
+    """Take the square of the y values in a curve or list of curves.
 
     :param curvelist: the curve or list of curves
     :type curvelist: curve or list
@@ -2069,8 +1998,7 @@ def sqr(curvelist):
 
 
 def sqrx(curvelist):
-    """
-    Take the square of the x values in a curve or list of curves.
+    """Take the square of the x values in a curve or list of curves.
 
     :param curvelist: the curve or list of curves
     :type curvelist: curve or list
@@ -2082,8 +2010,7 @@ def sqrx(curvelist):
 
 
 def sqrt(curvelist):
-    """
-    Take the square root of the y values in a curve or list of curves.
+    """Take the square root of the y values in a curve or list of curves.
 
     :param curvelist: the curve or list of curves
     :type curvelist: curve or list
@@ -2095,8 +2022,7 @@ def sqrt(curvelist):
 
 
 def sqrtx(curvelist):
-    """
-    Take the square root of the x values in a curve or list of curves.
+    """Take the square root of the x values in a curve or list of curves.
 
     :param curvelist: the curve or list of curves
     :type curvelist: curve or list
@@ -2108,15 +2034,13 @@ def sqrtx(curvelist):
 
 
 def xmax(curvelist, max_val):
-    """
-    Filter out points in the curve or list of curves whose x values are greater than limit.
+    """Filter out points in the curve or list of curves whose x values are greater than limit.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
     :param max_val: The maximum value
     :type max_val: float
     """
-
     curves = _convert_to_curvelist(curvelist)
 
     for c in curves:
@@ -2126,15 +2050,13 @@ def xmax(curvelist, max_val):
 
 
 def xmin(curvelist, min_val):
-    """
-    Filter out points in the curve or list of curves whose x values are less than min_val.
+    """Filter out points in the curve or list of curves whose x values are less than min_val.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
     :param min_val: The minimum value
     :type min_val: float
     """
-
     curves = _convert_to_curvelist(curvelist)
 
     for c in curves:
@@ -2144,9 +2066,7 @@ def xmin(curvelist, min_val):
 
 
 def xminmax(curvelist, min_val, max_val):
-    """
-    Filter out points in the curve or list of curves whose x values are
-    less than min_val or greater than max_val.
+    """Filter out points in the curve or list of curves whose x values are less than min_val or greater than max_val.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2164,15 +2084,13 @@ def xminmax(curvelist, min_val, max_val):
 
 
 def ymax(curvelist, max_val):
-    """
-    Filter out points in the curve or list of curves whose y values are greater than limit.
+    """Filter out points in the curve or list of curves whose y values are greater than limit.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
     :param max_val: The maximum value
     :type max_val: float
     """
-
     curves = _convert_to_curvelist(curvelist)
 
     for c in curves:
@@ -2182,15 +2100,13 @@ def ymax(curvelist, max_val):
 
 
 def ymin(curvelist, min_val):
-    """
-    Filter out points in the curve or list of curves whose y values are less than min_val.
+    """Filter out points in the curve or list of curves whose y values are less than min_val.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
     :param min_val: The minimum value
     :type min_val: float
     """
-
     curves = _convert_to_curvelist(curvelist)
 
     for c in curves:
@@ -2200,9 +2116,7 @@ def ymin(curvelist, min_val):
 
 
 def yminmax(curvelist, min_val, max_val):
-    """
-    Filter out points in the curve or list of curves whose y values are
-    less than min_val or greater than max_val.
+    """Filter out points in the curve or list of curves whose y values are less than min_val or greater than max_val.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2220,9 +2134,7 @@ def yminmax(curvelist, min_val, max_val):
 
 
 def yn(curvelist, n):
-    """
-    Take the Bessel function of the second kind of order n for the y values of
-    curves in curvelist.
+    """Take the Bessel function of the second kind of order n for the y values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2236,9 +2148,7 @@ def yn(curvelist, n):
 
 
 def ynx(curvelist, n):
-    """
-    Take the Bessel function of the second kind of order n for the x values of
-    curves in curvelist.
+    """Take the Bessel function of the second kind of order n for the x values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2252,9 +2162,7 @@ def ynx(curvelist, n):
 
 
 def y0(curvelist):
-    """
-    Take the Bessel function of the second kind of the zeroth order for the y values of
-    curves in curvelist.
+    """Take the Bessel function of the second kind of the zeroth order for the y values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2266,9 +2174,7 @@ def y0(curvelist):
 
 
 def y0x(curvelist):
-    """
-    Take the Bessel function of the second kind of the zeroth order for the x values of
-    curves in curvelist.
+    """Take the Bessel function of the second kind of the zeroth order for the x values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2280,9 +2186,7 @@ def y0x(curvelist):
 
 
 def y1(curvelist):
-    """
-    Take the Bessel function of the second kind of the first order for the y values of
-    curves in curvelist.
+    """Take the Bessel function of the second kind of the first order for the y values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2294,9 +2198,7 @@ def y1(curvelist):
 
 
 def y1x(curvelist):
-    """
-    Take the Bessel function of the second kind of the first order for the x values of
-    curves in curvelist.
+    """Take the Bessel function of the second kind of the first order for the x values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2308,9 +2210,7 @@ def y1x(curvelist):
 
 
 def jn(curvelist, n):
-    """
-    Take the Bessel function of the first kind of the nth order for the y values of
-    curves in curvelist.
+    """Take the Bessel function of the first kind of the nth order for the y values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2324,9 +2224,7 @@ def jn(curvelist, n):
 
 
 def jnx(curvelist, n):
-    """
-    Take the Bessel function of the first kind of the nth order for the x values of
-    curves in curvelist.
+    """Take the Bessel function of the first kind of the nth order for the x values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2340,9 +2238,7 @@ def jnx(curvelist, n):
 
 
 def j0(curvelist):
-    """
-    Take the Bessel function of the first kind of the zeroth order for the y values of
-    curves in curvelist.
+    """Take the Bessel function of the first kind of the zeroth order for the y values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2354,9 +2250,7 @@ def j0(curvelist):
 
 
 def j0x(curvelist):
-    """
-    Take the Bessel function of the first kind of the zeroth order for the x values of
-    curves in curvelist.
+    """Take the Bessel function of the first kind of the zeroth order for the x values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2368,9 +2262,7 @@ def j0x(curvelist):
 
 
 def j1(curvelist):
-    """
-    Take the Bessel function of the first kind of the first order for the y values of
-    curves in curvelist.
+    """Take the Bessel function of the first kind of the first order for the y values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2382,9 +2274,7 @@ def j1(curvelist):
 
 
 def j1x(curvelist):
-    """
-    Take the Bessel function of the first kind of the first order for the x values of
-    curves in curvelist.
+    """Take the Bessel function of the first kind of the first order for the x values of curves in curvelist.
 
     :param curvelist: The curve or list of curves
     :type curvelist: curve or list
@@ -2396,8 +2286,7 @@ def j1x(curvelist):
 
 
 def recip(curvelist):
-    """
-    Take the reciprocal of the y values of the curve or list of curves.
+    """Take the reciprocal of the y values of the curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -2415,8 +2304,7 @@ def recip(curvelist):
 
 
 def recipx(curvelist):
-    """
-    Take the reciprocal of the x values of the curve or list of curves.
+    """Take the reciprocal of the x values of the curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -2437,8 +2325,7 @@ def recipx(curvelist):
 
 
 def integrate(curvelist, low=None, high=None):
-    """
-     Take the integral of the curve or curves in curvelist.
+    """Take the integral of the curve or curves in curvelist.
 
     :param curvelist: A curve or list of curves
     :type curvelist: curve or list
@@ -2481,6 +2368,7 @@ def integrate(curvelist, low=None, high=None):
 
 
 def alpha(ac, ig, res, npts=-1):
+    """Convolution of multiple curves."""
     if npts == -1:
         npts = len(ac.y)
 
@@ -2495,8 +2383,7 @@ def alpha(ac, ig, res, npts=-1):
 
 
 def gaussian(amp, wid, center, num=100, nsd=3):
-    """
-    Generate a gaussian function.
+    """Generate a gaussian function.
 
     >>> curve = pydvpy.gaussian(5, 10, 0)
 
@@ -2528,8 +2415,7 @@ def gaussian(amp, wid, center, num=100, nsd=3):
 
 
 def getymax(c, xmin=None, xmax=None):
-    """
-    Get the maximum y-value for the curve within the specified domain.
+    """Get the maximum y-value for the curve within the specified domain.
 
     :param c: the curve
     :type Curve:
@@ -2553,16 +2439,13 @@ def getymax(c, xmin=None, xmax=None):
 
     indices = np.where(y_interp == np.max(y_interp))[0]
 
-    xypairs = []
-    for index in indices:
-        xypairs.append((domain[index], y_interp[index]))
+    xypairs = [(domain[index], y_interp[index]) for index in indices]
 
     return __toCurveString(c), xypairs
 
 
 def getymin(c, xmin=None, xmax=None):
-    """
-    Get the minimum y-value for the curve within the specified domain.
+    """Get the minimum y-value for the curve within the specified domain.
 
     :param c: the curve
     :type Curve:
@@ -2586,16 +2469,13 @@ def getymin(c, xmin=None, xmax=None):
 
     indices = np.where(y_interp == np.min(y_interp))[0]
 
-    xypairs = []
-    for index in indices:
-        xypairs.append((domain[index], y_interp[index]))
+    xypairs = [(domain[index], y_interp[index]) for index in indices]
 
     return __toCurveString(c), xypairs
 
 
 def cumsum(c1):
-    """
-    Creates a new curve which is the cumulative sum of the original curve
+    """Create a new curve which is the cumulative sum of the original curve.
 
     :param c1: The original curve
     :type c1: Curve
@@ -2608,8 +2488,7 @@ def cumsum(c1):
 
 
 def correlate(c1, c2, mode="valid"):
-    """
-    Computes the cross-correlation of two 1D sequences (c1.y and c2.y) as defined by numpy.correlate.
+    """Compute the cross-correlation of two 1D sequences (c1.y and c2.y) as defined by numpy.correlate.
 
     :param c1: The first curve with 1D input sequence c1.y
     :type c1: Curve
@@ -2649,8 +2528,7 @@ def correlate(c1, c2, mode="valid"):
 
 
 def theta(xmin, x0, xmax, numpts=100):
-    """
-    Generate a unit step distribution.
+    """Generate a unit step distribution.
 
     :param xmin: The left most point
     :type xmin: Union[int,float]
@@ -2663,7 +2541,6 @@ def theta(xmin, x0, xmax, numpts=100):
     :return: The curve
     :rtype: curve.Curve
     """
-
     numpts = round(numpts / 2)
 
     firstx = np.linspace(xmin, x0, num=numpts)
@@ -2681,8 +2558,7 @@ def theta(xmin, x0, xmax, numpts=100):
 
 
 def normalize(c):
-    """
-    Normalize a curve.
+    """Normalize a curve.
 
     :param c: The curve to normalize
     :type c: curve.Curve
@@ -2695,8 +2571,7 @@ def normalize(c):
 
 
 def hypot(c1, c2):
-    """
-    Calculate harmonic average of two curves, sqrt(a^2+b^2).
+    """Calculate harmonic average of two curves, sqrt(a^2+b^2).
 
     :param c1: The first curve
     :type c1: curve.Curve
@@ -2705,7 +2580,6 @@ def hypot(c1, c2):
     :return: The harmonic average of two curves, sqrt(a^2+b^2)
     :rtype: curve.Curve
     """
-
     if not np.array_equal(c1.x, c2.x):
         raise ValueError("Curves must have the same x values")
 
@@ -2715,18 +2589,11 @@ def hypot(c1, c2):
     return c
 
 
-def convolve(c1, c2, npts=100, norm=True, debug=False):
-    print("Use convolvec for (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))")
-    print("Use convolveb for (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))")
-    return
+def convolvec(c1, c2, npts=100, npts_interp=100):
+    """Compute the convolution of the two given curves.
 
+    ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))``
 
-def convolvec(c1, c2, npts=100, npts_interp=100, debug=False):
-    """
-    Computes the convolution of the two given curves:
-    -
-    -   ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))``
-    -
     This computes the integrals directly which avoid padding and aliasing
     problems associated with FFT methods (it is however slower).
 
@@ -2738,20 +2605,16 @@ def convolvec(c1, c2, npts=100, npts_interp=100, debug=False):
     :type npts: int
     :param npts_interp: the number of points to interpolate at each delx step
     :type npts_interp: int
-    :param debug: Used only in CLI, plots curves and c2 h(x-t) as it moves
-    :type debug: bool
     :return: Curve -- the convolution of the two curves c1 and c2 using integration and no normalization
     """
+    return convolve_int(c1, c2, False, npts, npts_interp)
 
-    return convolve_int(c1, c2, False, npts, npts_interp, debug)
 
+def convolveb(c1, c2, npts=100, npts_interp=100):
+    """Compute the convolution of the two given curves.
 
-def convolveb(c1, c2, npts=100, npts_interp=100, debug=False):
-    """
-    Computes the convolution of the two given curves:
-    -
-    -   ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))``
-    -
+    ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))``
+
     This computes the integrals directly which avoid padding and aliasing
     problems associated with FFT methods (it is however slower).
 
@@ -2763,21 +2626,18 @@ def convolveb(c1, c2, npts=100, npts_interp=100, debug=False):
     :type npts: int
     :param npts_interp: the number of points to interpolate at each delx step
     :type npts_interp: int
-    :param debug: Used only in CLI, plots curves and c2 h(x-t) as it moves
-    :type debug: bool
     :return: Curve -- the convolution of the two curves c1 and c2 using integration and normalizing by c2
     """
+    return convolve_int(c1, c2, True, npts, npts_interp)
 
-    return convolve_int(c1, c2, True, npts, npts_interp, debug)
 
+def convolve_int(c1, c2, norm=True, npts=100, npts_interp=100):
+    """Compute the convolution of the two given curves.
 
-def convolve_int(c1, c2, norm=True, npts=100, npts_interp=100, debug=False):
-    """
-    Computes the convolution of the two given curves:
-    -
-    -   norm=False: ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))``
-    -   norm=True : ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))``
-    -
+    norm=False: ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))``
+
+    norm=True : ``(g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))``
+
     This computes the integrals directly which avoid padding and aliasing
     problems associated with FFT methods (it is however slower).
 
@@ -2791,11 +2651,8 @@ def convolve_int(c1, c2, norm=True, npts=100, npts_interp=100, debug=False):
     :type npts: int
     :param npts_interp: the number of points to interpolate at each delx step
     :type npts_interp: int
-    :param debug: Used only in CLI, plots curves and c2 h(x-t) as it moves
-    :type debug: bool
     :return: nc: Curve -- the convolution of the two curves c1 and c2
     """
-
     c1_copy = copy.deepcopy(c1)  # g(t)
     c2_copy = copy.deepcopy(c2)  # h(t)
 
@@ -2863,8 +2720,7 @@ def convolve_int(c1, c2, norm=True, npts=100, npts_interp=100, debug=False):
 
 
 def fft(c, n=None, axis=-1, norm=None):
-    """
-    Compute the one-dimensional discrete Fourier Transform for the x- or y-values of c.
+    """Compute the one-dimensional discrete Fourier Transform for the x- or y-values of c.
 
     This function computes the one-dimensional *n*-point discrete Fourier
     Transform (DFT) with the efficient Fast Fourier Transform (FFT)
@@ -2920,8 +2776,7 @@ def fft(c, n=None, axis=-1, norm=None):
 
 
 def derivative(c, eo=1):
-    """
-    Take the derivative of the curve.
+    """Take the derivative of the curve.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -2940,8 +2795,7 @@ def derivative(c, eo=1):
 
 
 def diffMeasure(c1, c2, tol=1e-8):
-    """
-    Compare two curves. For the given curves a fractional difference measure and its average are computed.
+    """Compare two curves. For the given curves a fractional difference measure and its average are computed.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3010,9 +2864,7 @@ def diffMeasure(c1, c2, tol=1e-8):
 
 
 def vs(c1, c2):
-    """
-    Create a new curve that will plot as the range of the first curve against
-    the range of the second curve.
+    """Create a new curve that has the range of the first curve against the range of the second curve.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3059,8 +2911,7 @@ def vs(c1, c2):
 
 
 def subsample(curvelist, stride=2, verbose=False):
-    """
-    Subsample the curve or list of curves, i.e., reduce to every nth value.
+    """Subsample the curve or list of curves, i.e., reduce to every nth value.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3089,8 +2940,7 @@ def subsample(curvelist, stride=2, verbose=False):
 
 
 def smooth(curvelist, factor=1):
-    """
-    Smooth the curve to the given degree.
+    """Smooth the curve to the given degree.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3141,8 +2991,7 @@ def smooth(curvelist, factor=1):
 
 
 def errorbar(scur, cury1, cury2, curx1=None, curx2=None, mod=1):
-    """
-    Plot error bars on the given curve.
+    """Plot error bars on the given curve.
 
     >>> curves = []
 
@@ -3196,8 +3045,7 @@ def errorbar(scur, cury1, cury2, curx1=None, curx2=None, mod=1):
 
 
 def errorrange(scur, cury1, cury2):
-    """
-    Plot shaded error region on given curve.
+    """Plot shaded error region on given curve.
 
     >>> curves = []
 
@@ -3222,15 +3070,13 @@ def errorrange(scur, cury1, cury2):
     :param cury2: y+error-curve
     :type cury2: Curve
     """
-
     errorbar(scur, cury1, cury2)
     scur.erange = [scur.ebar[0], scur.ebar[1]]
     scur.ebar = None
 
 
 def fit(c, n=1, logx=False, logy=False):
-    """
-    Make a new curve that is a polynomial fit to curve c.
+    """Make a new curve that is a polynomial fit to curve c.
 
     >>> curves = []
 
@@ -3291,8 +3137,7 @@ def fit(c, n=1, logx=False, logy=False):
 
 
 def getdomain(curvelist):
-    """
-    Get domain of the curve or list of curves.
+    """Get domain of the curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3304,18 +3149,13 @@ def getdomain(curvelist):
     :type curvelist: Curve or list
     :return: list -- A list of tuples where each tuple contains the curve name, minimum x, and maximum x
     """
-    domains = []
     curves = _convert_to_curvelist(curvelist)
 
-    for c in curves:
-        domains.append((__toCurveString(c), min(c.x), max(c.x)))
-
-    return domains
+    return [(__toCurveString(c), min(c.x), max(c.x)) for c in curves]
 
 
 def sums(curvelist):
-    """
-    Return sum of the x and y values of each curve.
+    """Return sum of the x and y values of each curve.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3327,18 +3167,13 @@ def sums(curvelist):
     :type curvelist: Curve or list
     :return: list -- A list of tuples where each tuple contains the curve name, sum of x-values, and sum of y-values
     """
-    sums_list = []
     curves = _convert_to_curvelist(curvelist)
 
-    for c in curves:
-        sums_list.append((__toCurveString(c), np.sum(c.x), np.sum(c.y)))
-
-    return sums_list
+    return [(__toCurveString(c), np.sum(c.x), np.sum(c.y)) for c in curves]
 
 
 def area(curvelist):
-    """
-    Return area of each curve.
+    """Return area of each curve.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3357,14 +3192,13 @@ def area(curvelist):
         try:
             areas.append((__toCurveString(c), scipy.integrate.simpson(c.y, c.x)))
         except:
-            areas.append((__toCurveString(c), np.trapz(c.y, c.x)))
+            areas.append((__toCurveString(c), np.trapz(c.y, c.x)))  # noqa: NPY201
 
     return areas
 
 
 def disp(c, domain=True, form="g"):
-    """
-    Create a string formatted list of the curve's x-values if domain is True, otherwise y-values.
+    """Create a string formatted list of the curve's x-values if domain is True, otherwise y-values.
 
     >>> c = pydvpy.span(1, 10)
 
@@ -3390,8 +3224,7 @@ def disp(c, domain=True, form="g"):
 
 
 def getnumpoints(curve):
-    """
-    Return the given curve's number of points.
+    """Return the given curve's number of points.
 
     :param curve: The given curve
     :return: int -- the number of points in curve
@@ -3400,8 +3233,7 @@ def getnumpoints(curve):
 
 
 def stats(curve):
-    """
-    Print statistics of the given curve.
+    """Print statistics of the given curve.
 
     :param curve: The given curve
     """
@@ -3439,8 +3271,7 @@ def stats(curve):
 
 
 def getrange(curvelist):
-    """
-    Get the range of the curve or list of curves.
+    """Get the range of the curve or list of curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3452,18 +3283,13 @@ def getrange(curvelist):
     :type curvelist: Curve or list
     :return: list -- A list of tuples where each tuple contains the curve name, minimum y, and maximum y
     """
-    ranges = []
     curves = _convert_to_curvelist(curvelist)
 
-    for c in curves:
-        ranges.append((__toCurveString(c), min(c.y), max(c.y)))
-
-    return ranges
+    return [(__toCurveString(c), min(c.y), max(c.y)) for c in curves]
 
 
 def getx(c, value, xmin=None, xmax=None):
-    """
-    Get the x values of the curve for a given y.
+    """Get the x values of the curve for a given y.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3518,8 +3344,7 @@ def getx(c, value, xmin=None, xmax=None):
 
 
 def gety(c, value):
-    """
-    Get the y values of the curve for a given x.
+    """Get the y values of the curve for a given x.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3548,8 +3373,7 @@ def gety(c, value):
 
 
 def line(m, b, xmin, xmax, numpts=100):
-    """
-    Generate a line with y = mx + b and an optional number of points.
+    """Generate a line with y = mx + b and an optional number of points.
 
     >>> curves = []
 
@@ -3590,9 +3414,7 @@ def line(m, b, xmin, xmax, numpts=100):
 
 
 def delta(xmn, x0, xmx, npts=100):
-    """
-    Procedure: Generate a Dirac delta distribution such that
-               Int(xmin, xmax, dt*delta(t - x0)) = 1
+    """Generate a Dirac delta distribution such that Int(xmin, xmax, dt*delta(t - x0)) = 1.
 
     :param xmn: The minimum x location
     :type xmn: float
@@ -3631,8 +3453,7 @@ def delta(xmn, x0, xmx, npts=100):
 
 
 def makeextensive(curvelist):
-    """
-    Set the y-values such that ``y[i] *= (x[i+1] - x[i])``
+    """Set the y-values such that ``y[i] *= (x[i+1] - x[i])``.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3654,8 +3475,7 @@ def makeextensive(curvelist):
 
 
 def makeintensive(curvelist):
-    """
-    Set the y-values such that y[i] /= (x[i+1] - x[i]).
+    """Set the y-values such that y[i] /= (x[i+1] - x[i]).
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3678,8 +3498,7 @@ def makeintensive(curvelist):
 
 
 def dupx(curvelist):
-    """
-    Duplicate the x-values such that y = x for each of the given curves.
+    """Duplicate the x-values such that y = x for each of the given curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3697,8 +3516,7 @@ def dupx(curvelist):
 
 
 def sort(curve):
-    """
-    Sort the specified curve so that their points are plotted in order of ascending x values.
+    """Sort the specified curve so that their points are plotted in order of ascending x values.
 
      >>> c = pydvpy.span(1, 10)
 
@@ -3714,8 +3532,7 @@ def sort(curve):
 
 
 def rev(curve):
-    """
-    Swap x and y values for the specified curves. You may want to sort after this one.
+    """Swap x and y values for the specified curves. You may want to sort after this one.
 
      >>> c = pydvpy.span(1, 10)
 
@@ -3732,8 +3549,7 @@ def rev(curve):
 
 
 def random(curve):
-    """
-    Generate random y values between -1 and 1 for the specified curves.
+    """Generate random y values between -1 and 1 for the specified curves.
 
      >>> c = pydvpy.span(1, 10)
 
@@ -3742,12 +3558,11 @@ def random(curve):
     :param curve: The curve to sort
     :type curve: Curve
     """
-    curve.y = np.random.uniform(-1, 1, len(curve.y))
+    curve.y = np.random.uniform(-1, 1, len(curve.y))  # noqa: NPY002
 
 
 def xindex(curvelist):
-    """
-    Create curves with y-values vs. integer index values.
+    """Create curves with y-values vs. integer index values.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3766,9 +3581,9 @@ def xindex(curvelist):
 
 
 def appendcurves(curvelist):
-    """
-    Merge two or more curves over the union of their domains. Where domains overlap, take the
-    average of the curve's y-values.
+    """Merge two or more curves over the union of their domains.
+
+    Where domains overlap, take the average of the curve's y-values.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -3799,8 +3614,7 @@ def appendcurves(curvelist):
 
 
 def max_curve(curvelist):
-    """
-    Construct a curve from the maximum y values of the intersection of the curves domain.
+    """Construct a curve from the maximum y values of the intersection of the curves domain.
 
     :param curvelist: the specified curves
     :return: Curve -- a new curve with the maximum y-values over the intersection of the
@@ -3825,13 +3639,12 @@ def max_curve(curvelist):
     # Calculate max
     x = np.array(ux)
 
-    all_data = []
-    for cur in curvelist:
-        all_data.append(
-            np.interp(
-                x, cur.x, cur.y, left=cur.math_interp_left, right=cur.math_interp_right, period=cur.math_interp_period
-            )
+    all_data = [
+        np.interp(
+            x, cur.x, cur.y, left=cur.math_interp_left, right=cur.math_interp_right, period=cur.math_interp_period
         )
+        for cur in curvelist
+    ]
 
     nc = makecurve(x=x, y=np.max(all_data, axis=0), name="Max(" + name_suffix + ")")
 
@@ -3839,8 +3652,7 @@ def max_curve(curvelist):
 
 
 def min_curve(curvelist):
-    """
-    Construct a curve from the minimum y values of the intersection of the curves domain.
+    """Construct a curve from the minimum y values of the intersection of the curves domain.
 
     :param curvelist: the specified curves
     :return: Curve -- a new curve with the minimum y-values over the intersection of the
@@ -3865,13 +3677,12 @@ def min_curve(curvelist):
     # Calculate min
     x = np.array(ux)
 
-    all_data = []
-    for cur in curvelist:
-        all_data.append(
-            np.interp(
-                x, cur.x, cur.y, left=cur.math_interp_left, right=cur.math_interp_right, period=cur.math_interp_period
-            )
+    all_data = [
+        np.interp(
+            x, cur.x, cur.y, left=cur.math_interp_left, right=cur.math_interp_right, period=cur.math_interp_period
         )
+        for cur in curvelist
+    ]
 
     nc = makecurve(x=x, y=np.min(all_data, axis=0), name="Min(" + name_suffix + ")")
 
@@ -3879,8 +3690,7 @@ def min_curve(curvelist):
 
 
 def average_curve(curvelist):
-    """
-    Average the specified curves over the intersection of their domains.
+    """Average the specified curves over the intersection of their domains.
 
     :param curvelist: the specified curves
     :return: Curve -- a new curve with the average values over the intersection of the domains of the specified curves.
@@ -3904,13 +3714,12 @@ def average_curve(curvelist):
     # Calculate average
     x = np.array(ux)
 
-    all_data = []
-    for cur in curvelist:
-        all_data.append(
-            np.interp(
-                x, cur.x, cur.y, left=cur.math_interp_left, right=cur.math_interp_right, period=cur.math_interp_period
-            )
+    all_data = [
+        np.interp(
+            x, cur.x, cur.y, left=cur.math_interp_left, right=cur.math_interp_right, period=cur.math_interp_period
         )
+        for cur in curvelist
+    ]
 
     nc = makecurve(x=x, y=np.mean(all_data, axis=0), name="Average(" + name_suffix + ")")
 
@@ -3923,8 +3732,7 @@ def average_curve(curvelist):
 
 
 def __fft(c):
-    """
-    Compute the Fast Fourier Transform of a real curve.
+    """Compute the Fast Fourier Transform of a real curve.
 
     :param c: The curve
     :type c: Curve
@@ -3950,8 +3758,7 @@ def __fft(c):
 
 
 def __ifft(cr, ci):
-    """
-    Compute the 1D inverse discrete Fourier Transform.
+    """Compute the 1D inverse discrete Fourier Transform.
 
     :param cr: Curve containing the real part of a complex number as it's y-values.
     :type c: Curve
@@ -3976,8 +3783,7 @@ def __ifft(cr, ci):
 
 
 def __complex_times(ra, ia, rb, ib):
-    """
-    Perform the complex product of the given pairs of curves representing the real and imaginary components.
+    """Perform the complex product of the given pairs of curves representing the real and imaginary components.
 
     :param ra: Curve containing the real part
     :type ra: Curve
@@ -4000,9 +3806,10 @@ def __complex_times(ra, ia, rb, ib):
 
 
 def __get_sub_range(x, low, high):
-    """
-    Returns a tuple with the index of the first value in x greater than low and
-    the index of the first value in x less than high.
+    """Return indices bounding the requested x range.
+
+    The lower index is the first value greater than or equal to ``low``.
+    The upper index is the last value less than or equal to ``high``.
 
     :param x: The array of x-values
     :type x: array
@@ -4021,8 +3828,7 @@ def __get_sub_range(x, low, high):
 
 
 def __toCurveString(c):
-    """
-    Returns the string description of the curve.
+    """Return the string description of the curve.
 
     :param c: The curve
     :type c: Curve
@@ -4035,11 +3841,11 @@ def __toCurveString(c):
 
 
 def __loadcolumns(fname, xcol):
-    """
-     Load a column oriented text data file, add parsed curves to the curvelist.
-     '#' is the comment character.  The last comment line must be the column
-     labels.  We assume the first column is the x-data, every other column is y-data.
-     We also assume all columns are the same length.
+    """Load a column oriented text data file, add parsed curves to the curvelist.
+
+    '#' is the comment character.  The last comment line must be the column
+    labels.  We assume the first column is the x-data, every other column is y-data.
+    We also assume all columns are the same length.
 
     :param fname: The column oriented (.gnu) file
     :type fname: str
@@ -4073,10 +3879,7 @@ def __loadcolumns(fname, xcol):
 
             # Make the curves, append them to self.curvelist.
             # First, get data into lists of numbers
-            localCurves = []
-            for _ in range(numcurves + 1):
-                localCurves.append([])
-            # FIGURE OUT COOL WAY TO DO THIS LATER: localCurves = (numcurves+1)*[[]]
+            localCurves = [[] for _ in range(numcurves + 1)]
             for line in lines[iLine:]:
                 nums = [float(n) for n in line.split()]
                 assert len(nums) == numcurves + 1
@@ -4251,10 +4054,7 @@ def _get_curve_from_text_ultra_perproc(input_tuple):
             except:
                 xticks = list(set(xvals))
                 xticks.sort()
-                xticks_dict = {}
-
-                for i, xtick in enumerate(xticks):
-                    xticks_dict[xtick] = i
+                xticks_dict = {xtick: i for i, xtick in enumerate(xticks)}
 
                 xvals = [xticks_dict[xtick] for xtick in xvals]
 
@@ -4298,8 +4098,7 @@ def _get_curve_from_text_ultra_perproc(input_tuple):
 
 
 def overlap_interp(cr1, cr2, npts_interp=0):
-    """
-    Get the a set of overlapping interpolated curves.
+    """Get the a set of overlapping interpolated curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4340,8 +4139,7 @@ def overlap_interp(cr1, cr2, npts_interp=0):
 
 
 def AvgDiff(cr1, cr2, npts=0, tol=1e80):
-    """
-    Calculate the difference between the overlapping interpolated curves.
+    """Calculate the difference between the overlapping interpolated curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4388,8 +4186,7 @@ def AvgDiff(cr1, cr2, npts=0, tol=1e80):
 
 
 def AbsDiff(cr1, cr2, npts=0, tol=1e80):
-    """
-    Calculate the absolute difference between the overlapping interpolated curves.
+    """Calculate the absolute difference between the overlapping interpolated curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4437,8 +4234,7 @@ def AbsDiff(cr1, cr2, npts=0, tol=1e80):
 
 
 def RelDiff(cr1, cr2, npts=0, tol=1e80):
-    """
-    Calculate the relative difference between the overlapping interpolated curves.
+    """Calculate the relative difference between the overlapping interpolated curves.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4503,8 +4299,8 @@ def RelDiff(cr1, cr2, npts=0, tol=1e80):
 
 
 def AbsAndRelDiff(cr1, cr2, npts=0, abs_tol=1e80, rel_tol=1e80):
-    """
-    Calculate the absolute and relative difference between the overlapping interpolated curves.
+    """Calculate the absolute and relative difference between the overlapping interpolated curves.
+
     Returns the updated AND statement for `failed` along with curves from AbsDiff and RelDiff
 
     >>> curves = pydvpy.read('testData.txt')
@@ -4539,7 +4335,6 @@ def AbsAndRelDiff(cr1, cr2, npts=0, abs_tol=1e80, rel_tol=1e80):
         - failed_Rel (:py:class:`bool`) - If the `differences` failed the tolerance or not for RelDiff
         - failed_AND (:py:class:`bool`) - If the `differences` failed the tolerance or not for AbsDiff AND RelDiff
     """
-
     (cr1_interp, cr2_interp, differences_Abs, avgDiff_Abs, maxDiff_Abs, failed_curve_Abs, failed_Abs) = AbsDiff(
         cr1, cr2, npts, abs_tol
     )
@@ -4568,8 +4363,8 @@ def AbsAndRelDiff(cr1, cr2, npts=0, abs_tol=1e80, rel_tol=1e80):
 
 
 def AbsOrRelDiff(cr1, cr2, npts=0, abs_tol=1e80, rel_tol=1e80):
-    """
-    Calculate the absolute and relative difference between the overlapping interpolated curves.
+    """Calculate the absolute and relative difference between the overlapping interpolated curves.
+
     Returns the updated OR statement for `failed` along with curves from AbsDiff and RelDiff
 
     >>> curves = pydvpy.read('testData.txt')
@@ -4604,7 +4399,6 @@ def AbsOrRelDiff(cr1, cr2, npts=0, abs_tol=1e80, rel_tol=1e80):
         - failed_Rel (:py:class:`bool`) - If the `differences` failed the tolerance or not for RelDiff
         - failed_OR (:py:class:`bool`) - If the `differences` failed the tolerance or not for AbsDiff OR RelDiff
     """
-
     (cr1_interp, cr2_interp, differences_Abs, avgDiff_Abs, maxDiff_Abs, failed_curve_Abs, failed_Abs) = AbsDiff(
         cr1, cr2, npts, abs_tol
     )
@@ -4633,8 +4427,7 @@ def AbsOrRelDiff(cr1, cr2, npts=0, abs_tol=1e80, rel_tol=1e80):
 
 
 def addPoint(curvelist, x, y):
-    """
-    Appends both x and y coordinates to the end of each list of values of a Curve.
+    """Append both x and y coordinates to the end of each list of values of a Curve.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4650,17 +4443,14 @@ def addPoint(curvelist, x, y):
     :type y: float
     :return: Curve -- A list of new curves with the appended point
     """
-    new_curves = []
-    for cur in curvelist:
-        new_curves.append(
-            makecurve(x=np.append(cur.x, x), y=np.append(cur.y, y), name=f"{cur.name} appended x={x} and y={y}")
-        )
-    return new_curves
+    return [
+        makecurve(x=np.append(cur.x, x), y=np.append(cur.y, y), name=f"{cur.name} appended x={x} and y={y}")
+        for cur in curvelist
+    ]
 
 
 def getxi(curvelist, i):
-    """
-    Returns a discrete data point from the xData array
+    """Return a discrete data point from the xData array.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4674,19 +4464,13 @@ def getxi(curvelist, i):
     :type i: int
     :return: list -- A list of x values at the given index
     """
-    xvals = []
-
     curves = _convert_to_curvelist(curvelist)
 
-    for cur in curves:
-        xvals.append(cur.x[i])
-
-    return xvals
+    return [cur.x[i] for cur in curves]
 
 
 def getyi(curvelist, i):
-    """
-    Returns a discrete data point from the yData array
+    """Return a discrete data point from the yData array.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4700,19 +4484,13 @@ def getyi(curvelist, i):
     :type i: int
     :return: list -- A list of y values at the given index
     """
-    yvals = []
-
     curves = _convert_to_curvelist(curvelist)
 
-    for cur in curves:
-        yvals.append(cur.y[i])
-
-    return yvals
+    return [cur.y[i] for cur in curves]
 
 
 def crop_and_interp(curvelist, npts=None, idomian=None):
-    """
-    Returns new curves that are cropped and interpolated.
+    """Return new curves that are cropped and interpolated.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4748,8 +4526,7 @@ def crop_and_interp(curvelist, npts=None, idomian=None):
 
 
 def shift(curvelist, x=0, y=0):
-    """
-    Shifts curves by an x and y value.
+    """Shifts curves by an x and y value.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4765,15 +4542,11 @@ def shift(curvelist, x=0, y=0):
     :type y: float
     :return: Curve -- A list of new curves with the shifted x and y values
     """
-    new_curves = []
-    for cur in curvelist:
-        new_curves.append(makecurve(x=cur.x + x, y=cur.y + y, name=f"{cur.name} shifted by X={x} and Y={y}"))
-    return new_curves
+    return [makecurve(x=cur.x + x, y=cur.y + y, name=f"{cur.name} shifted by X={x} and Y={y}") for cur in curvelist]
 
 
 def swapCoords(curvelist):
-    """
-    Swap x and y values for the specified curves.
+    """Swap x and y values for the specified curves.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4785,15 +4558,11 @@ def swapCoords(curvelist):
     :type curvelist: Curve or list
     :return: Curve -- A list of new curves with the swapped x and y values
     """
-    new_curves = []
-    for cur in curvelist:
-        new_curves.append(makecurve(x=cur.y, y=cur.x, name=f"{cur.name} swapped coordinates"))
-    return new_curves
+    return [makecurve(x=cur.y, y=cur.x, name=f"{cur.name} swapped coordinates") for cur in curvelist]
 
 
 def ClipValues(curvelist, ymin, ymax):
-    """
-    Clip the y values for the specified curves using np.clip().
+    """Clip the y values for the specified curves using np.clip().
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4817,9 +4586,7 @@ def ClipValues(curvelist, ymin, ymax):
 
 
 def LinearFit(c, x):
-    """
-    This method takes in a value for x and uses linear interpolation to return
-    the cooresponding y value for the given data
+    """Use linear interpolation to return the coresponding y value for the given x.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4855,8 +4622,7 @@ def LinearFit(c, x):
 
 
 def PolyFit(c, value, order):
-    """
-    Using a Polynomial Fit, get the y values of the curve for a given x.
+    """Use a Polynomial Fit to get the y values of the curve for a given x.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4880,8 +4646,7 @@ def PolyFit(c, value, order):
 
 
 def SplineFit(c, value, order, smooth):
-    """
-    Using a Spline Fit, get the y values of the curve for a given x.
+    """Use a Spline Fit to get the y values of the curve for a given x.
 
     >>> curves = pydvpy.read('testData.txt')
 
@@ -4907,8 +4672,8 @@ def SplineFit(c, value, order, smooth):
 
 
 def MovingAvg(c, npts):
-    """
-    This filter returns a smooth a curve using a moving average technique.
+    """Return a smooth curve using a moving average technique.
+
     The function takes N points and reassigns each point in a curve as
     the average of the N points around it.
 
@@ -4946,8 +4711,7 @@ def MovingAvg(c, npts):
 
 
 def GuassianFilter(c, sigma):
-    """
-    This smooths a curve using a Gaussian filter.
+    """Smooth a curve using a Gaussian filter.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4963,8 +4727,7 @@ def GuassianFilter(c, sigma):
 
 
 def UniformFilter(c, npts):
-    """
-    This smooths a curve using a Uniform filter.
+    """Smooth a curve using a Uniform filter.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4980,8 +4743,7 @@ def UniformFilter(c, npts):
 
 
 def MedianFilter(c, npts):
-    """
-    This smooths a curve using a Median filter.
+    """Smooth a curve using a Median filter.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -4997,8 +4759,8 @@ def MedianFilter(c, npts):
 
 
 def TimeShift(cbase, cset, tol=1e80, pairID=0, version=0):
-    """
-    This filter will take a curve and return a time shifted curve.
+    """Return a time shifted curve.
+
     It uses the slope of the baseline curve to find the time offset
     for each point of the new curve such that the new curve would
     match the baseline. It uses the time offset at the point with
@@ -5076,8 +4838,7 @@ def TimeShift(cbase, cset, tol=1e80, pairID=0, version=0):
 
 
 def getfl(curvelist):
-    """
-    Returns the first and last data point from the yData array
+    """Return the first and last data point from the yData array.
 
      >>> curves = pydvpy.read('testData.txt')
 
@@ -5089,11 +4850,6 @@ def getfl(curvelist):
     :type curvelist: Curve or list
     :return: list -- A list of y values at the first and last index
     """
-    first_last = []
-
     curves = _convert_to_curvelist(curvelist)
 
-    for cur in curves:
-        first_last.append([cur.y[0], cur.y[-1]])
-
-    return first_last
+    return [[cur.y[0], cur.y[-1]] for cur in curves]

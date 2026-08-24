@@ -1,3 +1,8 @@
+"""Command-line interface for PyDV.
+
+Calls functions in :mod:`pydvpy` to provide common tooling.
+"""
+
 # Copyright (c) Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # See top-level LICENSE AND COPYRIGHT files for dates and other details.
@@ -126,6 +131,8 @@ else:
 
 
 class LogEnum(Enum):
+    """Log enum."""
+
     LOG = 1
     LOGX = 2
     LOG10 = 3
@@ -133,7 +140,10 @@ class LogEnum(Enum):
 
 
 class Command(cmd.Cmd):
+    """PyDV command line interface."""
+
     def __init__(self):
+        """Initialize all attributes needed for PyDV."""
         super().__init__()  # Don't ovewrite cmd.Cmd __init__
 
         # Special cmd.Cmd attributes
@@ -249,6 +259,7 @@ class Command(cmd.Cmd):
     # following commands handle the situations where there are multiple plots or
     # where the user specifies the attributes via the direct commands.
     def set_xlabel(self, label, from_curve=False):
+        """Set curve x label."""
         if "bold" in label:
             if self.xlabelweight == "bold":
                 self.xlabelweight = "normal"
@@ -282,6 +293,7 @@ class Command(cmd.Cmd):
                     self.xlabel_set_from_curve = from_curve
 
     def set_ylabel(self, label, from_curve=False):
+        """Set curve y label."""
         if "bold" in label:
             if self.ylabelweight == "bold":
                 self.ylabelweight = "normal"
@@ -315,6 +327,7 @@ class Command(cmd.Cmd):
                     self.ylabel_set_from_curve = from_curve
 
     def set_title(self, title, from_curve=False):
+        """Set curve title."""
         if not from_curve:
             self.title = title
             self.title_set_from_curve = from_curve if title != "" else True
@@ -327,6 +340,7 @@ class Command(cmd.Cmd):
                     self.title_set_from_curve = from_curve
 
     def set_filename(self, filename, from_curve=False):
+        """Set curve filename."""
         if not from_curve:
             self.filename = filename
             self.filename_set_from_curve = from_curve if filename != "" else True
@@ -339,6 +353,7 @@ class Command(cmd.Cmd):
                     self.filename_set_from_curve = from_curve
 
     def set_record_id(self, record_id, from_curve=False):
+        """Set curve record id for sina files."""
         if not from_curve:
             self.record_id = record_id
             self.record_id_set_from_curve = from_curve if record_id != "" else True
@@ -351,13 +366,8 @@ class Command(cmd.Cmd):
                     self.record_id_set_from_curve = from_curve
 
     def precmd(self, line):
-        """
-        Check for special character/operator commands
-        """
-
-        pl = []
-        for i in range(len(self.plotlist)):
-            pl.append(self.plotlist[i].copy())
+        """Check for special character/operator commands."""
+        pl = [self.plotlist[i].copy() for i in range(len(self.plotlist))]
         self.oldlist = pl
 
         if not line or not line.split():
@@ -416,7 +426,7 @@ class Command(cmd.Cmd):
         # print line
 
         if self.showkey and plt.gca().get_legend() is not None:
-            self.key_loc = plt.gca().get_legend()._loc
+            self.key_loc = plt.gca().get_legend()._loc  # noqa: SLF001
 
         if self.plotter is not None and self.plotter.plotChanged:
             self.apply_uichanges()
@@ -424,12 +434,9 @@ class Command(cmd.Cmd):
         return line
 
     def default(self, line):
-        """
-        Check for arithmetic calculation
-        """
-
+        """Check for arithmetic calculation."""
         try:
-            pdvutil.parsemath(line, self.plotlist, self, (plt.axis()[0], plt.axis()[1]))
+            pdvutil.parsemath(line, self.plotlist, self)
             self.plotedit = True
         except:
             self.redraw = False
@@ -437,11 +444,8 @@ class Command(cmd.Cmd):
             if self.debug:
                 traceback.print_exc(file=sys.stdout)
 
-    def postcmd(self, stop, line):
-        """
-        Save current state for undo/redo
-        """
-
+    def postcmd(self, stop, line):  # noqa: ARG002
+        """Save current state for undo/redo."""
         if self.plotedit:
             if len(self.history) > self.histptr + 1:
                 self.history = self.history[: self.histptr + 1]
@@ -455,14 +459,12 @@ class Command(cmd.Cmd):
 
             self.plotedit = False
         if self.update and self.redraw:
-            self.updateplot  # noqa: B018
+            self.updateplot()
         self.redraw = True
         return stop
 
     def emptyline(self):
-        """
-        Override cmd empty line function to not repeat last command
-        """
+        """Override cmd empty line function to not repeat last command."""
         self.redraw = False
 
     ########################################################################################################
@@ -470,128 +472,164 @@ class Command(cmd.Cmd):
     ########################################################################################################
 
     def do_q(self, line):
+        """Shortcut for do_quit(line)."""
         self.do_quit(line)
 
     def do_ran(self, line):
+        """Shortcut for do_range(line)."""
         self.do_range(line)
 
     def do_dom(self, line):
+        """Shortcut for do_domain(line)."""
         self.do_domain(line)
 
     def do_rd(self, line):
+        """Shortcut for do_read(line)."""
         self.do_read(line)
 
     def do_rdcsv(self, line):
+        """Shortcut for do_readcsv(line)."""
         self.do_readcsv(line)
 
     def do_rdsina(self, line):
+        """Shortcut for do_readsina(line)."""
         self.do_readsina(line)
 
     def do_rdsinah5(self, line):
+        """Shortcut for do_readsinahdf5(line)."""
         self.do_readsinahdf5(line)
 
     def do_cur(self, line):
+        """Shortcut for do_curve(line)."""
         self.do_curve(line)
 
     def do_era(self, line):
+        """Shortcut for do_erase(line)."""
         self.do_erase(line)
 
     def do_del(self, line):
+        """Shortcut for do_delete(line)."""
         self.do_delete(line)
 
     def do_lst(self, line):
+        """Shortcut for do_list(line)."""
         self.do_list(line)
 
     def do_lstr(self, line):
+        """Shortcut for do_listr(line)."""
         self.do_listr(line)
 
     def do_sub(self, line):
+        """Shortcut for do_subtract(line)."""
         self.do_subtract(line)
 
     def do_div(self, line):
+        """Shortcut for do_divide(line)."""
         self.do_divide(line)
 
     def do_mult(self, line):
+        """Shortcut for do_multiply(line)."""
         self.do_multiply(line)
 
     def do_xls(self, line):
+        """Shortcut for do_xlogscale(line)."""
         self.do_xlogscale(line)
 
     def do_yls(self, line):
+        """Shortcut for do_ylogscale(line)."""
         self.do_ylogscale(line)
 
     def do_der(self, line):
+        """Shortcut for do_derivative(line)."""
         self.do_derivative(line)
 
     def do_pow(self, line):
+        """Shortcut for do_powr(line)."""
         self.do_powr(line)
 
     def do_power(self, line):
+        """Longcut for do_powr(line)."""
         self.do_powr(line)
 
     def do_powx(self, line):
+        """Shortcut for do_powrx(line)."""
         self.do_powrx(line)
 
     def do_powerx(self, line):
+        """Longcut for do_powrx(line)."""
         self.do_powrx(line)
 
     def do_square(self, line):
+        """Longcut for do_sqr(line)."""
         self.do_sqr(line)
 
     def do_squarex(self, line):
+        """Longcut for do_sqrx(line)."""
         self.do_sqrx(line)
 
-    def do_convol(self, line):
-        self.do_convolve(line)
-
     def do_convolb(self, line):
+        """Shortcut for do_convolveb(line)."""
         self.do_convolveb(line)
 
     def do_convolc(self, line):
+        """Shortcut for do_convolvec(line)."""
         self.do_convolvec(line)
 
     def do_int(self, line):
+        """Shortcut for do_integrate(line)."""
         self.do_integrate(line)
 
     def do_geom(self, line):
+        """Shortcut for do_geometry(line)."""
         self.do_geometry(line)
 
     def do_xmm(self, line):
+        """Shortcut for do_xminmax(line)."""
         self.do_xminmax(line)
 
     def do_ymm(self, line):
+        """Shortcut for do_yminmax(line)."""
         self.do_yminmax(line)
 
     def do_key(self, line):
+        """Alias for do_legend(line)."""
         self.do_legend(line)
 
     def do_leg(self, line):
+        """Shortcut for do_legend(line)."""
         self.do_legend(line)
 
     def do_ln(self, line):
+        """Shortcut for do_log(line)."""
         self.do_log(line)
 
     def do_lnx(self, line):
+        """Shortcut for do_logx(line)."""
         self.do_logx(line)
 
     def do_nc(self, line):
+        """Shortcut for do_newcurve(line)."""
         self.do_newcurve(line)
 
     def do_mkext(self, line):
+        """Shortcut for do_makeextensive(line)."""
         self.do_makeextensive(line)
 
     def do_mkint(self, line):
+        """Shortcut for do_makeintensive(line)."""
         self.do_makeintensive(line)
 
     def do_system(self, line):
+        """Alias for do_shell(line)."""
         self.do_shell(line)
 
     def do_pl(self, line):
+        """Shortcut for do_plotlayout(line)."""
         self.do_plotlayout(line)
 
     def do_help(self, arg):
-        """
-        Return information about the specified command, variable, or command category.
+        """Return information about the specified command, variable, or command category.
+
         If no argument is supplied, return a list of available commands.
 
         .. code::
@@ -601,7 +639,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: help list
         """
-
         if arg == "+":
             arg = "add"
         elif arg == "-" or arg == "sub":
@@ -618,8 +655,6 @@ class Command(cmd.Cmd):
             arg = "readsina"
         elif arg == "rdsinah5":
             arg = "readsinahdf5"
-        elif arg == "convol":
-            arg = "convolve"
         elif arg == "convolb":
             arg = "convolveb"
         elif arg == "convolc":
@@ -693,8 +728,7 @@ class Command(cmd.Cmd):
         return super().do_help(arg)
 
     def do_shell(self, line):
-        """
-        Execute shell commands.
+        """Execute shell commands.
 
         .. code::
 
@@ -703,7 +737,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: shell echo $PATH
         """
-
         os.system(line)
 
     ########################################################################################################
@@ -711,8 +744,8 @@ class Command(cmd.Cmd):
     ########################################################################################################
 
     def do_newcurve(self, line):
-        """
-        Creates a new curve from an expression containing curves that have the **same domain**.
+        """Create a new curve from an expression containing curves that have the **same domain**.
+
         For convenience, the **numpy** and **scipy** module have been imported into the namespace. **Shortcut: nc**
 
         * The x-values will be the x-values of the last curve used in the expression due to how PyDV finds curves in a
@@ -741,7 +774,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: newcurve scipy.ndimage.gaussian_filter(np.sin(a.x*2*np.pi)/(b.x**2), sigma=5)
         """
-
         try:
             # check for obvious input errors
             if not line:
@@ -781,8 +813,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_eval(self, line):
-        """
-        Evaluate mathematical operations on curves.
+        """Evaluate mathematical operations on curves.
 
         .. code::
 
@@ -791,19 +822,17 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: eval a+b
         """
-
         try:
             line = line.replace("integrate", "commander.integrate").replace("int", "commander.integrate")
             line = line.replace("derivative", "commander.derivative").replace("der", "commander.derivative")
 
-            pdvutil.parsemath(line, self.plotlist, self, (plt.axis()[0], plt.axis()[1]))
+            pdvutil.parsemath(line, self.plotlist, self)
             self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
     def do_debug(self, line):
-        """
-        Turn on debug tracebacks for commands.
+        """Turn on debug tracebacks for commands.
 
         .. code::
 
@@ -813,7 +842,6 @@ class Command(cmd.Cmd):
                 [PyDV]: debug on
                 [PyDV]: debug off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -828,8 +856,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_tightlayout(self, line):
-        """
-        Turn on plot tight layout. Useful if tick labels are long.
+        """Turn on plot tight layout. Useful if tick labels are long.
 
         .. code::
 
@@ -838,7 +865,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: tightlayout on
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -853,21 +879,17 @@ class Command(cmd.Cmd):
         finally:
             self.redraw = True
 
-    def do_undo(self, line):
-        """
-        Undo the last operation on plotted curves.
+    def do_undo(self, line):  # noqa: ARG002
+        """Undo the last operation on plotted curves.
 
         .. code::
 
             [PyDV]: undo
         """
-
         try:
             if self.histptr > 0:
                 if self.histptr == len(self.history) - 1:
-                    pl = []
-                    for i in range(len(self.plotlist)):
-                        pl.append(self.plotlist[i].copy())
+                    pl = [self.plotlist[i].copy() for i in range(len(self.plotlist))]
                     self.history.append(pl)
                 self.plotlist = self.history[self.histptr]
 
@@ -878,15 +900,13 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_redo(self, line):
-        """
-        Redo the last undo curve operation.
+    def do_redo(self, line):  # noqa: ARG002
+        """Redo the last undo curve operation.
 
         .. code::
 
             [PyDV]: redo
         """
-
         try:
             if self.histptr < len(self.history) - 2:
                 self.histptr += 1
@@ -898,8 +918,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_add(self, line):
-        """
-        Take the sum of curves. If the optional *value* is specified it will add the y-values of
+        """Take the sum of curves.
+
+        If the optional *value* is specified it will add the y-values of
         the curves by *value* (equivalent to using the **dy** command). **Shortcut:** +
 
         .. note::
@@ -919,7 +940,6 @@ class Command(cmd.Cmd):
                 [PyDV]: add c d
                 [PyDV]: add c d 7
         """
-
         try:
             # If adding a number then send to dy
             if any(char.isdigit() for char in line) and not any(char == "@" for char in line):
@@ -931,17 +951,17 @@ class Command(cmd.Cmd):
                 else:
                     line = line.split()
                     line = " + ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self, (plt.axis()[0], plt.axis()[1]))
+                    pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
 
         except:
             pdvutil.print_own_docstring(self)
 
     def do_subtract(self, line):
-        """
-        Take the difference of curves. A single curve can be specified, resulting in the
-        negating of its y-values. If the optional `value` is specified it will subtract the
-        y-values of the curves by `value`.
+        """Take the difference of curves.
+
+        A single curve can be specified, resulting in the negating of its y-values.
+        If the optional `value` is specified it will subtract the y-values of the curves by `value`.
 
         .. note::
             Be sure that the x points are in increasing order as PyDV uses np.interp().
@@ -960,7 +980,6 @@ class Command(cmd.Cmd):
                 [PyDV]: subtract c d
                 [PyDV]: subtract c d 7
         """
-
         try:
             try:
                 nline = line.split()
@@ -975,15 +994,15 @@ class Command(cmd.Cmd):
                 else:
                     line = line.split()
                     line = "-" + line[0] if len(line) == 1 else " - ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self, (plt.axis()[0], plt.axis()[1]))
+                    pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
     def do_multiply(self, line):
-        """
-        Take the product of curves. If the optional `value` is specified it will multiply the
-        y-values of the curves by `value`.
+        """Take the product of curves.
+
+        If the optional `value` is specified it will multiply the y-values of the curves by `value`.
 
         .. note::
             Be sure that the x points are in increasing order as PyDV uses np.interp().
@@ -1002,7 +1021,6 @@ class Command(cmd.Cmd):
                 [PyDV]: multiply c d
                 [PyDV]: multiply c d 7
         """
-
         try:
             # If multiplying by a number then send to my
             if any(char.isdigit() for char in line) and not any(char == "@" for char in line):
@@ -1014,15 +1032,15 @@ class Command(cmd.Cmd):
                 else:
                     line = line.split()
                     line = " * ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self, (plt.axis()[0], plt.axis()[1]))
+                    pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
     def do_divide(self, line):
-        """
-        Take quotient of curves. If the optional `value` is specified it will divide the
-        y-values of the curves by `value`.
+        """Take quotient of curves.
+
+        If the optional `value` is specified it will divide the y-values of the curves by `value`.
 
         .. note::
             Be sure that the x points are in increasing order as PyDV uses np.interp().
@@ -1052,16 +1070,17 @@ class Command(cmd.Cmd):
                 else:
                     line = line.split()
                     line = " / ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self, (plt.axis()[0], plt.axis()[1]))
+                    pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
     def do_read(self, line):
-        """
-        Read curves from the specified ASCII file and optionally filter by regex. The next available prefix (see the
-        prefix command) is automatically assigned the menu index of the first curve in each data file read. For column
-        oriented (.gnu) files optionally specify the x-column number before the file name.
+        """Read curves from the specified ASCII file and optionally filter by regex.
+
+        The next available prefix (see the prefix command) is automatically assigned the menu index of the first curve
+        in each data file read. For column oriented (.gnu) files optionally specify the x-column number before the file
+        name.
 
         .. code::
 
@@ -1072,7 +1091,6 @@ class Command(cmd.Cmd):
                 [PyDV]: read my.*curves my_file.ult
                 [PyDV]: read my.*curves 1 my_file.ult
         """
-
         try:
             line = line.split()
             n = len(line)
@@ -1116,8 +1134,9 @@ class Command(cmd.Cmd):
             self.plotter.updateDialogs()
 
     def do_readcsv(self, line):
-        """
-        Read CSV data file. The next available prefix (see the prefix command) is automatically assigned the menu index
+        """Read CSV data file.
+
+        The next available prefix (see the prefix command) is automatically assigned the menu index
         of the first curve in each data file read. For column oriented (.gnu) files optionally specify the x-column
         number before the file name. If the columns are in x and y pairs with `savecsv` command, the [x-col] must be
         specified as `paired`.
@@ -1131,7 +1150,6 @@ class Command(cmd.Cmd):
                 [PyDV]: readcsv my_file.csv 2
                 [PyDV]: readcsv my_file.csv paired
         """
-
         try:
             line = line.split()
 
@@ -1145,8 +1163,9 @@ class Command(cmd.Cmd):
             self.plotter.updateDialogs()
 
     def do_readsina(self, line):
-        """
-        Read all curves from Sina data file. The next available prefix (see the prefix command) is automatically
+        """Read all curves from Sina data file.
+
+        The next available prefix (see the prefix command) is automatically
         assigned the menu index of the first curve in each data file read.
 
         .. code::
@@ -1156,7 +1175,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: readsina my_file.json
         """
-
         try:
             line = line.split()
             self.load_sina(line[0])
@@ -1167,8 +1185,9 @@ class Command(cmd.Cmd):
             self.plotter.updateDialogs()
 
     def do_readsinahdf5(self, line):
-        """
-        Read all curves from Sina hdf5 data file. The next available prefix (see the prefix command) is automatically
+        """Read all curves from Sina hdf5 data file.
+
+        The next available prefix (see the prefix command) is automatically
         assigned the menu index of the first curve in each data file read.
 
         .. code::
@@ -1178,7 +1197,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: readsinahdf5 my_file.hdf5
         """
-
         try:
             line = line.split()
             self.load_sinahdf5(line[0])
@@ -1189,8 +1207,7 @@ class Command(cmd.Cmd):
             self.plotter.updateDialogs()
 
     def do_setxcolumn(self, line):
-        """
-        Set x column for reading column formatted data files (.gnu or .csv).
+        """Set x column for reading column formatted data files (.gnu or .csv).
 
         .. code::
 
@@ -1199,7 +1216,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: setxcolumn 1
         """
-
         try:
             line = line.split()
 
@@ -1255,9 +1271,9 @@ class Command(cmd.Cmd):
             raise RuntimeError("error: Expecting more than 1 curve")
 
     def do_add_h(self, line):
-        """
-        Adds curves that have been read from a file but not yet plotted. `list-of-menu-numbers`
-        are the index values displayed in the first column of the `menu` command.
+        """Add curves that have been read from a file but not yet plotted.
+
+        `list-of-menu-numbers` are the index values displayed in the first column of the `menu` command.
 
         .. code::
 
@@ -1268,7 +1284,6 @@ class Command(cmd.Cmd):
                 [PyDV]: add_h 1:2
                 [PyDV]: add_h 3 4
         """
-
         if not line:
             return 0
 
@@ -1284,9 +1299,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_subtract_h(self, line):
-        """
-        Subtracts curves that have been read from a file but not yet plotted. `list-of-menu-numbers`
-        are the index values displayed in the first column of the `menu` command.
+        """Subtract curves that have been read from a file but not yet plotted.
+
+        `list-of-menu-numbers` are the index values displayed in the first column of the `menu` command.
 
         .. code::
 
@@ -1297,7 +1312,6 @@ class Command(cmd.Cmd):
                 [PyDV]: subtract_h 1:2
                 [PyDV]: subtract_h 3 4
         """
-
         if not line:
             return 0
 
@@ -1313,9 +1327,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_multiply_h(self, line):
-        """
-        Multiplies curves that have been read from a file but not yet plotted. `list-of-menu-numbers`
-        are the index values displayed in the first column of the `menu` command.
+        """Multiply curves that have been read from a file but not yet plotted.
+
+        `list-of-menu-numbers` are the index values displayed in the first column of the `menu` command.
 
         .. code::
 
@@ -1326,7 +1340,6 @@ class Command(cmd.Cmd):
                 [PyDV]: multiply_h 1:2
                 [PyDV]: multiply_h 3 4
         """
-
         if not line:
             return 0
 
@@ -1342,9 +1355,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_divide_h(self, line):
-        """
-        Divides curves that have been read from a file but not yet plotted. `list-of-menu-numbers`
-        are the index values displayed in the first column of the `menu` command.
+        """Divide curves that have been read from a file but not yet plotted.
+
+        `list-of-menu-numbers` are the index values displayed in the first column of the `menu` command.
 
         .. code::
 
@@ -1355,7 +1368,6 @@ class Command(cmd.Cmd):
                 [PyDV]: divide_h 1:2
                 [PyDV]: divide_h 3 4
         """
-
         if not line:
             return 0
 
@@ -1371,8 +1383,8 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_curve(self, line):
-        """
-        Select curves from the menu for plotting.
+        """Select curves from the menu for plotting.
+
         A regular expression may be supplied in paranthesis for matching against the curve label to plot.
 
         Regular expressions are based on the Python regex syntax, not the UNIX syntax.
@@ -1390,7 +1402,6 @@ class Command(cmd.Cmd):
                 [PyDV]: cur 4 5
                 [PyDV]: cur (.*my_curves.*)
         """
-
         if not line:
             return 0
         try:
@@ -1486,9 +1497,8 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_erase(self, line):
-        """
-        Erase all curves on the screen but leave the limits untouched.
+    def do_erase(self, line):  # noqa: ARG002
+        """Erase all curves on the screen but leave the limits untouched.
 
         .. code::
 
@@ -1497,15 +1507,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: erase
         """
-
         self.plotlist = []
         self.usertexts = []
 
         self.plotedit = True
 
     def do_delete(self, line):
-        """
-        Delete a curve from the graph.
+        """Delete a curve from the graph.
 
         .. code::
 
@@ -1516,7 +1524,6 @@ class Command(cmd.Cmd):
                 [PyDV]: delete a:b
                 [PyDV]: delete c d
         """
-
         try:
             if not line:
                 return 0
@@ -1540,8 +1547,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_color(self, line):
-        """
-        Set the color of curves. Color names can be "blue", "red", etc., or "#eb70aa", a 6 digit set of hexadecimal
+        """Set the color of curves.
+
+        Color names can be "blue", "red", etc., or "#eb70aa", a 6 digit set of hexadecimal
         red-green-blue values #RRGGBB. The entire set of HTML-standard color names is available. Type `showcolormap`
         to see the available named colors which will show up in the PyDV plotting area (hit return to go back to your
         plots).
@@ -1559,7 +1567,6 @@ class Command(cmd.Cmd):
                 hit return to go back to your plots
                 [PyDV]: color a lime
         """
-
         if not line:
             return 0
         try:
@@ -1588,8 +1595,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_stats(self, line):
-        """
-        Show various statistics about the curve.
+        """Show various statistics about the curve.
 
         .. code::
 
@@ -1625,8 +1631,7 @@ class Command(cmd.Cmd):
                 self.redraw = False
 
     def do_deltax(self, line):
-        """
-        Create new curve that calculates difference between its own X points. Delta X vs # of points - 1.
+        """Create new curve that calculates difference between its own X points. Delta X vs # of points - 1.
 
         .. code::
 
@@ -1636,7 +1641,6 @@ class Command(cmd.Cmd):
                 [PyDV]: deltax a
                 [PyDV]: deltax a:b
         """
-
         if not line:
             return 0
 
@@ -1667,8 +1671,7 @@ class Command(cmd.Cmd):
                 self.redraw = True
 
     def do_deltay(self, line):
-        """
-        Create new curve that calculates difference between its own Y points. Delta Y vs # of points - 1.
+        """Create new curve that calculates difference between its own Y points. Delta Y vs # of points - 1.
 
         .. code::
 
@@ -1678,7 +1681,6 @@ class Command(cmd.Cmd):
                 [PyDV]: deltay a
                 [PyDV]: deltay a:b
         """
-
         if not line:
             return 0
 
@@ -1709,8 +1711,7 @@ class Command(cmd.Cmd):
                 self.redraw = True
 
     def do_getattributes(self, line):
-        """
-        Return a curve's attributes, such as: color, style, width, etc.
+        """Return a curve's attributes, such as: color, style, width, etc.
 
         .. code::
 
@@ -1775,8 +1776,9 @@ class Command(cmd.Cmd):
                 self.redraw = False
 
     def do_markerfacecolor(self, line):
-        """
-        Set the markerface color of curves. Color names can be "blue", "red", etc., or "#eb70aa", a 6 digit set of
+        """Set the markerface color of curves.
+
+        Color names can be "blue", "red", etc., or "#eb70aa", a 6 digit set of
         hexadecimal red-green-blue values #RRGGBB. The entire set of HTML-standard color names is available. Type
         `showcolormap` to see the available named colors which will show up in the PyDV plotting area (hit return
         to go back to your plots).
@@ -1794,7 +1796,6 @@ class Command(cmd.Cmd):
                 hit return to go back to your plots
                 [PyDV]: markerfacecolor a lime
         """
-
         try:
             if not line:
                 return 0
@@ -1824,8 +1825,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_markeredgecolor(self, line):
-        """
-        Set the markeredge color of curves. Color names can be "blue", "red", etc., or "#eb70aa", a 6 digit set of
+        """Set the markeredge color of curves.
+
+        Color names can be "blue", "red", etc., or "#eb70aa", a 6 digit set of
         hexadecimal red-green-blue values #RRGGBB. The entire set of HTML-standard color names is available. Type
         `showcolormap` to see the available named colors which will show up in the PyDV plotting area (hit return
         to go back to your plots).
@@ -1843,7 +1845,6 @@ class Command(cmd.Cmd):
                 hit return to go back to your plots
                 [PyDV]: markeredgecolor a lime
         """
-
         try:
             if not line:
                 return 0
@@ -1872,15 +1873,13 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_showstyles(self, line):
-        """
-        Show available matplotlib styles.
+    def do_showstyles(self, line):  # noqa: ARG002
+        """Show available matplotlib styles.
 
         .. code::
 
             [PyDV]: showstyles
         """
-
         try:
             if stylesLoaded:
                 ss = pydvpy.get_styles()
@@ -1893,15 +1892,13 @@ class Command(cmd.Cmd):
         finally:
             self.redraw = False
 
-    def do_showcolormap(self, line):
-        """
-        Show the available named colors. Hit return to go back to your plots.
+    def do_showcolormap(self, line):  # noqa: ARG002
+        """Show the available named colors. Hit return to go back to your plots.
 
         .. code::
 
             [PyDV]: showcolormap
         """
-
         try:
             ax = plt.gca()
             plt.cla()  # wipe current axes
@@ -1943,8 +1940,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_mx(self, line):
-        """
-        Scale the x values of the curves by a fixed value.
+        """Scale the x values of the curves by a fixed value.
 
         .. code::
 
@@ -1955,7 +1951,6 @@ class Command(cmd.Cmd):
                 [PyDV]: mx a:b 2
                 [PyDV]: mx c d 2
         """
-
         try:
             self.__mod_curve(line, "mx")
             self.plotedit = True
@@ -1963,8 +1958,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_divx(self, line):
-        """
-        Divide x values of curves by a constant.
+        """Divide x values of curves by a constant.
 
         .. code::
 
@@ -1976,7 +1970,6 @@ class Command(cmd.Cmd):
                 [PyDV]: divx c d 7
                 [PyDV]: divx c d 7
         """
-
         try:
             self.__mod_curve(line, "divx")
             self.plotedit = True
@@ -1984,8 +1977,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_my(self, line):
-        """
-        Multiply the y values of curves by a constant.
+        """Multiply the y values of curves by a constant.
 
         .. code::
 
@@ -1996,7 +1988,6 @@ class Command(cmd.Cmd):
                 [PyDV]: my a:b 2
                 [PyDV]: my c d 2
         """
-
         try:
             self.__mod_curve(line, "my")
             self.plotedit = True
@@ -2004,8 +1995,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_divy(self, line):
-        """
-        Divide y values of curves by a constant.
+        """Divide y values of curves by a constant.
 
         .. code::
 
@@ -2017,7 +2007,6 @@ class Command(cmd.Cmd):
                 [PyDV]: divy c d 7
                 [PyDV]: divy c d 7
         """
-
         try:
             self.__mod_curve(line, "divy")
             self.plotedit = True
@@ -2025,8 +2014,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_dx(self, line):
-        """
-        Shift x values of curves by a constant.
+        """Shift x values of curves by a constant.
 
         .. code::
 
@@ -2037,7 +2025,6 @@ class Command(cmd.Cmd):
                 [PyDV]: dx a:b 3
                 [PyDV]: dx c d 3
         """
-
         try:
             self.__mod_curve(line, "dx")
             self.plotedit = True
@@ -2045,8 +2032,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_dy(self, line):
-        """
-        Shift y values of curves by a constant.
+        """Shift y values of curves by a constant.
 
         .. code::
 
@@ -2057,7 +2043,6 @@ class Command(cmd.Cmd):
                 [PyDV]: dy a:b 3
                 [PyDV]: dy c d 3
         """
-
         try:
             self.__mod_curve(line, "dy")
             self.plotedit = True
@@ -2065,9 +2050,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_L2(self, line):
-        """
-        Take L2 norm of two curves. The L2 norm is `integral( (curve1 - curve2)**2 )**(1/2)` over the interval
-        [xmin,xmax]. Also prints value of integral to command-line.
+        """Take L2 norm of two curves.
+
+        The L2 norm is `integral( (curve1 - curve2)**2 )**(1/2)` over the interval [xmin,xmax].
+        Also prints value of integral to command-line.
 
         .. code::
 
@@ -2077,7 +2063,6 @@ class Command(cmd.Cmd):
                 [PyDV]: L2 a b
                 [PyDV]: L2 a b 4 10
         """
-
         try:
             """take L2 norm of two curves given as args"""
             args = line.strip().split()
@@ -2094,8 +2079,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_L1(self, line):
-        """
-        Take L1 norm of two curves. The L1 norm is `integral( |curve1 - curve2| )` over the interval [xmin,xmax].
+        """Take L1 norm of two curves.
+
+        The L1 norm is `integral( |curve1 - curve2| )` over the interval [xmin,xmax].
         Also prints value of integral to command-line.
 
         .. code::
@@ -2106,7 +2092,6 @@ class Command(cmd.Cmd):
                 [PyDV]: L1 a b
                 [PyDV]: L1 a b 4 10
         """
-
         try:
             """take L1 norm of two curves given as args"""
             args = line.strip().split()
@@ -2123,8 +2108,8 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_norm(self, line):
-        """
-        Makes a new curve that is the norm of two args. Also prints the value of the integral to command line.
+        """Make a new curve that is the norm of two args. Also prints the value of the integral to command line.
+
         The p-norm is `(integral( (curve1 - curve2)**p )**(1/p)` over the interval [xmin, xmax], where p = order.
 
         .. code::
@@ -2134,7 +2119,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: norm a b 2 10 15
         """
-
         try:
             """take norm of order N of two curves given as args"""
             args = line.strip().split()
@@ -2175,8 +2159,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_max(self, line):
-        """
-        Makes a new curve with max y values of curves passed in curvelist.
+        """Make a new curve with max y values of curves passed in curvelist.
 
         .. code::
 
@@ -2187,7 +2170,6 @@ class Command(cmd.Cmd):
                 [PyDV]: max a:b
                 [PyDV]: max c d
         """
-
         try:
             if not line:
                 return 0
@@ -2218,8 +2200,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_min(self, line):
-        """
-        Makes a new curve with min y values of curves passed in curvelist.
+        """Make a new curve with min y values of curves passed in curvelist.
 
         .. code::
 
@@ -2230,7 +2211,6 @@ class Command(cmd.Cmd):
                 [PyDV]: min a:b
                 [PyDV]: min c d
         """
-
         if not line:
             return 0
 
@@ -2258,8 +2238,7 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_average(self, line):
-        """
-        Average the specified curvelist over the intersection of their domains.
+        """Average the specified curvelist over the intersection of their domains.
 
         .. code::
 
@@ -2270,7 +2249,6 @@ class Command(cmd.Cmd):
                 [PyDV]: average a:b
                 [PyDV]: average c d
         """
-
         if not line:
             return 0
 
@@ -2300,9 +2278,9 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_fit(self, line):
-        """
-        Make new curve that is polynomial fit to argument. n=1 by default, logy means take log(y-values) before fitting,
-        logx means take log(x-values) before fitting.
+        """Make new curve that is polynomial fit to argument.
+
+        n=1 by default, logy means take log(y-values) before fitting, logx means take log(x-values) before fitting.
 
         .. code::
 
@@ -2314,7 +2292,6 @@ class Command(cmd.Cmd):
                 [PyDV]: fit a 2 logx
                 [PyDV]: fit a 2 logy
         """
-
         try:
             """fit curve to line: usage is 'fit curve [n] [logx] [logy]', where n=order of fit, default is linear"""
             print(f"fitting curve: {line}")
@@ -2343,8 +2320,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_getx(self, line):
-        """
-        Return the x values for a given y.
+        """Return the x values for a given y.
 
         .. code::
 
@@ -2355,18 +2331,16 @@ class Command(cmd.Cmd):
                 [PyDV]: getx a:b 1.2
                 [PyDV]: getx c d 1.2
         """
-
         try:
             self.__mod_curve(line, "getx")
-            print("")
+            print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
 
     def do_gety(self, line):
-        """
-        Return the y values for a given x.
+        """Return the y values for a given x.
 
         .. code::
 
@@ -2377,18 +2351,16 @@ class Command(cmd.Cmd):
                 [PyDV]: gety a:b 3.3
                 [PyDV]: gety c d 3.3
         """
-
         try:
             self.__mod_curve(line, "gety")
-            print("")
+            print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
 
     def do_getrange(self, line):
-        """
-        Return range of curves.
+        """Return range of curves.
 
         .. code::
 
@@ -2399,7 +2371,6 @@ class Command(cmd.Cmd):
                 [PyDV]: getrange a:b
                 [PyDV]: getrange c d
         """
-
         if not line:
             return
         try:
@@ -2418,15 +2389,14 @@ class Command(cmd.Cmd):
                         print(f"    ymin: {miny:.6e}    ymax: {maxy:.6e}")
                     except pdvutil.CurveIndexError:
                         pass
-                print("")
+                print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
 
     def do_getdomain(self, line):
-        """
-        Return domain of curves.
+        """Return domain of curves.
 
         .. code::
 
@@ -2437,7 +2407,6 @@ class Command(cmd.Cmd):
                 [PyDV]: getdomain a:b
                 [PyDV]: getdomain c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_getdomain(pdvutil.getletterargs(line))
@@ -2455,15 +2424,14 @@ class Command(cmd.Cmd):
                         print(f"    xmin: {minx:.6e}    xmax: {maxx:.6e}")
                     except pdvutil.CurveIndexError:
                         pass
-                print("")
+                print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
 
     def do_sum(self, line):
-        """
-        Calculate the sum of the x and y values of the curves.
+        """Calculate the sum of the x and y values of the curves.
 
         .. code::
 
@@ -2474,7 +2442,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sum a:b
                 [PyDV]: sum c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_sum(pdvutil.getletterargs(line))
@@ -2492,15 +2459,14 @@ class Command(cmd.Cmd):
                         print(f"\tsumx: {sumx:.6e}, sumy: {sumy:.6e}")
                     except pdvutil.CurveIndexError:
                         pass
-                print("")
+                print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
 
     def do_area(self, line):
-        """
-        Calculate the area of the curves.
+        """Calculate the area of the curves.
 
         .. code::
 
@@ -2511,7 +2477,6 @@ class Command(cmd.Cmd):
                 [PyDV]: area a:b
                 [PyDV]: area c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_area(pdvutil.getletterargs(line))
@@ -2529,17 +2494,16 @@ class Command(cmd.Cmd):
                         print(f"\tarea: {area:.6e}")
                     except pdvutil.CurveIndexError:
                         pass
-                print("")
+                print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
 
     def do_getymax(self, line):
-        """
-        Return xy-parings of the x values with the corresponding maximum y-value for the
-        curve within the specified domain. If no domain is given, then the full domain
-        range is used.
+        """Return xy-parings of the x values with the corresponding maximum y-value within the specified domain.
+
+        If no domain is given, then the full domain range is used.
 
         .. code::
 
@@ -2553,7 +2517,6 @@ class Command(cmd.Cmd):
                 [PyDV]: getymax c d
                 [PyDV]: getymax c d 2 7
         """
-
         if not line:
             return 0
         try:
@@ -2593,10 +2556,9 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_getymin(self, line):
-        """
-        Return xy-parings of the x values with the corresponding minimum y-value for the
-        curve within the specified domain. If no domain is given, then the full domain
-        range is used.
+        """Return xy-pairings of the x values with the corresponding minimum y-value within the specified domain.
+
+        If no domain is given, then the full domain range is used.
 
         .. code::
 
@@ -2610,7 +2572,6 @@ class Command(cmd.Cmd):
                 [PyDV]: getymin c d
                 [PyDV]: getymin c d 2 7
         """
-
         if not line:
             return 0
         try:
@@ -2650,8 +2611,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_cumsum(self, line):
-        """
-        Create new curve which is the cumulative sum of the original curve.
+        """Create new curve which is the cumulative sum of the original curve.
 
         .. code::
 
@@ -2662,7 +2622,6 @@ class Command(cmd.Cmd):
                 [PyDV]: cumsum a:b
                 [PyDV]: cumsum c d
         """
-
         if not line:
             return 0
         try:
@@ -2683,8 +2642,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_getlabel(self, line):
-        """
-        Return the given curve's label.
+        """Return the given curve's label.
 
         .. code::
 
@@ -2695,7 +2653,6 @@ class Command(cmd.Cmd):
                 [PyDV]: getlabel a:b
                 [PyDV]: getlabel c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_getlabel(pdvutil.getletterargs(line))
@@ -2714,8 +2671,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_sort(self, line):
-        """
-        Sort the specified curves so that their points are plotted in order of ascending x values.
+        """Sort the specified curves so that their points are plotted in order of ascending x values.
 
         .. code::
 
@@ -2726,7 +2682,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sort a:b
                 [PyDV]: sort c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_sort(pdvutil.getletterargs(line))
@@ -2747,8 +2702,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_rev(self, line):
-        """
-        Swap x and y values for the specified curves. You may want to `sort` after this one.
+        """Swap x and y values for the specified curves. You may want to `sort` after this one.
 
         .. code::
 
@@ -2759,7 +2713,6 @@ class Command(cmd.Cmd):
                 [PyDV]: rev a:b
                 [PyDV]: rev c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_rev(pdvutil.getletterargs(line))
@@ -2779,8 +2732,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_random(self, line):
-        """
-        Generate random y values between -1 and 1 for the specified curves.
+        """Generate random y values between -1 and 1 for the specified curves.
 
         .. code::
 
@@ -2791,7 +2743,6 @@ class Command(cmd.Cmd):
                 [PyDV]: random a:b
                 [PyDV]: random c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_random(pdvutil.getletterargs(line))
@@ -2811,8 +2762,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_disp(self, line):
-        """
-        Display the y-values in the specified curve(s).
+        """Display the y-values in the specified curve(s).
 
         .. code::
 
@@ -2850,8 +2800,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_dispx(self, line):
-        """
-        Display the x-values in the specified curve(s).
+        """Display the x-values in the specified curve(s).
 
         .. code::
 
@@ -2889,8 +2838,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_getnumpoints(self, line):
-        """
-        Display the number of points for the given curve.
+        """Display the number of points for the given curve.
 
         .. code::
 
@@ -2901,7 +2849,6 @@ class Command(cmd.Cmd):
                 [PyDV]: getnumpoints a:b
                 [PyDV]: getnumpoints c d
         """
-
         if not line:
             return 0
         try:
@@ -2920,8 +2867,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_abs(self, line):
-        """
-        Take the absolute value of the y values of the curves. Modifies the existing curve.
+        """Take the absolute value of the y values of the curves. Modifies the existing curve.
 
         .. code::
 
@@ -2932,7 +2878,6 @@ class Command(cmd.Cmd):
                 [PyDV]: abs a:b
                 [PyDV]: abs c d
         """
-
         try:
             self.__func_curve(line, "abs", do_x=0)
             self.plotedit = True
@@ -2940,8 +2885,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_absx(self, line):
-        """
-        Take the absolute value of the x values of the curves. Modifies the existing curve.
+        """Take the absolute value of the x values of the curves. Modifies the existing curve.
 
         .. code::
 
@@ -2952,7 +2896,6 @@ class Command(cmd.Cmd):
                 [PyDV]: absx a:b
                 [PyDV]: absx c d
         """
-
         try:
             self.__func_curve(line, "abs", do_x=1)
             self.plotedit = True
@@ -2960,9 +2903,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_log(self, line):
-        """
-        Take the natural logarithm of the y values of the curves. If the optional argument `keep-neg-vals` is set to
-        false, then zero and negative y-values will be discarded. `keep-neg-vals` is true by default.
+        """Take the natural logarithm of the y values of the curves.
+
+        If the optional argument `keep-neg-vals` is set to false, then zero and negative y-values will be discarded.
+        `keep-neg-vals` is true by default.
 
         .. code::
 
@@ -2974,7 +2918,6 @@ class Command(cmd.Cmd):
                 [PyDV]: log c d
                 [PyDV]: log c d True
         """
-
         try:
             self.__log(line, LogEnum.LOG)
             self.plotedit = True
@@ -2982,9 +2925,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_logx(self, line):
-        """
-        Take the natural logarithm of the x values of the curves. If the optional argument `keep-neg-vals` is set to
-        false, then zero and negative x-values will be discarded. `keep-neg-vals` is true by default.
+        """Take the natural logarithm of the x values of the curves.
+
+        If the optional argument `keep-neg-vals` is set to false, then zero and negative x-values will be discarded.
+        `keep-neg-vals` is true by default.
 
         .. code::
 
@@ -2996,7 +2940,6 @@ class Command(cmd.Cmd):
                 [PyDV]: logx c d
                 [PyDV]: logx c d True
         """
-
         try:
             self.__log(line, LogEnum.LOGX)
             self.plotedit = True
@@ -3004,9 +2947,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_log10(self, line):
-        """
-        Take the base 10 logarithm of the y values of the curves. If the optional argument `keep-neg-vals` is set to
-        false, then zero and negative y-values will be discarded. `keep-neg-vals` is true by default.
+        """Take the base 10 logarithm of the y values of the curves.
+
+        If the optional argument `keep-neg-vals` is set to false, then zero and negative y-values will be discarded.
+        `keep-neg-vals` is true by default.
 
         .. code::
 
@@ -3018,7 +2962,6 @@ class Command(cmd.Cmd):
                 [PyDV]: log10 c d
                 [PyDV]: log10 c d True
         """
-
         try:
             self.__log(line, LogEnum.LOG10)
             self.plotedit = True
@@ -3026,9 +2969,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_log10x(self, line):
-        """
-        Take the base 10 logarithm of the x values of the curves. If the optional argument `keep-neg-vals` is set to
-        false, then zero and negative y-values will be discarded. `keep-neg-vals` is true by default.
+        """Take the base 10 logarithm of the x values of the curves.
+
+        If the optional argument `keep-neg-vals` is set to false, then zero and negative y-values will be discarded.
+        `keep-neg-vals` is true by default.
 
         .. code::
 
@@ -3040,7 +2984,6 @@ class Command(cmd.Cmd):
                 [PyDV]: log10x c d
                 [PyDV]: log10x c d True
         """
-
         try:
             self.__log(line, LogEnum.LOG10X)
             self.plotedit = True
@@ -3048,8 +2991,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_exp(self, line):
-        """
-        Exponentiate y values of curves, e^y.
+        """Exponentiate y values of curves, e^y.
 
         .. code::
 
@@ -3060,7 +3002,6 @@ class Command(cmd.Cmd):
                 [PyDV]: exp a:b
                 [PyDV]: exp c d
         """
-
         try:
             self.__func_curve(line, "exp", do_x=0)
             self.plotedit = True
@@ -3068,8 +3009,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_expx(self, line):
-        """
-        Exponentiate x values of curves, e^x.
+        """Exponentiate x values of curves, e^x.
 
         .. code::
 
@@ -3080,7 +3020,6 @@ class Command(cmd.Cmd):
                 [PyDV]: expx a:b
                 [PyDV]: expx c d
         """
-
         try:
             self.__func_curve(line, "exp", do_x=1)
             self.plotedit = True
@@ -3088,8 +3027,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_cos(self, line):
-        """
-        Take the cosine of the y values of the curves.
+        """Take the cosine of the y values of the curves.
 
         .. code::
 
@@ -3100,7 +3038,6 @@ class Command(cmd.Cmd):
                 [PyDV]: cos a:b
                 [PyDV]: cos c d
         """
-
         try:
             self.__func_curve(line, "cos", do_x=0)
             self.plotedit = True
@@ -3108,8 +3045,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_cosx(self, line):
-        """
-        Take the cosine of the x values of the curves.
+        """Take the cosine of the x values of the curves.
 
         .. code::
 
@@ -3120,7 +3056,6 @@ class Command(cmd.Cmd):
                 [PyDV]: cosx a:b
                 [PyDV]: cosx c d
         """
-
         try:
             self.__func_curve(line, "cos", do_x=1)
             self.plotedit = True
@@ -3128,8 +3063,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sin(self, line):
-        """
-        Take the sine of the y values of the curve.
+        """Take the sine of the y values of the curve.
 
         .. code::
 
@@ -3140,7 +3074,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sin a:b
                 [PyDV]: sin c d
         """
-
         try:
             self.__func_curve(line, "sin", do_x=0)
             self.plotedit = True
@@ -3148,8 +3081,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sinx(self, line):
-        """
-        Take the sine of the x values of the curve.
+        """Take the sine of the x values of the curve.
 
         .. code::
 
@@ -3160,7 +3092,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sinx a:b
                 [PyDV]: sinx c d
         """
-
         try:
             self.__func_curve(line, "sin", do_x=1)
             self.plotedit = True
@@ -3168,8 +3099,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_tan(self, line):
-        """
-        Take the tangent of y values of curves.
+        """Take the tangent of y values of curves.
 
         .. code::
 
@@ -3180,7 +3110,6 @@ class Command(cmd.Cmd):
                 [PyDV]: tan a:b
                 [PyDV]: tan c d
         """
-
         try:
             self.__func_curve(line, "tan", do_x=0)
             self.plotedit = True
@@ -3188,8 +3117,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_tanx(self, line):
-        """
-        Take the tangent of x values of curves.
+        """Take the tangent of x values of curves.
 
         .. code::
 
@@ -3200,7 +3128,6 @@ class Command(cmd.Cmd):
                 [PyDV]: tanx a:b
                 [PyDV]: tanx c d
         """
-
         try:
             self.__func_curve(line, "tan", do_x=1)
             self.plotedit = True
@@ -3208,8 +3135,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_acos(self, line):
-        """
-        Take arccosine of y values of curves
+        """Take arccosine of y values of curves.
 
         .. code::
 
@@ -3220,7 +3146,6 @@ class Command(cmd.Cmd):
                 [PyDV]: acos a:b
                 [PyDV]: acos c d
         """
-
         try:
             self.__func_curve(line, "acos", do_x=0)
             self.plotedit = True
@@ -3228,8 +3153,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_acosx(self, line):
-        """
-        Take arccosine of x values of curves
+        """Take arccosine of x values of curves.
 
         .. code::
 
@@ -3240,7 +3164,6 @@ class Command(cmd.Cmd):
                 [PyDV]: acosx a:b
                 [PyDV]: acosx c d
         """
-
         try:
             self.__func_curve(line, "acos", do_x=1)
             self.plotedit = True
@@ -3248,8 +3171,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_asin(self, line):
-        """
-        Take arcsine of y values of curves.
+        """Take arcsine of y values of curves.
 
         .. code::
 
@@ -3260,7 +3182,6 @@ class Command(cmd.Cmd):
                 [PyDV]: asin a:b
                 [PyDV]: asin c d
         """
-
         try:
             self.__func_curve(line, "asin", do_x=0)
             self.plotedit = True
@@ -3268,8 +3189,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_asinx(self, line):
-        """
-        Take arcsine of x values of curves.
+        """Take arcsine of x values of curves.
 
         .. code::
 
@@ -3280,7 +3200,6 @@ class Command(cmd.Cmd):
                 [PyDV]: asinx a:b
                 [PyDV]: asinx c d
         """
-
         try:
             self.__func_curve(line, "asin", do_x=1)
             self.plotedit = True
@@ -3288,8 +3207,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_atan(self, line):
-        """
-        Take arctangent of y values of curves.
+        """Take arctangent of y values of curves.
 
         .. code::
 
@@ -3300,7 +3218,6 @@ class Command(cmd.Cmd):
                 [PyDV]: atan a:b
                 [PyDV]: atan c d
         """
-
         try:
             self.__func_curve(line, "atan", do_x=0)
             self.plotedit = True
@@ -3308,8 +3225,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_atanx(self, line):
-        """
-        Take arctangent of x values of curves.
+        """Take arctangent of x values of curves.
 
         .. code::
 
@@ -3320,7 +3236,6 @@ class Command(cmd.Cmd):
                 [PyDV]: atanx a:b
                 [PyDV]: atanx c d
         """
-
         try:
             self.__func_curve(line, "atan", do_x=1)
             self.plotedit = True
@@ -3328,8 +3243,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_atan2(self, line):
-        """
-        Take atan2 of two curves.
+        """Take atan2 of two curves.
 
         .. code::
 
@@ -3340,7 +3254,6 @@ class Command(cmd.Cmd):
                 [PyDV]: atan2 a:b
                 [PyDV]: atan2 c d
         """
-
         try:
             letterargs = [x.upper() for x in line.split()]
             assert len(letterargs) == 2
@@ -3359,8 +3272,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_cosh(self, line):
-        """
-        Take hyperbolic cosine of y values of curves.
+        """Take hyperbolic cosine of y values of curves.
 
         .. code::
 
@@ -3371,7 +3283,6 @@ class Command(cmd.Cmd):
                 [PyDV]: cosh a:b
                 [PyDV]: cosh c d
         """
-
         try:
             self.__func_curve(line, "cosh", do_x=0)
             self.plotedit = True
@@ -3379,8 +3290,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_coshx(self, line):
-        """
-        Take hyperbolic cosine of x values of curves.
+        """Take hyperbolic cosine of x values of curves.
 
         .. code::
 
@@ -3391,7 +3301,6 @@ class Command(cmd.Cmd):
                 [PyDV]: coshx a:b
                 [PyDV]: coshx c d
         """
-
         try:
             self.__func_curve(line, "cosh", do_x=1)
             self.plotedit = True
@@ -3399,8 +3308,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sinh(self, line):
-        """
-        Take the hyperbolic sine of the y values of the curve
+        """Take the hyperbolic sine of the y values of the curve.
 
         .. code::
 
@@ -3411,7 +3319,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sinh a:b
                 [PyDV]: sinh c d
         """
-
         try:
             self.__func_curve(line, "sinh", do_x=0)
             self.plotedit = True
@@ -3419,8 +3326,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sinhx(self, line):
-        """
-        Take the hyperbolic sine of the x values of the curve
+        """Take the hyperbolic sine of the x values of the curve.
 
         .. code::
 
@@ -3431,7 +3337,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sinhx a:b
                 [PyDV]: sinhx c d
         """
-
         try:
             self.__func_curve(line, "sinh", do_x=1)
             self.plotedit = True
@@ -3439,8 +3344,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_tanh(self, line):
-        """
-        Take the hyperbolic tangent of y values of curves
+        """Take the hyperbolic tangent of y values of curves.
 
         .. code::
 
@@ -3451,7 +3355,6 @@ class Command(cmd.Cmd):
                 [PyDV]: tanh a:b
                 [PyDV]: tanh c d
         """
-
         try:
             self.__func_curve(line, "tanh", do_x=0)
             self.plotedit = True
@@ -3459,8 +3362,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_tanhx(self, line):
-        """
-        Take the hyperbolic tangent of x values of curves
+        """Take the hyperbolic tangent of x values of curves.
 
         .. code::
 
@@ -3471,7 +3373,6 @@ class Command(cmd.Cmd):
                 [PyDV]: tanhx a:b
                 [PyDV]: tanhx c d
         """
-
         try:
             self.__func_curve(line, "tanh", do_x=1)
             self.plotedit = True
@@ -3479,8 +3380,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_acosh(self, line):
-        """
-        Take hyperbolic arccosine of y values of curves.
+        """Take hyperbolic arccosine of y values of curves.
 
         .. code::
 
@@ -3491,7 +3391,6 @@ class Command(cmd.Cmd):
                 [PyDV]: acosh a:b
                 [PyDV]: acosh c d
         """
-
         try:
             self.__func_curve(line, "acosh", do_x=0)
             self.plotedit = True
@@ -3499,8 +3398,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_acoshx(self, line):
-        """
-        Take hyperbolic arccosine of x values of curves.
+        """Take hyperbolic arccosine of x values of curves.
 
         .. code::
 
@@ -3511,7 +3409,6 @@ class Command(cmd.Cmd):
                 [PyDV]: acoshx a:b
                 [PyDV]: acoshx c d
         """
-
         try:
             self.__func_curve(line, "acosh", do_x=1)
             self.plotedit = True
@@ -3519,8 +3416,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_asinh(self, line):
-        """
-        Take hyperbolic arcsine of y values of curves.
+        """Take hyperbolic arcsine of y values of curves.
 
         .. code::
 
@@ -3531,7 +3427,6 @@ class Command(cmd.Cmd):
                 [PyDV]: asinh a:b
                 [PyDV]: asinh c d
         """
-
         try:
             self.__func_curve(line, "asinh", do_x=0)
             self.plotedit = True
@@ -3539,8 +3434,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_asinhx(self, line):
-        """
-        Take hyperbolic arcsine of x values of curves.
+        """Take hyperbolic arcsine of x values of curves.
 
         .. code::
 
@@ -3551,7 +3445,6 @@ class Command(cmd.Cmd):
                 [PyDV]: asinhx a:b
                 [PyDV]: asinhx c d
         """
-
         try:
             self.__func_curve(line, "asinh", do_x=1)
             self.plotedit = True
@@ -3559,8 +3452,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_atanh(self, line):
-        """
-        Take hyperbolic arctangent of y values of curves.
+        """Take hyperbolic arctangent of y values of curves.
 
         .. code::
 
@@ -3571,7 +3463,6 @@ class Command(cmd.Cmd):
                 [PyDV]: atanh a:b
                 [PyDV]: atanh c d
         """
-
         try:
             self.__func_curve(line, "atanh", do_x=0)
             self.plotedit = True
@@ -3579,8 +3470,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_atanhx(self, line):
-        """
-        Take hyperbolic arctangent of x values of curves.
+        """Take hyperbolic arctangent of x values of curves.
 
         .. code::
 
@@ -3591,7 +3481,6 @@ class Command(cmd.Cmd):
                 [PyDV]: atanhx a:b
                 [PyDV]: atanhx c d
         """
-
         try:
             self.__func_curve(line, "atanh", do_x=1)
             self.plotedit = True
@@ -3599,8 +3488,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_j0(self, line):
-        """
-        Take the zeroth order Bessel function of y values of curves
+        """Take the zeroth order Bessel function of y values of curves.
 
         .. code::
 
@@ -3611,7 +3499,6 @@ class Command(cmd.Cmd):
                 [PyDV]: j0 a:b
                 [PyDV]: j0 c d
         """
-
         try:
             self.__func_curve(line, "j0", do_x=0)
             self.plotedit = True
@@ -3619,8 +3506,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_j0x(self, line):
-        """
-        Take the zeroth order Bessel function of x values of curves
+        """Take the zeroth order Bessel function of x values of curves.
 
         .. code::
 
@@ -3631,7 +3517,6 @@ class Command(cmd.Cmd):
                 [PyDV]: j0x a:b
                 [PyDV]: j0x c d
         """
-
         try:
             self.__func_curve(line, "j0", do_x=1)
             self.plotedit = True
@@ -3639,8 +3524,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_j1(self, line):
-        """
-        Take the first order Bessel function of y values of curves
+        """Take the first order Bessel function of y values of curves.
 
         .. code::
 
@@ -3651,7 +3535,6 @@ class Command(cmd.Cmd):
                 [PyDV]: j1 a:b
                 [PyDV]: j1 c d
         """
-
         try:
             self.__func_curve(line, "j1", do_x=0)
             self.plotedit = True
@@ -3659,8 +3542,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_j1x(self, line):
-        """
-        Take the first order Bessel function of x values of curves
+        """Take the first order Bessel function of x values of curves.
 
         .. code::
 
@@ -3671,7 +3553,6 @@ class Command(cmd.Cmd):
                 [PyDV]: j1x a:b
                 [PyDV]: j1x c d
         """
-
         try:
             self.__func_curve(line, "j1", do_x=1)
             self.plotedit = True
@@ -3679,8 +3560,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_jn(self, line):
-        """
-        Take the nth order Bessel function of y values of curves
+        """Take the nth order Bessel function of y values of curves.
 
         .. code::
 
@@ -3691,7 +3571,6 @@ class Command(cmd.Cmd):
                 [PyDV]: jn a:b 4
                 [PyDV]: jn c d 4
         """
-
         try:
             self.__func_curve(line, "jn", do_x=0, idx=-1)
             self.plotedit = True
@@ -3699,8 +3578,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_jnx(self, line):
-        """
-        Take the nth order Bessel function of x values of curves
+        """Take the nth order Bessel function of x values of curves.
 
         .. code::
 
@@ -3711,7 +3589,6 @@ class Command(cmd.Cmd):
                 [PyDV]: jnx a:b 4
                 [PyDV]: jnx c d 4
         """
-
         try:
             self.__func_curve(line, "jn", do_x=1, idx=-1)
             self.plotedit = True
@@ -3719,8 +3596,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_y0(self, line):
-        """
-        Take the zeroth order Bessel function of the second kind of the y values of the curves.
+        """Take the zeroth order Bessel function of the second kind of the y values of the curves.
 
         .. code::
 
@@ -3731,7 +3607,6 @@ class Command(cmd.Cmd):
                 [PyDV]: y0 a:b
                 [PyDV]: y0 c d
         """
-
         try:
             self.__func_curve(line, "y0", do_x=0)
             self.plotedit = True
@@ -3739,8 +3614,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_y0x(self, line):
-        """
-        Take the zeroth order Bessel function of the second kind of the x values of the curves.
+        """Take the zeroth order Bessel function of the second kind of the x values of the curves.
 
         .. code::
 
@@ -3751,7 +3625,6 @@ class Command(cmd.Cmd):
                 [PyDV]: y0x a:b
                 [PyDV]: y0x c d
         """
-
         try:
             self.__func_curve(line, "y0", do_x=1)
             self.plotedit = True
@@ -3759,8 +3632,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_y1(self, line):
-        """
-        Take the first order Bessel function of the second kind of the y values of the curves.
+        """Take the first order Bessel function of the second kind of the y values of the curves.
 
         .. code::
 
@@ -3771,7 +3643,6 @@ class Command(cmd.Cmd):
                 [PyDV]: y1 a:b
                 [PyDV]: y1 c d
         """
-
         try:
             self.__func_curve(line, "y1", do_x=0)
             self.plotedit = True
@@ -3779,8 +3650,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_y1x(self, line):
-        """
-        Take the first order Bessel function of the second kind of the x values of the curves.
+        """Take the first order Bessel function of the second kind of the x values of the curves.
 
         .. code::
 
@@ -3791,7 +3661,6 @@ class Command(cmd.Cmd):
                 [PyDV]: y1x a:b
                 [PyDV]: y1x c d
         """
-
         try:
             self.__func_curve(line, "y1", do_x=1)
             self.plotedit = True
@@ -3799,8 +3668,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_yn(self, line):
-        """
-        Take the nth order Bessel function of the second kind of y values of curves.
+        """Take the nth order Bessel function of the second kind of y values of curves.
 
         .. code::
 
@@ -3811,7 +3679,6 @@ class Command(cmd.Cmd):
                 [PyDV]: yn a:b 3
                 [PyDV]: yn c d 3
         """
-
         try:
             self.__func_curve(line, "yn", do_x=0, idx=-1)
             self.plotedit = True
@@ -3819,8 +3686,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ynx(self, line):
-        """
-        Take the nth order Bessel function of the second kind of x values of curves.
+        """Take the nth order Bessel function of the second kind of x values of curves.
 
         .. code::
 
@@ -3831,7 +3697,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ynx a:b 3
                 [PyDV]: ynx c d 3
         """
-
         try:
             self.__func_curve(line, "yn", do_x=1, idx=-1)
             self.plotedit = True
@@ -3839,8 +3704,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_powa(self, line):
-        """
-        Raise a fixed value, a, to the power of the y values of the curves.
+        """Raise a fixed value, a, to the power of the y values of the curves.
 
         .. code::
 
@@ -3851,7 +3715,6 @@ class Command(cmd.Cmd):
                 [PyDV]: powa a:b 2
                 [PyDV]: powa c d 2
         """
-
         try:
             self.__func_curve(line, "powa", do_x=0, idx=-1)
             self.plotedit = True
@@ -3859,8 +3722,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_powax(self, line):
-        """
-        Raise a fixed value, a, to the power of the x values of the curves.
+        """Raise a fixed value, a, to the power of the x values of the curves.
 
         .. code::
 
@@ -3871,7 +3733,6 @@ class Command(cmd.Cmd):
                 [PyDV]: powax a:b 2
                 [PyDV]: powax c d 2
         """
-
         try:
             self.__func_curve(line, "powa", do_x=1, idx=-1)
             self.plotedit = True
@@ -3879,8 +3740,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_powr(self, line):
-        """
-        Raise the y values of the curves to a fixed power p.
+        """Raise the y values of the curves to a fixed power p.
 
         .. code::
 
@@ -3891,7 +3751,6 @@ class Command(cmd.Cmd):
                 [PyDV]: powr a:b 2
                 [PyDV]: powr c d 2
         """
-
         try:
             self.__func_curve(line, "powr", do_x=0, idx=-1)
             self.plotedit = True
@@ -3899,8 +3758,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_powrx(self, line):
-        """
-        Raise the x values of the curves to a fixed power p.
+        """Raise the x values of the curves to a fixed power p.
 
         .. code::
 
@@ -3911,7 +3769,6 @@ class Command(cmd.Cmd):
                 [PyDV]: powrx a:b 2
                 [PyDV]: powrx c d 2
         """
-
         try:
             self.__func_curve(line, "powr", do_x=1, idx=-1)
             self.plotedit = True
@@ -3919,8 +3776,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_recip(self, line):
-        """
-        Take the reciprocal of the y values of the curves.
+        """Take the reciprocal of the y values of the curves.
 
         .. code::
 
@@ -3931,7 +3787,6 @@ class Command(cmd.Cmd):
                 [PyDV]: recip a:b
                 [PyDV]: recip c d
         """
-
         try:
             self.__func_curve(line, "recip", do_x=0)
             self.plotedit = True
@@ -3939,8 +3794,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_recipx(self, line):
-        """
-        Take the reciprocal of the x values of the curves.
+        """Take the reciprocal of the x values of the curves.
 
         .. code::
 
@@ -3951,7 +3805,6 @@ class Command(cmd.Cmd):
                 [PyDV]: recipx a:b
                 [PyDV]: recipx c d
         """
-
         try:
             self.__func_curve(line, "recip", do_x=1)
             self.plotedit = True
@@ -3959,8 +3812,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sqr(self, line):
-        """
-        Take the square of the y values of the curves.
+        """Take the square of the y values of the curves.
 
         .. code::
 
@@ -3971,7 +3823,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sqr a:b
                 [PyDV]: sqr c d
         """
-
         try:
             self.__func_curve(line, "sqr", do_x=0)
             self.plotedit = True
@@ -3979,8 +3830,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sqrx(self, line):
-        """
-        Take the square of the x values of the curves.
+        """Take the square of the x values of the curves.
 
         .. code::
 
@@ -3991,7 +3841,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sqrx a:b
                 [PyDV]: sqrx c d
         """
-
         try:
             self.__func_curve(line, "sqr", do_x=1)
             self.plotedit = True
@@ -3999,8 +3848,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sqrt(self, line):
-        """
-        Take the square root of the y values of the curves.
+        """Take the square root of the y values of the curves.
 
         .. code::
 
@@ -4011,7 +3859,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sqrt a:b
                 [PyDV]: sqrt c d
         """
-
         try:
             self.__func_curve(line, "sqrt", do_x=0)
             self.plotedit = True
@@ -4019,8 +3866,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_sqrtx(self, line):
-        """
-        Take the square root of the x values of the curves.
+        """Take the square root of the x values of the curves.
 
         .. code::
 
@@ -4031,7 +3877,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sqrtx a:b
                 [PyDV]: sqrtx c d
         """
-
         try:
             self.__func_curve(line, "sqrt", do_x=1)
             self.plotedit = True
@@ -4039,8 +3884,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xlabel(self, line):
-        """
-        Set a label for the x axis
+        """Set a label for the x axis.
 
         .. code::
 
@@ -4049,15 +3893,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: xlabel my_x_label
         """
-
         try:
             self.set_xlabel(line)
         except:
             pdvutil.print_own_docstring(self)
 
     def do_ylabel(self, line):
-        """
-        Set a label for the y axis.
+        """Set a label for the y axis.
 
         .. code::
 
@@ -4066,15 +3908,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: ylabel my_y_label
         """
-
         try:
             self.set_ylabel(line)
         except:
             pdvutil.print_own_docstring(self)
 
     def do_title(self, line):
-        """
-        Set a title for the plot
+        """Set a title for the plot.
 
         .. code::
 
@@ -4083,15 +3923,14 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: title my_title
         """
-
         try:
             self.set_title(line)
         except:
             pdvutil.print_own_docstring(self)
 
     def do_legend(self, line):
-        """
-        Show/Hide the legend with on | off or set legend position with ur, ul, ll, lr, cl, cr, uc, lc.
+        """Show/Hide the legend with on | off or set legend position with ur, ul, ll, lr, cl, cr, uc, lc.
+
         Specify the number of columns to use in the legend.
         Specify curves to add to or remove from the legend using the `hide` or `show` keywords followed by the ids of
         the curves. Commands after `hide`/`show` will not be processed, so make sure these are the last in the command
@@ -4115,7 +3954,6 @@ class Command(cmd.Cmd):
                 [PyDV]: legend on ul 2 hideid c d
                 [PyDV]: legend on ul 2 hideid all
         """
-
         try:
             locs = {"best": 0, "ur": 1, "ul": 2, "ll": 3, "lr": 4, "cl": 6, "cr": 7, "lc": 8, "uc": 9, "c": 10}
             line = line.strip().split()
@@ -4172,8 +4010,8 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_menulength(self, line):
-        """
-        Adjust the number of curves displayed when executing the `menu` command before Enter needs to be pressed.
+        """Adjust the number of curves displayed when executing the `menu` command before Enter needs to be pressed.
+
         If no length is given, the current menu length will be displayed.
 
         .. code::
@@ -4184,7 +4022,6 @@ class Command(cmd.Cmd):
                 [PyDV]: menulength
                 [PyDV]: menulength 100
         """
-
         try:
             if len(line) == 0:
                 print("menu length is currently", self.menulength)
@@ -4199,9 +4036,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_namewidth(self, line):
-        """
-        Change the width of the namewidth column of the `menu` and `list` output. If no width is given, the
-        current column width will be displayed.
+        """Change the width of the namewidth column of the `menu` and `list` output.
+
+        If no width is given, the current column width will be displayed.
 
         .. code::
 
@@ -4211,7 +4048,6 @@ class Command(cmd.Cmd):
                 [PyDV]: namewidth
                 [PyDV]: namewidth 100
         """
-
         try:
             if len(line) == 0:
                 print("label column width is currently", self.namewidth)
@@ -4226,9 +4062,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xlabelwidth(self, line):
-        """
-        Change the width of the xlabel column of the `menu` and `list` output. If no width is given, the
-        current column width will be displayed.
+        """Change the width of the xlabel column of the `menu` and `list` output.
+
+        If no width is given, the current column width will be displayed.
 
         .. code::
 
@@ -4238,7 +4074,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xlabelwidth
                 [PyDV]: xlabelwidth 100
         """
-
         try:
             if len(line) == 0:
                 print("xlabel column width is currently", self.xlabelwidth)
@@ -4253,9 +4088,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ylabelwidth(self, line):
-        """
-        Change the width of the ylabel column of the `menu` and `list` output. If no width is given, the
-        current column width will be displayed.
+        """Change the width of the ylabel column of the `menu` and `list` output.
+
+        If no width is given, the current column width will be displayed.
 
         .. code::
 
@@ -4265,7 +4100,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ylabelwidth
                 [PyDV]: ylabelwidth 100
         """
-
         try:
             if len(line) == 0:
                 print("label column width is currently", self.ylabelwidth)
@@ -4280,9 +4114,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_filenamewidth(self, line):
-        """
-        Change the width of the fname column of the `menu` and `list` output. If no width is given, the
-        current column width will be displayed.
+        """Change the width of the fname column of the `menu` and `list` output.
+
+        If no width is given, the current column width will be displayed.
 
         .. code::
 
@@ -4292,7 +4126,6 @@ class Command(cmd.Cmd):
                 [PyDV]: filenamewidth
                 [PyDV]: filenamewidth 100
         """
-
         try:
             if len(line) == 0:
                 print("file column width is currently", self.filenamewidth)
@@ -4307,9 +4140,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_recordidwidth(self, line):
-        """
-        Change the width of the record_id column of the `menu` and `list` output. If no width is given, the
-        current column width will be displayed.
+        """Change the width of the record_id column of the `menu` and `list` output.
+
+        If no width is given, the current column width will be displayed.
 
         .. code::
 
@@ -4319,7 +4152,6 @@ class Command(cmd.Cmd):
                 [PyDV]: recordidwidth
                 [PyDV]: recordidwidth 100
         """
-
         try:
             if len(line) == 0:
                 print("record_id column width is currently", self.recordidwidth)
@@ -4334,8 +4166,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_handlelength(self, line):
-        """
-        Adjust the length of the line(s) in the legend.
+        """Adjust the length of the line(s) in the legend.
 
         .. code::
 
@@ -4344,7 +4175,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: handlelength 10
         """
-
         try:
             key = line.strip().split()[0]
             if key.upper() == "NONE":
@@ -4356,8 +4186,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_minorticks(self, line):
-        """
-        Minor ticks are not visible by default. On will make the minor ticks visible and off will hide the minor ticks.
+        """Minor ticks are not visible by default.
+
+        On will make the minor ticks visible and off will hide the minor ticks.
 
         .. code::
 
@@ -4367,7 +4198,6 @@ class Command(cmd.Cmd):
                 [PyDV]: minorticks on
                 [PyDV]: minorticks off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4380,8 +4210,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_border(self, line):
-        """
-        Show or hide the plot border. By default, the border color is black.
+        """Show or hide the plot border. By default, the border color is black.
 
         .. code::
 
@@ -4392,7 +4221,6 @@ class Command(cmd.Cmd):
                 [PyDV]: border on blue
                 [PyDV]: border off
         """
-
         try:
             color = None
             line = line.split()
@@ -4424,8 +4252,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_grid(self, line):
-        """
-        Show or hide the grid on the graph.
+        """Show or hide the grid on the graph.
 
         .. code::
 
@@ -4435,7 +4262,6 @@ class Command(cmd.Cmd):
                 [PyDV]: grid on
                 [PyDV]: grid off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4448,8 +4274,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_axis(self, line):
-        """
-        Show or hide the axis.
+        """Show or hide the axis.
 
         .. code::
 
@@ -4459,7 +4284,6 @@ class Command(cmd.Cmd):
                 [PyDV]: axis on
                 [PyDV]: axis off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4472,8 +4296,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_plot(self, line):
-        """
-        Show or hide the line plots.
+        """Show or hide the line plots.
 
         .. code::
 
@@ -4483,7 +4306,6 @@ class Command(cmd.Cmd):
                 [PyDV]: plot on
                 [PyDV]: plot off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4497,15 +4319,13 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_recolor(self, line):
-        """
-        Reset the color of the line plots.
+    def do_recolor(self, line):  # noqa: ARG002
+        """Reset the color of the line plots.
 
         .. code::
 
             [PyDV]: recolor
         """
-
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
         j = 0
         for i in range(len(self.plotlist)):
@@ -4515,8 +4335,7 @@ class Command(cmd.Cmd):
                 j = 0
 
     def do_merge(self, line):
-        """
-        Merge ultra files together.
+        """Merge ultra files together.
 
         .. code::
 
@@ -4525,7 +4344,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: merge newfile.ult myfile1.ult myfile2.ult
         """
-
         try:
             line = line.split()
             new_file = line[0]
@@ -4554,8 +4372,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_gridcolor(self, line):
-        """
-        Set the color of the grid. White is default.
+        """Set the color of the grid. White is default.
 
         .. code::
 
@@ -4564,7 +4381,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: gridcolor blue
         """
-
         if not line:
             return 0
         try:
@@ -4579,8 +4395,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_gridstyle(self, line):
-        """
-        Set the line style for the grid.
+        """Set the line style for the grid.
 
         .. code::
 
@@ -4592,7 +4407,6 @@ class Command(cmd.Cmd):
                 [PyDV]: gridstyle dot
                 [PyDV]: gridstyle dashdot
         """
-
         if not line:
             return 0
 
@@ -4611,8 +4425,7 @@ class Command(cmd.Cmd):
             return 0
 
     def do_gridwidth(self, line):
-        """
-        Set the grid line width in points.
+        """Set the grid line width in points.
 
         .. code::
 
@@ -4621,7 +4434,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: gridwidth 5
         """
-
         if not line:
             return 0
 
@@ -4631,8 +4443,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_dataid(self, line):
-        """
-        Show or hide curve identifiers on plot.
+        """Show or hide curve identifiers on plot.
 
         .. code::
 
@@ -4642,7 +4453,6 @@ class Command(cmd.Cmd):
                 [PyDV]: dataid on
                 [PyDV]: dataid off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4655,8 +4465,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xlogscale(self, line):
-        """
-        Show the x axis on a log scale.
+        """Show the x axis on a log scale.
 
         .. code::
 
@@ -4666,7 +4475,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xlogscale on
                 [PyDV]: xlogscale off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4683,8 +4491,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ylogscale(self, line):
-        """
-        Set log scale on or off for the y-axis.
+        """Set log scale on or off for the y-axis.
 
         .. code::
 
@@ -4694,7 +4501,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ylogscale on
                 [PyDV]: ylogscale off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4711,8 +4517,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_guilims(self, line):
-        """
-        Set whether or not to use the GUI min/max values for the X and Y limits. Default is off.
+        """Set whether or not to use the GUI min/max values for the X and Y limits. Default is off.
 
         .. code::
 
@@ -4722,7 +4527,6 @@ class Command(cmd.Cmd):
                 [PyDV]: guilims on
                 [PyDV]: guilims off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4739,8 +4543,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_update(self, line):
-        """
-        Update the plot after each command if True. Update the plot is ON by default.
+        """Update the plot after each command if True. Update the plot is ON by default.
 
         .. code::
 
@@ -4750,7 +4553,6 @@ class Command(cmd.Cmd):
                 [PyDV]: update on
                 [PyDV]: update off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -4763,8 +4565,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_latex(self, line):
-        """
-        Use LaTeX font rendering.
+        """Use LaTeX font rendering.
 
         .. code::
 
@@ -4774,7 +4575,6 @@ class Command(cmd.Cmd):
                 [PyDV]: latex on
                 [PyDV]: latex off
         """
-
         try:
             line = line.strip()
 
@@ -4788,8 +4588,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_scatter(self, line):
-        """
-        Show given curves as points rather than continuous line.
+        """Show given curves as points rather than continuous line.
 
         .. code::
 
@@ -4800,7 +4599,6 @@ class Command(cmd.Cmd):
                 [PyDV]: scatter a:b on
                 [PyDV]: scatter c d off
         """
-
         try:
             self.__mod_curve(line, "scatter")
             self.plotedit = True
@@ -4808,8 +4606,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_linespoints(self, line):
-        """
-        Show given curves as points and a line rather than continuous line.
+        """Show given curves as points and a line rather than continuous line.
 
         .. code::
 
@@ -4820,7 +4617,6 @@ class Command(cmd.Cmd):
                 [PyDV]: linespoints a:b on
                 [PyDV]: linespoints c d off
         """
-
         try:
             self.__mod_curve(line, "linespoints")
             self.plotedit = True
@@ -4828,9 +4624,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_lnwidth(self, line):
-        """
-        Set the line widths of the specified curves. A line width of 0 will give the thinnest line which the host
-        graphics system supports.
+        """Set the line widths of the specified curves.
+
+        A line width of 0 will give the thinnest line which the host graphics system supports.
 
         .. code::
 
@@ -4841,7 +4637,6 @@ class Command(cmd.Cmd):
                 [PyDV]: lnwidth a:b 2
                 [PyDV]: lnwidth c d 2
         """
-
         try:
             self.__mod_curve(line, "lnwidth")
             self.plotedit = True
@@ -4849,8 +4644,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_lnstyle(self, line):
-        """
-        Set the line style of the specified curves.
+        """Set the line style of the specified curves.
 
         .. code::
 
@@ -4861,7 +4655,6 @@ class Command(cmd.Cmd):
                 [PyDV]: lnstyle a:b dash
                 [PyDV]: lnstyle c d dot
         """
-
         try:
             self.__mod_curve(line, "lnstyle")
             self.plotedit = True
@@ -4869,8 +4662,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_drawstyle(self, line):
-        """
-        Set draw style of given curves.
+        """Set draw style of given curves.
 
         .. code::
 
@@ -4881,7 +4673,6 @@ class Command(cmd.Cmd):
                 [PyDV]: drawstyle a:b steps-pre
                 [PyDV]: drawstyle c d steps-post
         """
-
         try:
             self.__mod_curve(line, "drawstyle")
             self.plotedit = True
@@ -4889,9 +4680,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_dashstyle(self, line):
-        """
-        Set the style of dash or dot dash lines. The python list is a list of integers, alternating how many pixels
-        to turn on and off, for example:
+        """Set the style of dash or dot dash lines.
+
+        The python list is a list of integers, alternating how many pixels to turn on and off, for example:
 
         [2, 2] : Two pixels on, two off (will result in a dot pattern).
 
@@ -4912,7 +4703,6 @@ class Command(cmd.Cmd):
                 [PyDV]: dashstyle a:b [2, 2]
                 [PyDV]: dashstyle c d [2, 2]
         """
-
         try:
             options = line[line.index("[") :]
             line = line[0 : line.index("[")]
@@ -4922,8 +4712,8 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_group(self, line):
-        """
-        Group curves based on name and file if curve names are the same. Max number of same name curves is 14.
+        """Group curves based on name and file if curve names are the same. Max number of same name curves is 14.
+
         Can also update title to curve name and change labels to filenames if all curves share the same name.
         If `title` is passed, one can adjust the filename label with number of `slashes` as well.
         If `off` is passed, will reset curves back to normal and stop automatic grouping.
@@ -4954,7 +4744,7 @@ class Command(cmd.Cmd):
         fn = []
         for cur in self.plotlist:
             pn.append(cur.plotname)
-            cn.append(cur._original_name)
+            cn.append(cur.original_name)
             fn.append(cur.filename)
 
         # Setting Linestyles at the file level
@@ -5026,22 +4816,21 @@ class Command(cmd.Cmd):
                 self.do_label(f"{cur.plotname} {path_section}")
             else:
                 if self.slashes != 0:
-                    self.do_label(f"{cur.plotname} {cur._original_name} - {path_section}")
+                    self.do_label(f"{cur.plotname} {cur.original_name} - {path_section}")
 
         if len(curve_names) == 1 and title_update:
             self.do_title(f"{curve_names[0].strip()}")
 
         if not self.group or len(files) == 1:
             for i, cur in enumerate(self.plotlist):
-                self.do_label(f"{cur.plotname} {cur._original_name}")
+                self.do_label(f"{cur.plotname} {cur.original_name}")
                 temp_color = colors[i % len(colors)].replace("'", "")
                 self.do_color(f"{cur.plotname} {temp_color}")
                 self.do_lnstyle(f"{cur.plotname} solid")
             self.slashes = 100
 
     def do_hide(self, line):
-        """
-        Hide a curve from the graph.
+        """Hide a curve from the graph.
 
         .. code::
 
@@ -5052,7 +4841,6 @@ class Command(cmd.Cmd):
                 [PyDV]: hide a:b
                 [PyDV]: hide c d
         """
-
         try:
             line = line + " " + "ON"
             self.__mod_curve(line, "hide")
@@ -5061,8 +4849,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_show(self, line):
-        """
-        Show the specified curves hidden by the `hide` command
+        """Show the specified curves hidden by the `hide` command.
 
         .. code::
 
@@ -5073,7 +4860,6 @@ class Command(cmd.Cmd):
                 [PyDV]: show a:b
                 [PyDV]: show c d
         """
-
         try:
             line = line + " " + "OFF"
             self.__mod_curve(line, "hide")
@@ -5082,10 +4868,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_style(self, line):
-        """
-        Use matplotlib style settings from a style specification. The style name of **default** (if available) is
-        reserved for reverting back to the default style settings. You can type the command `showstyles` and see
-        Matplotlib's Style sheets reference.
+        """Use matplotlib style settings from a style specification.
+
+        The style name of **default** (if available) is reserved for reverting back to the default style settings.
+        You can type the command `showstyles` and see Matplotlib's Style sheets reference.
 
         .. code::
 
@@ -5094,7 +4880,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: style classic
         """
-
         try:
             line = line.split()
             self.plotter.style = line[0]
@@ -5104,8 +4889,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_range(self, line):
-        """
-        Set the range for plotting. Using de (for default) will let the curves determine the range.
+        """Set the range for plotting. Using de (for default) will let the curves determine the range.
 
         .. code::
 
@@ -5115,7 +4899,6 @@ class Command(cmd.Cmd):
                 [PyDV]: range 3 7
                 [PyDV]: range de
         """
-
         try:
             line = line.split()
             if line and line[0] == "de":
@@ -5128,8 +4911,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_domain(self, line):
-        """
-        Set the domain for plotting. Using de (for default) will let the curves determine the domain.
+        """Set the domain for plotting. Using de (for default) will let the curves determine the domain.
 
         .. code::
 
@@ -5139,7 +4921,6 @@ class Command(cmd.Cmd):
                 [PyDV]: domain 3 7
                 [PyDV]: domain de
         """
-
         try:
             line = line.split()
             if line and line[0] == "de":
@@ -5152,8 +4933,8 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_list(self, line):
-        """
-        List the curves that are plotted.
+        """List the curves that are plotted.
+
         A regular expression may be supplied for matching against the curve label to be listed.
 
         Regular expressions are based on the Python regex syntax, not the UNIX syntax.
@@ -5169,7 +4950,6 @@ class Command(cmd.Cmd):
                 [PyDV]: list
                 [PyDV]: list my.*curves
         """
-
         try:
             reg = re.compile(r"")
             if line:
@@ -5252,8 +5032,8 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_listr(self, line):
-        """
-        List the curves that are plotted in the range from start to stop.
+        """List the curves that are plotted in the range from start to stop.
+
         If stop is not specified, it will be set to the end of the curve list.
 
         .. code::
@@ -5264,7 +5044,6 @@ class Command(cmd.Cmd):
                 [PyDV]: listr 1
                 [PyDV]: listr 1 10
         """
-
         group_plotnames = []
         group_curvenames = []
         group_filenames = []
@@ -5367,8 +5146,7 @@ class Command(cmd.Cmd):
             return group_plotnames, group_curvenames, group_filenames  # noqa: B012
 
     def do_kill(self, line):
-        """
-        Delete the specified entries from the menu.
+        """Delete the specified entries from the menu.
 
         .. code::
 
@@ -5378,7 +5156,6 @@ class Command(cmd.Cmd):
                 [PyDV]: kill all
                 [PyDV]: kill 5:7
         """
-
         try:
             if not line:
                 raise RuntimeError("Argument(s) missing.")
@@ -5386,12 +5163,7 @@ class Command(cmd.Cmd):
             if "all" in line:
                 self.curvelist = []
             else:
-                tmpcurvelist = []
-
-                for i in range(len(self.curvelist)):
-                    if str(i + 1) not in line:
-                        tmpcurvelist.append(self.curvelist[i])
-
+                tmpcurvelist = [self.curvelist[i] for i in range(len(self.curvelist)) if str(i + 1) not in line]
                 self.curvelist = tmpcurvelist
         except:
             pdvutil.print_own_docstring(self)
@@ -5400,8 +5172,8 @@ class Command(cmd.Cmd):
             self.plotter.updateDialogs()
 
     def do_menur(self, line):
-        """
-        List the curves available for plotting in the range from start to stop.
+        """List the curves available for plotting in the range from start to stop.
+
         If stop is not specified, it will be set to the end of the curve list.
 
         .. code::
@@ -5412,7 +5184,6 @@ class Command(cmd.Cmd):
                 [PyDV]: menur 1
                 [PyDV]: menur 1 10
         """
-
         try:
             line = line.split()
             argcnt = len(line)
@@ -5502,8 +5273,8 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_menu(self, line):
-        """
-        List the curves available for plotting.
+        """List the curves available for plotting.
+
         A regular expression may be supplied for matching against the curve label to be listed.
 
         Regular expressions are based on the Python regex syntax, not the UNIX syntax.
@@ -5519,7 +5290,6 @@ class Command(cmd.Cmd):
                 [PyDV]: menu
                 [PyDV]: menu my.*curves
         """
-
         menu_j = 1
         j = 0
         try:
@@ -5611,11 +5381,11 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def help_regex(self):
+        """Display the regex help."""
         help(re)
 
-    def do_drop(self, line):
-        """
-        Start the Python Interactive Console.
+    def do_drop(self, line):  # noqa: ARG002
+        """Start the Python Interactive Console.
 
         .. code::
 
@@ -5645,9 +5415,8 @@ class Command(cmd.Cmd):
         self.redraw = False
         return True
 
-    def do_quit(self, line):
-        """
-        Quit PyDV.
+    def do_quit(self, line):  # noqa: ARG002
+        """Quit PyDV.
 
         .. code::
 
@@ -5656,7 +5425,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: q
         """
-
         try:
             readline.write_history_file(os.getenv("HOME") + "/.pdvhistory")
         except:
@@ -5666,10 +5434,11 @@ class Command(cmd.Cmd):
             sys.exit(0)
 
     def do_image(self, line):
-        """
-        Save the current figure to an image file. All parameters are optional. The default value
-        for `filename=plot`, the default value for `filetype=pdf` and the default value for
-        `transparent=False`. `dpi` is the resolution in dots per inch and the default value is
+        """Save the current figure to an image file.
+
+        All parameters are optional. The default value for `filename=plot`,
+        the default value for `filetype=pdf` and the default value for `transparent=False`.
+        `dpi` is the resolution in dots per inch and the default value is
         the figure's dpi value. Width and height are in pixels.
 
         .. code::
@@ -5682,7 +5451,6 @@ class Command(cmd.Cmd):
                 [PyDV]: image my_plot png True 100
                 [PyDV]: image my_plot png True 100 1920 1080
         """  # noqa: E501
-
         try:
             line = line.split()
             optcnt = len(line)
@@ -5718,8 +5486,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_save(self, line):
-        """
-        Saves plotted curves to a file in ULTRA format. Can also save x and y labels which can be read back in.
+        """Save plotted curves to a file in ULTRA format. Can also save x and y labels which can be read back in.
 
         .. code::
 
@@ -5731,7 +5498,6 @@ class Command(cmd.Cmd):
                 [PyDV]: save my_saved_file.ult b:d
                 [PyDV]: save my_saved_file.ult b:d savelabels
         """
-
         if not line:
             return 0
         try:
@@ -5755,8 +5521,9 @@ class Command(cmd.Cmd):
                                 f.write("# " + cur.name + " # xlabel " + cur.xlabel + " # ylabel " + cur.ylabel + "\n")
                             else:
                                 f.write("# " + cur.name + "\n")
-                            for dex in range(len(cur.x)):
-                                f.write(" " + str(cur.x[dex]) + " " + str(cur.y[dex]) + "\n")
+                            f.writelines(
+                                " " + str(cur.x[dex]) + " " + str(cur.y[dex]) + "\n" for dex in range(len(cur.x))
+                            )
                         except RuntimeError as rte:
                             print(f"I/O error: {rte}")
         except:
@@ -5765,8 +5532,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_savecsv(self, line):
-        """
-        Saves plotted curves to file in comma separated values (CSV) format. Assumes all curves have the same x basis.
+        """Save plotted curves to file in comma separated values (CSV) format. Assumes all curves have the same x basis.
 
         .. code::
 
@@ -5777,7 +5543,6 @@ class Command(cmd.Cmd):
                 [PyDV]: savecsv my_saved_file.csv b d
                 [PyDV]: savecsv my_saved_file.csv b:d
         """
-
         if not line:
             return 0
         try:
@@ -5814,8 +5579,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_annot(self, line):
-        """
-        Display text on the plot at point (x, y). List of annotations can be seen with `listannot`.
+        """Display text on the plot at point (x, y). List of annotations can be seen with `listannot`.
 
         .. code::
 
@@ -5824,7 +5588,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: annot mytext 1 2
         """
-
         if not line:
             return 0
         try:
@@ -5837,15 +5600,13 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_listannot(self, line):
-        """
-        List current annotations.
+    def do_listannot(self, line):  # noqa: ARG002
+        """List current annotations.
 
         .. code::
 
             [PyDV]: listannot
         """
-
         try:
             for i in range(len(self.usertexts)):
                 dex = str(i + 1).rjust(5)
@@ -5862,8 +5623,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_delannot(self, line):
-        """
-        Delete annotations from list. List of annotations can be seen with `listannot`.
+        """Delete annotations from list. List of annotations can be seen with `listannot`.
 
         .. code::
 
@@ -5875,7 +5635,6 @@ class Command(cmd.Cmd):
                 [PyDV]: delannot 1:2
                 [PyDV]: delannot 3 4
         """
-
         if not line:
             return 0
         try:
@@ -5885,17 +5644,14 @@ class Command(cmd.Cmd):
             else:
                 print(line)
                 line = line.split()
-                rmlist = []
-                for i in range(len(line)):
-                    rmlist.append(self.usertexts[int(line[i]) - 1])
+                rmlist = [self.usertexts[int(line[i]) - 1] for i in range(len(line))]
                 for text in rmlist:
                     self.usertexts.remove(text)
         except:
             pdvutil.print_own_docstring(self)
 
     def do_span(self, line):
-        """
-        Generates straight line of slope 1 and y intercept 0 in the specified domain with an optional number of points.
+        """Generate straight line slope 1 and y intercept 0 in the specified domain with an optional number of points.
 
         .. code::
 
@@ -5921,8 +5677,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_line(self, line):
-        """
-        Generate a line with y = mx + b and an optional number of points.
+        """Generate a line with y = mx + b and an optional number of points.
 
         .. code::
 
@@ -5932,7 +5687,6 @@ class Command(cmd.Cmd):
                 [PyDV]: line 3 7 -1 20
                 [PyDV]: line 3 7 -1 20 200
         """
-
         if not line:
             return 0
         try:
@@ -5952,8 +5706,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_makecurve(self, line):
-        """
-        Generate a curve from two tuples of numbers.
+        """Generate a curve from two tuples of numbers.
 
         .. code::
 
@@ -5962,7 +5715,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: makecurve (1 2 3) (20 30 40)
         """
-
         if not line:
             return 0
         try:
@@ -5980,8 +5732,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ymin(self, line):
-        """
-        Filter out points in curves whose y-values less than limit
+        """Filter out points in curves whose y-values less than limit.
 
         .. code::
 
@@ -5992,7 +5743,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ymin a:b 3
                 [PyDV]: ymin c d 3
         """
-
         try:
             self.__mod_curve(line, "ymin")
             self.plotedit = True
@@ -6000,8 +5750,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ymax(self, line):
-        """
-        Filter out points in curves whose y-values greater than limit
+        """Filter out points in curves whose y-values greater than limit.
 
         .. code::
 
@@ -6012,7 +5761,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ymax a:b 3
                 [PyDV]: ymax c d 3
         """
-
         try:
             self.__mod_curve(line, "ymax")
             self.plotedit = True
@@ -6020,8 +5768,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xmin(self, line):
-        """
-        Filter out points in curves whose x-values less than limit
+        """Filter out points in curves whose x-values less than limit.
 
         .. code::
 
@@ -6032,7 +5779,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xmin a:b 3
                 [PyDV]: xmin c d 3
         """
-
         try:
             self.__mod_curve(line, "xmin")
             self.plotedit = True
@@ -6040,8 +5786,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xmax(self, line):
-        """
-        Filter out points in curves whose x-values greater than limit.
+        """Filter out points in curves whose x-values greater than limit.
 
         .. code::
 
@@ -6052,7 +5797,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xmax a:b 3
                 [PyDV]: xmax c d 3
         """
-
         try:
             self.__mod_curve(line, "xmax")
             self.plotedit = True
@@ -6060,9 +5804,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xminmax(self, line):
-        """
-        Filter out points; this is the only filter points function that returns a new curve
-        due to how ULTRA behaved.
+        """Filter out points.
+
+        This is the only filter points function that returns a new curve due to how ULTRA behaved.
 
         .. code::
 
@@ -6073,7 +5817,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xminmax a:b 1 3
                 [PyDV]: xminmax c d 1 3
         """
-
         if len(line.split(":")) > 1:
             self.do_xminmax(pdvutil.getletterargs(line))
             return
@@ -6109,8 +5852,7 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_yminmax(self, line):
-        """
-        Trim the selected curves.
+        """Trim the selected curves.
 
         .. code::
 
@@ -6121,7 +5863,6 @@ class Command(cmd.Cmd):
                 [PyDV]: yminmax a:b 3 7
                 [PyDV]: yminmax c d 3 7
         """
-
         if len(line.split(":")) > 1:
             self.do_yminmax(pdvutil.getletterargs(line))
             return
@@ -6150,8 +5891,7 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_filter(self, line):
-        """
-        Filter out points in the x and y axis.
+        """Filter out points in the x and y axis.
 
         .. code::
 
@@ -6162,7 +5902,6 @@ class Command(cmd.Cmd):
                 [PyDV]: filter a:b -3 0 -5 10
                 [PyDV]: filter c d 0 13 -7 15
         """
-
         if len(line.split(":")) > 1:
             self.do_filter(pdvutil.getletterargs(line))
             return
@@ -6197,8 +5936,7 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_derivative(self, line):
-        """
-        Take the derivative of curves.
+        """Take the derivative of curves.
 
         .. code::
 
@@ -6209,7 +5947,6 @@ class Command(cmd.Cmd):
                 [PyDV]: derivative a:b
                 [PyDV]: derivative c d
         """
-
         if not line:
             return 0
         try:
@@ -6229,8 +5966,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_integrate(self, line):
-        """
-        Compute the definite integral of each curve in the list over the specified domain.
+        """Compute the definite integral of each curve in the list over the specified domain.
 
         .. code::
 
@@ -6242,7 +5978,6 @@ class Command(cmd.Cmd):
                 [PyDV]: integrate c d
                 [PyDV]: integrate c d 3 7
         """
-
         if not line:
             return 0
         try:
@@ -6284,8 +6019,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_vs(self, line):
-        """
-        Plot the range of the first curve against the range of the second curve.
+        """Plot the range of the first curve against the range of the second curve.
 
         .. code::
 
@@ -6294,7 +6028,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: vs a b
         """
-
         if not line:
             return 0
         try:
@@ -6324,9 +6057,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def __vs_variant(self, arg0, arg1):
-        """
-        This variant support directly plotting curve numbers against each other
-        """
+        """Variant support directly plotting curve numbers against each other."""
 
         def _extract_curvelist_number(arg):
             if ord(arg[0].upper()) >= ord("A") and ord(arg[0].upper()) <= ord("Z"):  # Look for a.% type stuff
@@ -6372,8 +6103,7 @@ class Command(cmd.Cmd):
         return
 
     def do_errorbar(self, line):
-        """
-        Plot error bars on the given curve.
+        """Plot error bars on the given curve.
 
         .. code::
 
@@ -6384,7 +6114,6 @@ class Command(cmd.Cmd):
                 [PyDV]: errorbar a 2 3 4 5
                 [PyDV]: errorbar a 2 3 4 5 2
         """
-
         if not line:
             return 0
         line = line.split()
@@ -6423,9 +6152,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_errorrange(self, line):
-        """
-        Plot shaded error region on given curve. Note: y-error-curve and y+error-curve are
-        curves and not scalars
+        """Plot shaded error region on given curve.
+
+        Note: y-error-curve and y+error-curve are curves and not scalars.
 
         .. code::
 
@@ -6434,7 +6163,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: errorrannge a b c
         """
-
         if not line:
             return 0
         try:
@@ -6449,9 +6177,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_marker(self, line):
-        """
-        Set the marker symbol and marker size (optionally) for scatter plots. You can also use any of the matplotlib
-        supported marker types as well. See the matplotlib documentation on markers for further information.
+        """Set the marker symbol and marker size (optionally) for scatter plots.
+
+        You can also use any of the matplotlib supported marker types as well.
+        See the matplotlib documentation on markers for further information.
 
         .. code::
 
@@ -6466,8 +6195,7 @@ class Command(cmd.Cmd):
         self.do_linemarker(line)
 
     def do_linemarker(self, line):
-        """
-        Set the marker symbol and marker size for the curves
+        """Set the marker symbol and marker size for the curves.
 
         .. note::
             When setting this value through the interface or the curve object directly,
@@ -6485,7 +6213,6 @@ class Command(cmd.Cmd):
                 [PyDV]: linemarker c d circle
                 [PyDV]: linemarker c d square 5
         """
-
         if not line:
             return 0
         try:
@@ -6520,10 +6247,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_mathinterpparams(self, line):
-        """
-        Set `np.interp()` `left`, `right`, and `period` parameters for internal curve math methods for Curve such
-        as `+ a b c`, `- a b c`, etc.... Defaults are `None` which align with `np.interp()` defaults. To reset pass
-        in none to <left> <right> <period>.
+        """Set `np.interp()` `left`, `right`, and `period` parameters for internal curve math methods.
+
+        Such as `+ a b c`, `- a b c`, etc.... Defaults are `None` which align with `np.interp()` defaults.
+        To reset pass in none to <left> <right> <period>.
 
         .. code::
 
@@ -6534,7 +6261,6 @@ class Command(cmd.Cmd):
                 [PyDV]: mathinterpparams a:b 0 0 none
                 [PyDV]: mathinterpparams c d none none none
         """
-
         if not line:
             return 0
         try:
@@ -6567,8 +6293,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_smooth(self, line):
-        """
-        Smooth the curve to the given degree.
+        """Smooth the curve to the given degree.
 
         .. code::
 
@@ -6580,7 +6305,6 @@ class Command(cmd.Cmd):
                 [PyDV]: sin c d
                 [PyDV]: sin c d 4
         """
-
         if not line:
             return 0
         try:
@@ -6614,8 +6338,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_fft(self, line):
-        """
-        Compute the one-dimensional discrete Fourier Transform for the curves.
+        """Compute the one-dimensional discrete Fourier Transform for the curves.
 
         .. code::
 
@@ -6626,7 +6349,6 @@ class Command(cmd.Cmd):
                 [PyDV]: fft a:b
                 [PyDV]: fft c d
         """
-
         if not line:
             return 0
 
@@ -6648,8 +6370,8 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_appendcurves(self, line):
-        """
-        Merge a list of curves over the union of their domains.
+        """Merge a list of curves over the union of their domains.
+
         Where the domains overlap, take the average of the curves' y-values.
 
         .. code::
@@ -6660,7 +6382,6 @@ class Command(cmd.Cmd):
                 [PyDV]: appendcurves a:b
                 [PyDV]: appendcurves c d
         """
-
         if not line:
             return 0
 
@@ -6690,14 +6411,12 @@ class Command(cmd.Cmd):
                 pdvutil.print_own_docstring(self)
 
     def do_alpha(self, line):
-        """
-        Find the alpha.
+        """Find the alpha.
 
         .. code::
 
             [PyDV]: alpha <calculated-a> <calculated-i> <response> [# points]
         """
-
         if not line:
             return 0
 
@@ -6731,22 +6450,8 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_convolve(self, line):
-        """
-        Computes the convolution of the two given curves.
-
-        **THIS IS DEPRECIATED**
-
-        * Use `convolc` for (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))
-        * Use `convolb` for (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))
-        """
-        print(f"convol {line}")
-        print("Use `convolc` for (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))")
-        print("Use `convolb` for (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))")
-
     def do_convolveb(self, line):
-        """
-        Computes the convolution of the two given curves and normalizes by the area under the second curve.
+        """Compute the convolution of the two given curves and normalizes by the area under the second curve.
 
         (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))
 
@@ -6759,7 +6464,6 @@ class Command(cmd.Cmd):
                 [PyDV]: convolveb g h 200
                 [PyDV]: convolveb g h 200 200
         """
-
         if not line:
             return 0
         try:
@@ -6774,16 +6478,16 @@ class Command(cmd.Cmd):
                     break
 
             if len(line) == 2:
-                nc = pydvpy.convolveb(c1, c2, debug=self.debug)
+                nc = pydvpy.convolveb(c1, c2)
             elif len(line) == 3:
                 npts = int(line[2])
-                nc = pydvpy.convolveb(c1, c2, npts, debug=self.debug)
+                nc = pydvpy.convolveb(c1, c2, npts)
             elif len(line) == 4:
                 npts = int(line[2])
                 npts_interp = int(line[3])
-                nc = pydvpy.convolveb(c1, c2, npts, npts_interp, debug=self.debug)
+                nc = pydvpy.convolveb(c1, c2, npts, npts_interp)
             else:
-                raise RuntimeError(f"Wrong number of arguments, expecting 2 or 3 but received {len(line)}.")
+                raise RuntimeError(f"Wrong number of arguments, expecting 2 thru 4 but received {len(line)}.")
 
             self.addtoplot(nc)
             self.plotedit = True
@@ -6791,8 +6495,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_convolvec(self, line):
-        """
-        Computes the convolution of the two given curves with no normalization.
+        """Compute the convolution of the two given curves with no normalization.
 
         (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))
 
@@ -6805,7 +6508,6 @@ class Command(cmd.Cmd):
                 [PyDV]: convolvec g h 200
                 [PyDV]: convolvec g h 200 200
         """
-
         if not line:
             return 0
         try:
@@ -6820,16 +6522,16 @@ class Command(cmd.Cmd):
                     break
 
             if len(line) == 2:
-                nc = pydvpy.convolvec(c1, c2, debug=self.debug)
+                nc = pydvpy.convolvec(c1, c2)
             elif len(line) == 3:
                 npts = int(line[2])
-                nc = pydvpy.convolvec(c1, c2, npts, debug=self.debug)
+                nc = pydvpy.convolvec(c1, c2, npts)
             elif len(line) == 4:
                 npts = int(line[2])
                 npts_interp = int(line[3])
-                nc = pydvpy.convolvec(c1, c2, npts, npts_interp, debug=self.debug)
+                nc = pydvpy.convolvec(c1, c2, npts, npts_interp)
             else:
-                raise RuntimeError(f"Wrong number of arguments, expecting 2 or 3 but received {len(line)}.")
+                raise RuntimeError(f"Wrong number of arguments, expecting 2 thru 4 but received {len(line)}.")
 
             self.addtoplot(nc)
             self.plotedit = True
@@ -6837,8 +6539,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_diffMeasure(self, line):
-        """
-        Compare two curves. For the given curves a fractional difference measure and its average is computed
+        """Compare two curves by computing a fractional difference measure and its average.
 
         .. code::
 
@@ -6848,7 +6549,6 @@ class Command(cmd.Cmd):
                 [PyDV]: diffMeasure a b
                 [PyDV]: diffMeasure a b 0.1
         """
-
         if not line:
             return 0
         try:
@@ -6876,8 +6576,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_correl(self, line):
-        """
-        Computes the cross-correlation of two curves.
+        """Compute the cross-correlation of two curves.
 
         .. code::
 
@@ -6886,7 +6585,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: correl a b
         """
-
         if not line:
             return 0
 
@@ -6909,8 +6607,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_theta(self, line):
-        """
-        Generate a unit step distribution.
+        """Generate a unit step distribution.
 
         .. code::
 
@@ -6920,7 +6617,6 @@ class Command(cmd.Cmd):
                 [PyDV]: theta -5 0 5
                 [PyDV]: theta -3 3 5 200
         """
-
         try:
             line = line.split()
             xmin = float(line[0])
@@ -6936,8 +6632,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_normalize(self, line):
-        """
-        Normalize a curve.
+        """Normalize a curve.
 
         .. code::
 
@@ -6946,7 +6641,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: normalize a
         """
-
         try:
             idx = pdvutil.getCurveIndex(line, self.plotlist)
             c1 = self.plotlist[idx]
@@ -6958,8 +6652,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_hypot(self, line):
-        """
-        Calculate harmonic average of two curves, sqrt(a^2+b^2).
+        """Calculate harmonic average of two curves, sqrt(a^2+b^2).
 
         .. code::
 
@@ -6968,7 +6661,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: hypot a b
         """
-
         try:
             line = line.split()
             idx = pdvutil.getCurveIndex(line[0], self.plotlist)
@@ -6983,8 +6675,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_delta(self, line):
-        """
-        Procedure: Generate a Dirac delta distribution such that `Int(xmin, xmax, dt*delta(t - x0)) = 1`.
+        """Procedure: Generate a Dirac delta distribution such that `Int(xmin, xmax, dt*delta(t - x0)) = 1`.
 
         .. code::
 
@@ -6994,7 +6685,6 @@ class Command(cmd.Cmd):
                 [PyDV]: delta -5 0 5
                 [PyDV]: delta -3 3 5 200
         """
-
         try:
             line = line.split()
             xmn = float(line[0])
@@ -7009,8 +6699,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_bkgcolor(self, line):
-        """
-        Change the background color of the plot, window, or both.
+        """Change the background color of the plot, window, or both.
 
         .. code::
 
@@ -7021,7 +6710,6 @@ class Command(cmd.Cmd):
                 [PyDV]: bkgcolor window blue
                 [PyDV]: bkgcolor reset
         """
-
         try:
             line = line.split()
             color = line[-1]
@@ -7057,8 +6745,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_fontcolor(self, line):
-        """
-        Change the font color of given plot component.
+        """Change the font color of given plot component.
 
         .. code::
 
@@ -7071,7 +6758,6 @@ class Command(cmd.Cmd):
                 [PyDV]: fontcolor xaxis blue
                 [PyDV]: fontcolor yaxis blue
         """
-
         try:
             line = line.split()
             color = line[-1]
@@ -7117,8 +6803,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_fontsize(self, line):
-        """
-        Change the font size of given component, or overall scaling factor.
+        """Change the font size of given component, or overall scaling factor.
 
         .. code::
 
@@ -7133,7 +6818,6 @@ class Command(cmd.Cmd):
                 [PyDV]: fontsize curve 12
                 [PyDV]: fontsize annotation small
         """  # noqa: E501
-
         try:
             line = line.split()
             size = line[-1]
@@ -7189,8 +6873,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_gaussian(self, line):
-        """
-        Generate a gaussian function.
+        """Generate a gaussian function.
 
         .. code::
 
@@ -7201,7 +6884,6 @@ class Command(cmd.Cmd):
                 [PyDV]: gaussian 5 2 0 100
                 [PyDV]: gaussian 5 2 0 100 2
         """
-
         if not line:
             return 0
         try:
@@ -7230,8 +6912,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_geometry(self, line):
-        """
-        Change the PyDV window size and location in pixels.
+        """Change the PyDV window size and location in pixels.
 
         .. code::
 
@@ -7240,7 +6921,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: geometry 500 500 250 250
         """
-
         try:
             line = line.split()
             if len(line) != 4:
@@ -7253,12 +6933,13 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_plotlayout(self, line):
-        """
-        Adjust the plot layout parameters. Where `left` is the position of the left edge of the
-        plot as a fraction of the figure width, `right` is the position of the right edge of the
-        plot, as a fraction of the figure width, `top` is the position of the top edge of the plot,
-        as a fraction of the figure height and `bottom` is the position of the bottom edge of the plot,
-        as a fraction of the figure height. Alternatively, `de` will revert to the default plot layout values.
+        """Adjust the plot layout parameters.
+
+        Where `left` is the position of the left edge of the plot as a fraction of the figure width,
+        `right` is the position of the right edge of the plot, as a fraction of the figure width,
+        `top` is the position of the top edge of the plot, as a fraction of the figure height and
+        `bottom` is the position of the bottom edge of the plot, as a fraction of the figure height.
+        Alternatively, `de` will revert to the default plot layout values.
 
         If no arguments are given, the plot's current layout settings will be displayed.
 
@@ -7273,7 +6954,6 @@ class Command(cmd.Cmd):
                 [PyDV]: plotlayout bottom
                 [PyDV]: plotlayout de
         """
-
         try:
             line = line.split()
             paramcnt = len(line)
@@ -7308,15 +6988,13 @@ class Command(cmd.Cmd):
             self.redraw = False
             pdvutil.print_own_docstring(self)
 
-    def do_reid(self, line):
-        """
-        Relabel all the curves into continuous alphabetical order.
+    def do_reid(self, line):  # noqa: ARG002
+        """Relabel all the curves into continuous alphabetical order.
 
         .. code::
 
             [PyDV]: reid
         """
-
         try:
             for i in range(len(self.plotlist)):
                 c = self.plotlist[i]  # get i'th curve object
@@ -7328,9 +7006,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_label(self, line):
-        """
-        Change the key and list label for a curve. For multiple curves, each label must start with ` (this is the
-        backtick character ` , not the single quote character ').
+        """Change the key and list label for a curve.
+
+        For multiple curves, each label must start with ` (this is the backtick character ` ,
+        not the single quote character ').
 
         .. code::
 
@@ -7341,7 +7020,6 @@ class Command(cmd.Cmd):
                 [PyDV]: label a:b `my_new_label `my other label
                 [PyDV]: label a:c `mynewlabel `my other label `my thirdlabel
         """
-
         try:
             if len(line.split(":")) > 1 and not self.do_label_done:
                 self.do_label_done = True
@@ -7371,9 +7049,9 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_labelrecordids(self, line):
-        """
-        Add curve recordid to the legend label. Command will only work with curves from Sina files with valid
-        record ids.
+        """Add curve recordid to the legend label.
+
+        Command will only work with curves from Sina files with valid record ids.
 
         .. code::
 
@@ -7383,7 +7061,6 @@ class Command(cmd.Cmd):
                 [PyDV]: labelrecordids on
                 [PyDV]: labelrecordids off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -7396,8 +7073,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_labelfilenames(self, line):
-        """
-        Add curve filename to the legend label.
+        """Add curve filename to the legend label.
 
         .. code::
 
@@ -7407,7 +7083,6 @@ class Command(cmd.Cmd):
                 [PyDV]: labelfilenames on
                 [PyDV]: labelfilenames off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -7420,8 +7095,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_labelcurve(self, line):
-        """
-        Add curve letter to the legend label.
+        """Add curve letter to the legend label.
 
         .. code::
 
@@ -7431,7 +7105,6 @@ class Command(cmd.Cmd):
                 [PyDV]: labelcurve on
                 [PyDV]: labelcurve off
         """
-
         try:
             line = line.strip()
             if line == "0" or line.upper() == "OFF":
@@ -7444,8 +7117,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_run(self, line):
-        """
-        Execute a list of commands from a file.
+        """Execute a list of commands from a file.
 
         .. code::
 
@@ -7454,7 +7126,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: run my_file
         """
-
         try:
             fname = line.strip()
             if fname[0] == "~":
@@ -7470,7 +7141,7 @@ class Command(cmd.Cmd):
                         args = fline.split()
                         cmd = args.pop(0)
                         if cmd == "image":
-                            self.updateplot  # noqa: B018
+                            self.updateplot()
                         args = " ".join(args)
                         send = "self.do_" + cmd + "('" + args.replace("\\", "\\\\") + "')"
                         result = eval(send)  # noqa: F841
@@ -7481,15 +7152,14 @@ class Command(cmd.Cmd):
                         if self.debug:
                             traceback.print_exc(file=sys.stdout)
             self.plotedit = True
-            self.updateplot  # noqa: B018
+            self.updateplot()
         except SystemExit:
             self.do_quit(line)
         except:
             pdvutil.print_own_docstring(self)
 
     def do_movefront(self, line):
-        """
-        Move given curves to the front of the plot
+        """Move given curves to the front of the plot.
 
         .. code::
 
@@ -7500,7 +7170,6 @@ class Command(cmd.Cmd):
                 [PyDV]: movefront a:b
                 [PyDV]: movefront c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_movefront(pdvutil.getletterargs(line))
@@ -7525,8 +7194,10 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_custom(self, line):
-        """
-        Load a Python file of custom functions to extend PyDV. Functions must be of the form
+        r"""Load a Python file of custom functions to extend PyDV.
+
+        Functions must be of the form:
+
         `def do_commandname(self, line): ...`.
 
         This custom Python script is imported at the `pdv.py` level and thus you can use the methods within
@@ -7650,7 +7321,7 @@ class Command(cmd.Cmd):
                         self.do_customcurveinfo(pdvutil.getletterargs(line))
                         return 0
                     else:
-                        print('\\nCustom Curve Info:')
+                        print('\nCustom Curve Info:')
                         line = line.split()
 
                         for i in range(len(line)):
@@ -7658,8 +7329,8 @@ class Command(cmd.Cmd):
                             idx = pdvutil.getCurveIndex(line[i], self.plotlist)
                             cur = self.plotlist[idx]
                             info = np.sum(cur.x) + 10
-                            print(f'\\nCurve {cur.plotname}: {cur.name}')
-                            print(f'\\tInfo: {info:.6e}')
+                            print(f'\nCurve {cur.plotname}: {cur.name}')
+                            print(f'\tInfo: {info:.6e}')
                         except pdvutil.CurveIndexError:
                             pass
                         print('')
@@ -7669,7 +7340,6 @@ class Command(cmd.Cmd):
                     self.redraw = False
 
         """
-
         try:
             fname = line.strip()
             try:
@@ -7703,8 +7373,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_alias(self, line):
-        """
-        Define a synonym for an existing command.
+        """Define a synonym for an existing command.
 
         .. code::
 
@@ -7713,7 +7382,6 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: alias list l
         """
-
         try:
             cmd = line.split()[0]
             alias = line.split()[1]
@@ -7727,8 +7395,7 @@ class Command(cmd.Cmd):
             self.redraw = False
 
     def do_copy(self, line):
-        """
-        Copy and plot the given curves.
+        """Copy and plot the given curves.
 
         .. code::
 
@@ -7739,7 +7406,6 @@ class Command(cmd.Cmd):
                 [PyDV]: copy a:b
                 [PyDV]: copy c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_copy(pdvutil.getletterargs(line))
@@ -7759,8 +7425,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_makeextensive(self, line):
-        """
-        Set the y-values such that y[i] = y[i] * (x[i+1] - x[i]).
+        """Set the y-values such that y[i] = y[i] * (x[i+1] - x[i]).
 
         .. code::
 
@@ -7771,7 +7436,6 @@ class Command(cmd.Cmd):
                 [PyDV]: makeextensive a:b
                 [PyDV]: makeextensive c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_makeextensive(pdvutil.getletterargs(line))
@@ -7795,8 +7459,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_makeintensive(self, line):
-        """
-        Set the y-values such that y[i] = y[i] / (x[i+1] - x[i]).
+        """Set the y-values such that y[i] = y[i] / (x[i+1] - x[i]).
 
         .. code::
 
@@ -7807,7 +7470,6 @@ class Command(cmd.Cmd):
                 [PyDV]: makeintensive a:b
                 [PyDV]: makeintensive c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_makeintensive(pdvutil.getletterargs(line))
@@ -7831,8 +7493,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_dupx(self, line):
-        """
-        Duplicate x-values so that y=x for each of the specified curves.
+        """Duplicate x-values so that y=x for each of the specified curves.
 
         .. code::
 
@@ -7843,7 +7504,6 @@ class Command(cmd.Cmd):
                 [PyDV]: dupx a:b
                 [PyDV]: dupx c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_dupx(pdvutil.getletterargs(line))
@@ -7866,8 +7526,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xindex(self, line):
-        """
-        Create curves with y-values vs. integer index values.
+        """Create curves with y-values vs. integer index values.
 
         .. code::
 
@@ -7878,7 +7537,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xindex a:b
                 [PyDV]: xindex c d
         """
-
         try:
             if len(line.split(":")) > 1:
                 self.do_xindex(pdvutil.getletterargs(line))
@@ -7903,8 +7561,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ticks(self, line):
-        """
-        Set the maximum number of major ticks on the axes.
+        """Set the maximum number of major ticks on the axes.
 
         .. code::
 
@@ -7914,7 +7571,6 @@ class Command(cmd.Cmd):
                     [PyDV]: ticks 3
                     [PyDV]: ticks de
         """
-
         try:
             if line.strip() == "de":
                 self.xticks = "de"
@@ -7933,8 +7589,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_yticks(self, line):
-        """
-        Set the locations of major ticks on the y axis.
+        """Set the locations of major ticks on the y axis.
 
         .. code::
 
@@ -7946,7 +7601,6 @@ class Command(cmd.Cmd):
                 [PyDV]: yticks (1, 2, 3), ('first label', 'second label', 'third label')
                 [PyDV]: yticks de
         """
-
         try:
             if line.strip() == "de":
                 self.yticks = "de"
@@ -7962,8 +7616,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xticks(self, line):
-        """
-        Set the locations of major ticks on the x-axis
+        """Set the locations of major ticks on the x-axis.
 
         .. code::
 
@@ -7975,7 +7628,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xticks (1, 2, 3), ('first label', 'second label', 'third label')
                 [PyDV]: xticks de
         """
-
         try:
             if line.strip() == "de":
                 self.xticks = "de"
@@ -7991,8 +7643,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xtickcolor(self, line):
-        """
-        Set the color of the ticks on the x-axis. Default is to apply to major ticks only.
+        """Set the color of the ticks on the x-axis. Default is to apply to major ticks only.
 
         .. code::
 
@@ -8004,7 +7655,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xtickcolor blue both
                 [PyDV]: xtickcolor de both
         """
-
         try:
             line = line.split()
 
@@ -8039,8 +7689,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ytickcolor(self, line):
-        """
-        Set the color of the ticks on the y-axis. Default is to apply to major ticks only.
+        """Set the color of the ticks on the y-axis. Default is to apply to major ticks only.
 
         .. code::
 
@@ -8052,7 +7701,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ytickcolor blue both
                 [PyDV]: ytickcolor de both
         """
-
         try:
             line = line.split()
 
@@ -8087,8 +7735,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xticklength(self, line):
-        """
-        Set the length (in points) of x ticks on the axis. Default is apply to major ticks only.
+        """Set the length (in points) of x ticks on the axis. Default is apply to major ticks only.
 
         .. code::
 
@@ -8099,7 +7746,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xticklength 2 minor
                 [PyDV]: xticklength 2 both
         """
-
         try:
             line = line.split()
 
@@ -8134,8 +7780,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_yticklength(self, line):
-        """
-        Set the length (in points) of y ticks on the y axis. Default is to apply to major ticks only.
+        """Set the length (in points) of y ticks on the y axis. Default is to apply to major ticks only.
 
         .. code::
 
@@ -8146,7 +7791,6 @@ class Command(cmd.Cmd):
                 [PyDV]: yticklength 2 minor
                 [PyDV]: yticklength 2 both
         """
-
         try:
             line = line.split()
 
@@ -8181,8 +7825,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xtickwidth(self, line):
-        """
-        Set the width (in points) of x ticks on the x axis. Default is to apply to major ticks only.
+        """Set the width (in points) of x ticks on the x axis. Default is to apply to major ticks only.
 
         .. code::
 
@@ -8193,7 +7836,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xtickwidth 2 minor
                 [PyDV]: xtickwidth 2 both
         """
-
         try:
             line = line.split()
 
@@ -8228,8 +7870,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ytickwidth(self, line):
-        """
-        Set the width (in points) of y ticks on the y axis. Default is to apply to major ticks only.
+        """Set the width (in points) of y ticks on the y axis. Default is to apply to major ticks only.
 
         .. code::
 
@@ -8240,7 +7881,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ytickwidth 2 minor
                 [PyDV]: ytickwidth 2 both
         """
-
         try:
             line = line.split()
 
@@ -8275,8 +7915,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_ytickformat(self, line):
-        """
-        Set the format of major ticks on the y axis. Default is plain.
+        """Set the format of major ticks on the y axis. Default is plain.
 
         .. code::
 
@@ -8288,7 +7927,6 @@ class Command(cmd.Cmd):
                 [PyDV]: ytickformat exp
                 [PyDV]: ytickformat 10**
         """
-
         try:
             if line.strip() == "plain":
                 self.ytickformat = "de"
@@ -8298,8 +7936,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xtickformat(self, line):
-        """
-        Set the format of major ticks on the x axis. Default is plain.
+        """Set the format of major ticks on the x axis. Default is plain.
 
         .. code::
 
@@ -8311,7 +7948,6 @@ class Command(cmd.Cmd):
                 [PyDV]: xtickformat exp
                 [PyDV]: xtickformat 10**
         """
-
         try:
             if line.strip() == "plain":
                 self.xtickformat = "de"
@@ -8321,8 +7957,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
 
     def do_xtickrotation(self, line):
-        """
-        Set the rotation (in degrees) of the tick labels on the x axis.
+        """Set the rotation (in degrees) of the tick labels on the x axis.
 
         .. code::
 
@@ -8331,15 +7966,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: xtickrotation 45
         """
-
         try:
             self.xtickrotation = float(line.strip())
         except:
             pdvutil.print_own_docstring(self)
 
     def do_xtickha(self, line):
-        """
-        Set the horizontal alignment of tick labels on the x axis. Default is center.
+        """Set the horizontal alignment of tick labels on the x axis. Default is center.
 
         .. code::
 
@@ -8348,15 +7981,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: xtickha right
         """
-
         try:
             self.xtickha = line.strip()
         except:
             pdvutil.print_own_docstring(self)
 
     def do_xtickva(self, line):
-        """
-        Set the vertical alignment of tick labels on the x axis. Default is top.
+        """Set the vertical alignment of tick labels on the x axis. Default is top.
 
         .. code::
 
@@ -8365,15 +7996,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: xtickva center
         """
-
         try:
             self.xtickva = line.strip()
         except:
             pdvutil.print_own_docstring(self)
 
     def do_ytickha(self, line):
-        """
-        Set the horizontal alignment of tick labels on the y axis. Default is right.
+        """Set the horizontal alignment of tick labels on the y axis. Default is right.
 
         .. code::
 
@@ -8382,15 +8011,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: ytickha center
         """
-
         try:
             self.ytickha = line.strip()
         except:
             pdvutil.print_own_docstring(self)
 
     def do_ytickva(self, line):
-        """
-        Set the vertical alignment of tick labels on the y axis. Default is center.
+        """Set the vertical alignment of tick labels on the y axis. Default is center.
 
         .. code::
 
@@ -8399,15 +8026,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: ytickva top
         """
-
         try:
             self.ytickva = line.strip()
         except:
             pdvutil.print_own_docstring(self)
 
     def do_ytickrotation(self, line):
-        """
-        Set the rotation (in degrees) of the tick labels on the y axis.
+        """Set the rotation (in degrees) of the tick labels on the y axis.
 
         .. code::
 
@@ -8416,15 +8041,13 @@ class Command(cmd.Cmd):
             Ex:
                 [PyDV]: ytickrotation 45
         """
-
         try:
             self.ytickrotation = float(line.strip())
         except:
             pdvutil.print_own_docstring(self)
 
     def do_fontstyle(self, line):
-        """
-        Set the fontstyle family.
+        """Set the fontstyle family.
 
         .. code::
 
@@ -8435,15 +8058,13 @@ class Command(cmd.Cmd):
                 [PyDV]: fontstyle sans-serif
                 [PyDV]: fontstyle monospace
         """
-
         try:
             mpl.rc("font", family=line.strip())
         except:
             pdvutil.print_own_docstring(self)
 
     def do_subsample(self, line):
-        """
-        Subsample the curves by the optional stride. Default value for stride is 2.
+        """Subsample the curves by the optional stride. Default value for stride is 2.
 
         .. code::
 
@@ -8454,7 +8075,6 @@ class Command(cmd.Cmd):
                 [PyDV]: subsample a:b 3
                 [PyDV]: subsample c d 3
         """
-
         try:
             if not line:
                 return 0
@@ -8492,10 +8112,7 @@ class Command(cmd.Cmd):
     ########################################################################################################
 
     def find_xrange(self):
-        """
-        Find the proper x-range
-        """
-
+        """Find the proper x-range."""
         orderlist = sorted(self.plotlist, key=lambda x: x.plotprecedence)
         xmin, xmax = 1e300, -1e300
         for cur in orderlist:
@@ -8515,10 +8132,7 @@ class Command(cmd.Cmd):
         return xmin, xmax
 
     def find_yrange(self):
-        """
-        Find the proper y-range
-        """
-
+        """Find the proper y-range."""
         orderlist = sorted(self.plotlist, key=lambda x: x.plotprecedence)
         ymin, ymax = 1e300, -1e300
         for cur in orderlist:
@@ -8543,10 +8157,7 @@ class Command(cmd.Cmd):
         return ymin, ymax
 
     def curvefromlabel(self, label):
-        """
-        Get curve from its label/plot name
-        """
-
+        """Get curve from its label/plot name."""
         label = label.upper()
         for c in self.plotlist:
             if c.plotname == label:
@@ -8555,10 +8166,7 @@ class Command(cmd.Cmd):
         raise ValueError(f'label "{label}" not found in the plot list')
 
     def addtoplot(self, cur):
-        """
-        Ensure curve is valid and add it to the plotlist
-        """
-
+        """Ensure curve is valid and add it to the plotlist."""
         if cur.plotname == "" or (len(cur.plotname) > 1 and cur.plotname[0] != "@"):
             cur.plotname = self.getcurvename()
 
@@ -8583,10 +8191,7 @@ class Command(cmd.Cmd):
         self.set_record_id(cur.record_id, from_curve=True)
 
     def reset_xticks_labels(self):
-        """
-        Reset xtick labels whenever there is a new curve added/hidden/deleted
-        """
-
+        """Reset xtick labels whenever there is a new curve added/hidden/deleted."""
         # Create an overall dictionary for all the xtick labels
         reset = True
         for _, labeled_curve in enumerate(self.plotlist):
@@ -8657,19 +8262,13 @@ class Command(cmd.Cmd):
             self.xtick_labels = {}
 
     def derivative(self, cur):
-        """
-        Return derivative of curve
-        """
-
+        """Return derivative of curve."""
         nc = pydvpy.derivative(cur)
         nc.plotname = self.getcurvename()
         return nc
 
     def getcurvename(self):
-        """
-        Find the next available curve name for the plot
-        """
-
+        """Find the next available curve name for the plot."""
         name = ""
         for i in range(len(self.plotlist)):
             if i < 26:
@@ -8686,18 +8285,12 @@ class Command(cmd.Cmd):
             return name
 
     def getclosest(self, array, value):
-        """
-        Find closest value in numpy array
-        """
-
+        """Find closest value in numpy array."""
         i = (np.abs(array - value)).argmin()
         return i
 
     def modcurve(self, line, flag, arg):
-        """
-        Operate on given curves by constant value depending on given operation flag
-        """
-
+        """Operate on given curves by constant value depending on given operation flag."""
         if not line:
             return 0
         modvalue = arg
@@ -8894,10 +8487,7 @@ class Command(cmd.Cmd):
                         traceback.print_exc(file=sys.stdout)
 
     def func_curve(self, line, flag, do_x=0, arg=0):
-        """
-        Operate on given curves by a function
-        """
-
+        """Operate on given curves by a function."""
         if not line:
             return 0
         if len(line.split(":")) > 1:
@@ -9148,10 +8738,7 @@ class Command(cmd.Cmd):
                         traceback.print_exc(file=sys.stdout)
 
     def apply_uichanges(self):
-        """
-        Applies the changes made by the user from the GUI.
-        """
-
+        """Apply the changes made by the user from the GUI."""
         # this attribute value never gets updated... apply_uichanges() never gets called
         self.plotter.plotChanged = False
         cur_axes = plt.gca()  # Get current axes
@@ -9197,11 +8784,8 @@ class Command(cmd.Cmd):
                 c.markerfacecolor = plotcurvelist[i].get_markerfacecolor()
                 c.markeredgecolor = plotcurvelist[i].get_markeredgecolor()
 
-    @property
     def updateplot(self):
-        """
-        Iterates through plotlist and displays curves on graph
-        """
+        """Iterate through plotlist and displays curves on graph."""
         if self.group == 1:
             self.do_group("")
 
@@ -9431,7 +9015,7 @@ class Command(cmd.Cmd):
 
                         c[0].set_drawstyle(cur.drawstyle)
                         # Work-around for set_drawstyle bug (https://github.com/matplotlib/matplotlib/issues/10338)
-                        c[0]._invalidx = True
+                        c[0]._invalidx = True  # noqa: SLF001
 
                     if cur.linewidth:
                         plt.setp(c, lw=cur.linewidth)
@@ -9535,49 +9119,35 @@ class Command(cmd.Cmd):
             self.plotter.updateDialogs()
 
     def load(self, fname, gnu=False, pattern=None, matches=None):
-        """
-        Load an ultra file and add parsed curves to the curvelist
-        """
-
+        """Load an ultra file and add parsed curves to the curvelist."""
         curves = pydvpy.read(fname, gnu, self.xCol, self.debug, pattern, matches)
         if len(curves) > 0:
             self.curvelist += curves
             self.filelist.append((fname, len(curves)))
 
     def load_csv(self, fname, col):
-        """
-        Load a csv (commas separated values) text data file, add parsed curves to the curvelist
-        """
+        """Load a csv (commas separated values) text data file, add parsed curves to the curvelist."""
         curves = pydvpy.readcsv(fname, col, self.debug)
         if len(curves) > 0:
             self.curvelist += curves
             self.filelist.append((fname, len(curves)))
 
     def load_sina(self, fname):
-        """
-        Load a Sina JSON data file, add parsed curves to the curvelist
-        """
-
+        """Load a Sina JSON data file, add parsed curves to the curvelist."""
         curves = pydvpy.readsina(fname, self.debug)
         if len(curves) > 0:
             self.curvelist += curves
             self.filelist.append((fname, len(curves)))
 
     def load_sinahdf5(self, fname):
-        """
-        Load a Sina HDF5 data file, add parsed curves to the curvelist
-        """
-
-        curves = pydvpy.readsinahdf5(fname, self.debug)
+        """Load a Sina HDF5 data file, add parsed curves to the curvelist."""
+        curves = pydvpy.readsinahdf5(fname)
         if len(curves) > 0:
             self.curvelist += curves
             self.filelist.append((fname, len(curves)))
 
     def loadrc(self):
-        """
-        Read in a resource definition file
-        """
-
+        """Read in a resource definition file."""
         try:
             with open(os.getenv("HOME") + "/.pdvrc") as f:
                 for line in f:
@@ -9644,8 +9214,8 @@ class Command(cmd.Cmd):
         except:
             return 0
 
-    # set tick format and locations
     def tickFormat(self, axis, logscale, ticks, tickformat):
+        """Set tick format and locations."""
         if logscale:
             if tickformat == "de" or tickformat == "sci":
                 axis.set_major_formatter(mpl.ticker.LogFormatter())
@@ -9698,6 +9268,7 @@ class Command(cmd.Cmd):
                 raise RuntimeError("ticks set to bad value")
 
     def console_run(self):
+        """Interactive console for the command line interface with start up text."""
         while True:
             self.cmdloop(
                 f"\n\tPython Data Visualizer {pydv_version} - https://pypi.org/project/LLNL-PyDV/\n"
@@ -9811,7 +9382,7 @@ class Command(cmd.Cmd):
     ################################################################################################
 
     def main(self):
-
+        """Start the PyDV CLI, load files passed in, and look for user setting."""
         mpl.rc("text", usetex=False)
         mpl.rc("font", family="sans-serif")
         self.loadrc()
@@ -9915,24 +9486,25 @@ class Command(cmd.Cmd):
 
 
 class QuitHelper(QObject):
-    """
-    PySide6 QuitHelper
-    """
+    """PySide6 QuitHelper."""
 
     quit_signal = Signal()
 
     def __init__(self, app):
+        """Initialize the quit helper class."""
         super().__init__()
         self.app = app
         self.quit_signal.connect(self.handle_quit)
 
     def handle_quit(self):
+        """Close the top level widget for PyDV."""
         for widget in QApplication.topLevelWidgets():
             widget.close()
         self.app.quit()
 
 
 def main():
+    """Start the PyDV command line interface."""
     Command().main()
 
 

@@ -1,3 +1,5 @@
+"""Launcher for PyDV CLI."""
+
 import os
 import sys
 

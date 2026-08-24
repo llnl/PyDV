@@ -127,12 +127,6 @@ average
 .. autofunction:: pydv.pdv.Command.do_average
    :noindex:
 
-convolve
---------
-
-.. autofunction:: pydv.pdv.Command.do_convolve
-   :noindex:
-
 convolveb
 ---------
 
