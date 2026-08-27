@@ -1,9 +1,8 @@
 """Tests for the pydvpy module."""
 
-import os
-import pathlib
 import subprocess
 import time
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,9 +11,9 @@ import scipy
 
 from pydv import pydvpy
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+TEST_DIR = Path(__file__).resolve().parent
 
-test_files = list(pathlib.Path(TEST_DIR).glob("testData.*"))
+test_files = list(TEST_DIR.glob("testData.*"))
 
 
 @pytest.mark.parametrize("test_file", test_files)
@@ -31,7 +30,7 @@ def test_read(test_file):
 
 def test_sinaread():
     """Read sina files."""
-    curves = pydvpy.readsina(os.path.join(TEST_DIR, "testSinaData.json"))
+    curves = pydvpy.readsina(TEST_DIR / "testSinaData.json")
 
     # darkness curve
     np.testing.assert_array_equal(curves[0].y, [0, 1, 4, 9, 16])
@@ -48,12 +47,12 @@ def test_sinaread():
 
 def test_sinaread_mult_ind():
     """Read sina files with curvesets that have multiple independent curves."""
-    curves = pydvpy.readsina(os.path.join(TEST_DIR, "testSinaData_mult_ind.json"))
+    curves = pydvpy.readsina(TEST_DIR / "testSinaData_mult_ind.json")
 
     assert len(curves) == 6
 
 
-test_files = list(pathlib.Path(TEST_DIR).glob("testDataregex.*"))
+test_files = list(TEST_DIR.glob("testDataregex.*"))
 
 
 @pytest.mark.parametrize("test_file", test_files)
@@ -91,15 +90,15 @@ def test_read_regex(test_file):
 #     5. ultra -l tests/convolution_ultra_commands
 # convolb is (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t)) / Int(-inf, inf, dt*h(t))
 # convolc is (g*h)(x) = Int(-inf, inf, dt*g(t)*h(x-t))
-curves_pydv = pydvpy.read(os.path.join(TEST_DIR, "convol_pydv.ult"))
-curves_ultra = pydvpy.read(os.path.join(TEST_DIR, "convol_ultra.ult"))
-convol_plot_path = os.path.join(TEST_DIR, "convolution_plots")
-os.makedirs(convol_plot_path, exist_ok=True)
+curves_pydv = pydvpy.read(TEST_DIR / "convol_pydv.ult")
+curves_ultra = pydvpy.read(TEST_DIR / "convol_ultra.ult")
+convol_plot_path = TEST_DIR / "convolution_plots"
+convol_plot_path.mkdir(parents=True, exist_ok=True)
 
 
 def convol_curves():
     """Plot the convoluted plots created in ultra."""
-    curves = pydvpy.read(os.path.join(TEST_DIR, "convolution_created_curves_to_convol.ult"))
+    curves = pydvpy.read(TEST_DIR / "convolution_created_curves_to_convol.ult")
     start = ord("A")
 
     for i, cur in enumerate(curves):
@@ -108,7 +107,7 @@ def convol_curves():
         ax.plot(cur.x, cur.y, marker="x", linewidth=1)
         ax.set_title(f"Curve {curve_letter}: {cur.name}")
         ax.legend()
-        fig.savefig(os.path.join(TEST_DIR, "convolution_plots", f"convol_curve_{curve_letter}.png"))
+        fig.savefig(TEST_DIR / "convolution_plots" / f"convol_curve_{curve_letter}.png")
         plt.close(fig)
 
 
@@ -190,13 +189,13 @@ def convol(i):
     ax.scatter(cu.x[diff_index], cu.y[diff_index], marker="+", s=200, label=f"Ultra Max Diff Y {cu.y[diff_index]:.5f}")
     ax.set_title(f"{cp.name} {plot_details}")
     ax.legend()
-    fig.savefig(os.path.join(TEST_DIR, "convolution_plots", f"convol_plot_{i + 1}{plot_details}.png"))
+    fig.savefig(TEST_DIR / "convolution_plots" / f"convol_plot_{i + 1}{plot_details}.png")
     plt.close(fig)
 
 
 def test_read_labels():
     """Read curves with various x and y labels."""
-    test_file = os.path.join(TEST_DIR, "labels.txt")
+    test_file = TEST_DIR / "labels.txt"
     curves = pydvpy.read(test_file)
     # curve name, xlabel, ylabel
     names = [
@@ -251,7 +250,7 @@ def test_read_labels():
         assert cur.xlabel == names[i][1]
         assert cur.ylabel == names[i][2]
 
-    test_file = os.path.join(TEST_DIR, "labels2.txt")
+    test_file = TEST_DIR / "labels2.txt"
 
     pydvpy.save(test_file, curves, verbose=False, save_labels=True)
 
@@ -263,18 +262,18 @@ def test_read_labels():
         assert cur.ylabel == names[i][2]
 
 
-def BIG_file():
+def big_files():
     """Read 1GB+ big file with new multiprocessing file loading."""
-    subprocess.run(["python", os.path.join(TEST_DIR, "generate_ultra_curves_big.py")])
+    subprocess.run(["python", TEST_DIR / "generate_ultra_curves_big.py"])
 
     start = time.time()
 
-    big_file = os.path.join(TEST_DIR, "BIG_ULTRA_FILE.ult")
+    big_file = TEST_DIR / "BIG_ULTRA_FILE.ult"
     _ = pydvpy.read(big_file)
 
     end = start - time.time()
 
-    os.remove(big_file)
+    big_file.unlink()
 
     assert end < 10
 
@@ -285,9 +284,9 @@ def BIG_file():
 )
 def test_sina_hdf5(hdf5_file, json_file):
     """Read sina hdf5 files."""
-    curves_hdf5 = pydvpy.read(os.path.join(TEST_DIR, hdf5_file))
+    curves_hdf5 = pydvpy.read(TEST_DIR / hdf5_file)
 
-    curves_json = pydvpy.read(os.path.join(TEST_DIR, json_file))
+    curves_json = pydvpy.read(TEST_DIR / json_file)
 
     for cur_hdf5, cur_json in zip(curves_hdf5, curves_json, strict=False):
         assert cur_hdf5.record_id == cur_json.record_id

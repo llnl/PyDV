@@ -98,6 +98,9 @@ select = [
   "ARG",
   "NPY",
   "PERF",
-  "D"
+  "D",
+  "RET",
+  "PTH",
+  "N"
 ]
 ignore = ["E722"]

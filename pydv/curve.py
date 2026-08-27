@@ -143,17 +143,17 @@ class Curve:
         self.math_interp_period = math_interp_period
         self.original_name = name
 
-    def __add__(a, b):
+    def __add__(self, b):
         """Return the addition of the y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " + " + b.plotname + " ").strip()
+        c.drawstyle = self.drawstyle
+        c.plotname = str(self.plotname + " + " + b.plotname + " ").strip()
         ia, ib = getinterp(
-            a,
+            self,
             b,
-            a.math_interp_left,
-            a.math_interp_right,
-            a.math_interp_period,
+            self.math_interp_left,
+            self.math_interp_right,
+            self.math_interp_period,
             b.math_interp_left,
             b.math_interp_right,
             b.math_interp_period,
@@ -165,17 +165,17 @@ class Curve:
             c.math_interp_right = 0
         return c
 
-    def __sub__(a, b):
+    def __sub__(self, b):
         """Return the subtraction of the y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " - " + b.plotname + " ").strip()
+        c.drawstyle = self.drawstyle
+        c.plotname = str(self.plotname + " - " + b.plotname + " ").strip()
         ia, ib = getinterp(
-            a,
+            self,
             b,
-            a.math_interp_left,
-            a.math_interp_right,
-            a.math_interp_period,
+            self.math_interp_left,
+            self.math_interp_right,
+            self.math_interp_period,
             b.math_interp_left,
             b.math_interp_right,
             b.math_interp_period,
@@ -187,17 +187,17 @@ class Curve:
             c.math_interp_right = 0
         return c
 
-    def __mul__(a, b):
+    def __mul__(self, b):
         """Return the multiplication of the y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " * " + b.plotname + " ").strip()
+        c.drawstyle = self.drawstyle
+        c.plotname = str(self.plotname + " * " + b.plotname + " ").strip()
         ia, ib = getinterp(
-            a,
+            self,
             b,
-            a.math_interp_left,
-            a.math_interp_right,
-            a.math_interp_period,
+            self.math_interp_left,
+            self.math_interp_right,
+            self.math_interp_period,
             b.math_interp_left,
             b.math_interp_right,
             b.math_interp_period,
@@ -209,17 +209,17 @@ class Curve:
             c.math_interp_right = 0
         return c
 
-    def __div__(a, b):
+    def __div__(self, b):
         """Return the division of the y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip()
+        c.drawstyle = self.drawstyle
+        c.plotname = str(self.plotname + " / " + b.plotname + " ").strip()
         ia, ib = getinterp(
-            a,
+            self,
             b,
-            a.math_interp_left,
-            a.math_interp_right,
-            a.math_interp_period,
+            self.math_interp_left,
+            self.math_interp_right,
+            self.math_interp_period,
             b.math_interp_left,
             b.math_interp_right,
             b.math_interp_period,
@@ -239,17 +239,17 @@ class Curve:
 
         return c
 
-    def __truediv__(a, b):
+    def __truediv__(self, b):
         """Return the true division of the y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + " / " + b.plotname + " ").strip()
+        c.drawstyle = self.drawstyle
+        c.plotname = str(self.plotname + " / " + b.plotname + " ").strip()
         ia, ib = getinterp(
-            a,
+            self,
             b,
-            a.math_interp_left,
-            a.math_interp_right,
-            a.math_interp_period,
+            self.math_interp_left,
+            self.math_interp_right,
+            self.math_interp_period,
             b.math_interp_left,
             b.math_interp_right,
             b.math_interp_period,
@@ -269,30 +269,30 @@ class Curve:
 
         return c
 
-    def __pow__(a, b):
+    def __pow__(self, b):
         """Return the power of the y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str(a.plotname + "^" + str(b)).strip()
-        c.x = np.array(a.x)
-        c.y = np.power(a.y, b)
+        c.drawstyle = self.drawstyle
+        c.plotname = str(self.plotname + "^" + str(b)).strip()
+        c.x = np.array(self.x)
+        c.y = np.power(self.y, b)
         nans = np.isnan(c.y)  # remove NaNs
         c.x = c.x[~nans]
         c.y = c.y[~nans]
         return c
 
-    def __neg__(a):
+    def __neg__(self):
         """Return the negative y values of the curve."""
         c = Curve()
-        c.drawstyle = a.drawstyle
-        c.plotname = str("-" + a.plotname)
-        c.x = np.array(a.x)
-        c.y = np.array(-a.y)
+        c.drawstyle = self.drawstyle
+        c.plotname = str("-" + self.plotname)
+        c.x = np.array(self.x)
+        c.y = np.array(-self.y)
         return c
 
     def copy(self):
         """Return a new copy of the curve object."""
-        c = Curve(
+        return Curve(
             x=np.array(self.x, dtype=float),
             y=np.array(self.y, dtype=float),
             name=self.name,
@@ -328,8 +328,6 @@ class Curve:
             math_interp_right=self.math_interp_right,
             math_interp_period=self.math_interp_period,
         )
-
-        return c
 
     def normalize(self):
         """Return a new normalized copy of the curve object."""
@@ -390,7 +388,7 @@ def getinterp(
         ib.y = np.interp(ux, b.x, b.y, b_left, b_right, b_period)  # interpolate y vals
 
         return ia, ib
-    elif match == "step":
+    if match == "step":
         ax, step = np.linspace(min(a.x), max(a.x), num=samples, retstep=True)
 
         bxsamples = int((max(b.x) - min(b.x)) / step)
@@ -408,8 +406,7 @@ def getinterp(
         ib.y = np.interp(bx, b.x, b.y, b_left, b_right, b_period)  # interpolate y vals
 
         return ia, ib
-    else:
-        raise ValueError(f"{match} is not a supported option for match")
+    raise ValueError(f"{match} is not a supported option for match")
 
 
 def interp1d(a, num=100, retstep=False):
@@ -433,10 +430,9 @@ def interp1d(a, num=100, retstep=False):
         ia.x, step = np.linspace(min(a.x), max(a.x), num=num, retstep=True)
         ia.y = f(ia.x)
         return ia, step
-    else:
-        ia.x = np.linspace(min(a.x), max(a.x), num=num, retstep=False)
-        ia.y = f(ia.x)
-        return ia
+    ia.x = np.linspace(min(a.x), max(a.x), num=num, retstep=False)
+    ia.y = f(ia.x)
+    return ia
 
 
 def append(a, b):

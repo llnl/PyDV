@@ -1,16 +1,13 @@
 """Generate convolution command file for PyDV and Ultra."""
 
-import os
-import sys
 from itertools import combinations
+from pathlib import Path
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.dirname(TEST_DIR)
+from pydv import pydvpy
 
-sys.path.append(os.path.join(PYDV_DIR, "pydv"))
-import pydvpy  # noqa: E402
+TEST_DIR = Path(__file__).resolve().parent
 
-curves_to_convol = pydvpy.read(os.path.join(TEST_DIR, "convolution_created_curves_to_convol.ult"))
+curves_to_convol = pydvpy.read(TEST_DIR / "convolution_created_curves_to_convol.ult")
 
 total_curves = len(curves_to_convol)
 
@@ -27,7 +24,8 @@ total_convols = total_combos * 4
 print(total_convols)
 
 for sw in ["pydv", "ultra"]:
-    with open(f"tests/convolution_{sw}_commands", "w") as file1:
+    conv_cmds = TEST_DIR / f"convolution_{sw}_commands"
+    with conv_cmds.open("w") as file1:
         file1.write("rd tests/convolution_created_curves_to_convol.ult\n")
         file1.write(f"cur 1:{total_curves}\n")
 

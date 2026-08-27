@@ -1,18 +1,15 @@
 """Generate large ultra curves for new multiprocessing reading function update."""
 
-import os
-import sys
 import time
 from multiprocessing import Pool, cpu_count
+from pathlib import Path
 
 import numpy as np
 import scipy.special
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.dirname(TEST_DIR)
+from pydv import pydvpy
 
-sys.path.append(os.path.join(PYDV_DIR, "pydv"))
-import pydvpy  # noqa: E402
+TEST_DIR = Path(__file__).resolve().parent
 
 _list_of_funcs_with_domain = [
     ("sin", np.sin, 0, 2 * np.pi),
@@ -38,7 +35,7 @@ _list_of_funcs_with_domain = [
     ("y1", scipy.special.y1, 0.0, 5.0),
 ]
 
-_ufile = os.path.join(TEST_DIR, "BIG_ULTRA_FILE.ult")
+_ufile = TEST_DIR / "BIG_ULTRA_FILE.ult"
 
 
 def create_curve_perproc(input_tuple):

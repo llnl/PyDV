@@ -1,6 +1,8 @@
 """Some example custom functions."""
 
-import os
+from pathlib import Path
+
+TEST_DIR = Path(__file__).resolve().parent
 
 
 def do_mycustomfunction(self, line):  # noqa: ARG001
@@ -29,6 +31,5 @@ def do_mycustomfunction(self, line):  # noqa: ARG001
 
 def do_myothercustomfunction(self, line):  # noqa: ARG001
     """Automatically read different files."""
-    TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-    self.do_read(os.path.join(TEST_DIR, "../tests", "step.ult"))
-    self.do_readsina(os.path.join(TEST_DIR, "../tests", "testSinaData2.json"))
+    self.do_read(str(TEST_DIR / "../tests" / "step.ult"))
+    self.do_readsina(str(TEST_DIR / "../tests" / "testSinaData2.json"))
