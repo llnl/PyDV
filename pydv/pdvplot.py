@@ -60,7 +60,7 @@
 # Security, LLC, and shall not be used for advertising or product
 # endorsement purposes.
 
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvas
@@ -78,9 +78,9 @@ else:
 try:
     from matplotlib import style
 
-    stylesLoaded = True
+    styles_loaded = True
 except:
-    stylesLoaded = False
+    styles_loaded = False
 
 from importlib.metadata import version
 
@@ -108,9 +108,9 @@ if __package__:
 else:
     import tomllib
 
-    PYDV_DIR = os.path.dirname(os.path.abspath(__file__))
-    toml_file = os.path.join(PYDV_DIR, "pyproject.toml")
-    with open(toml_file, "rb") as fp:
+    PYDV_DIR = Path(__file__).resolve().parent
+    toml_file = PYDV_DIR / "pyproject.toml"
+    with toml_file.open("rb") as fp:
         pydv_version = tomllib.load(fp)["project"]["version"]
 
 
@@ -120,70 +120,70 @@ class Plotter(QMainWindow):
     # PyDV
     _pydvcmd = None
     # Dialogs
-    _listDialog = None
-    _menuDialog = None
+    _list_dialog = None
+    _menu_dialog = None
     # Tables
-    _tableWidget = None
-    _menuTableWidget = None
+    _table_widget = None
+    _menu_table_widget = None
     # Actions
-    _listAction = None
-    _menuAction = None
-    _geomAction = None
+    _list_action = None
+    _menu_action = None
+    _geom_action = None
 
     _geometry = "de"
 
     canvas = None
     style = "ggplot"
-    plotChanged = False
+    plot_changed = False
     fig = None
     figcolor = "white"
-    defaultPlotLayout = None
+    default_plot_layout = None
 
     def __init__(self, pydvcmd):
         """Initialize the plotter."""
         QMainWindow.__init__(self)
 
-        here = os.path.abspath(os.path.dirname(__file__))
+        here = Path(__file__).resolve().parent
 
         # Setup Application
         self.setWindowTitle(f"Python Data Visualizer {pydv_version}")
-        self.setWindowIcon(QIcon(os.path.join(here, "img/app_icon3.png")))
+        self.setWindowIcon(QIcon(str(here / "img/app_icon3.png")))
         self._pydvcmd = pydvcmd
 
         # Window geometry action
-        self._geomAction = QAction(self)
-        self._geomAction.triggered.connect(self.__setgeometry)
+        self._geom_action = QAction(self)
+        self._geom_action.triggered.connect(self.__setgeometry)
 
         # View Menu
-        viewMenu = self.menuBar().addMenu("View")
+        view_menu = self.menuBar().addMenu("View")
 
-        self._listAction = QAction("List...", self)
-        self._listAction.triggered.connect(self.showCurvelistDialog)
-        viewMenu.addAction(self._listAction)
+        self._list_action = QAction("List...", self)
+        self._list_action.triggered.connect(self.show_curvelist_dialog)
+        view_menu.addAction(self._list_action)
 
-        self._menuAction = QAction("Menu...", self)
-        self._menuAction.triggered.connect(self.showMenuDialog)
-        viewMenu.addAction(self._menuAction)
+        self._menu_action = QAction("Menu...", self)
+        self._menu_action.triggered.connect(self.show_menu_dialog)
+        view_menu.addAction(self._menu_action)
 
         # Help Menu
-        helpMenu = self.menuBar().addMenu("Help")
+        help_menu = self.menuBar().addMenu("Help")
 
         # Copyright
-        copyrightAction = QAction("Copyright...", self)
-        copyrightAction.triggered.connect(self.__viewCopyright)
-        helpMenu.addAction(copyrightAction)
+        copyright_action = QAction("Copyright...", self)
+        copyright_action.triggered.connect(self.__view_copyright)
+        help_menu.addAction(copyright_action)
         # About PyDV
-        aboutAction = QAction("&About PyDV", self)
-        aboutAction.setShortcut("ctrl+a")
-        aboutAction.triggered.connect(self.__aboutPyDV)
-        helpMenu.addAction(aboutAction)
+        about_action = QAction("&About PyDV", self)
+        about_action.setShortcut("ctrl+a")
+        about_action.triggered.connect(self.__about_pydv)
+        help_menu.addAction(about_action)
         # About QT
-        aboutQtAction = QAction("About &Qt", self)
-        aboutQtAction.triggered.connect(self.__aboutQt)
-        helpMenu.addAction(aboutQtAction)
+        about_qt_action = QAction("About &Qt", self)
+        about_qt_action.triggered.connect(self.__about_qt)
+        help_menu.addAction(about_qt_action)
 
         # Styles
-        if stylesLoaded:
+        if styles_loaded:
             styles = plt.style.available
 
             try:
@@ -199,7 +199,7 @@ class Plotter(QMainWindow):
         self.current_axes = self.fig.subplots()
         self.fig.set_facecolor(self.figcolor)
 
-        self.defaultPlotLayout = dict(vars(self.fig.subplotpars))
+        self.default_plot_layout = dict(vars(self.fig.subplotpars))
 
         self.canvas = FigureCanvas(self.fig)
         self.setCentralWidget(self.canvas)
@@ -207,39 +207,39 @@ class Plotter(QMainWindow):
         toolbar = PyDVToolbar(self.canvas, self, True)  # Add False as third parameter to turn off coordinates
         self.addToolBar(toolbar)
 
-    def updatePlotGeometry(self, geometry="de"):
+    def update_plot_geometry(self, geometry="de"):
         """Update the size and location of the window.
 
         Using an action to trigger the update to ensure that the resizing is happening on the main GUI thread.
         """
         self._geometry = geometry
-        self._geomAction.trigger()
+        self._geom_action.trigger()
 
-    def updateDialogs(self):
+    def update_dialogs(self):
         """Update the list and menu dialogs if visible."""
-        if self._listDialog is not None and self._listDialog.isVisible():
-            self._listAction.trigger()
+        if self._list_dialog is not None and self._list_dialog.isVisible():
+            self._list_action.trigger()
 
-        if self._menuDialog is not None and self._menuDialog.isVisible():
-            self._menuAction.trigger()
+        if self._menu_dialog is not None and self._menu_dialog.isVisible():
+            self._menu_action.trigger()
 
     ########################################################################################################
     # SLOTS
     ########################################################################################################
 
     @Slot()
-    def showCurvelistDialog(self):
+    def show_curvelist_dialog(self):
         """Show a dialog with the output of the list command in a table."""
         refresh = True
 
-        if self._listDialog is None:
+        if self._list_dialog is None:
             refresh = False
-            self._listDialog = QDialog(self)
-            self._listDialog.setWindowTitle("Curve List")
-            self._listDialog.setModal(False)
+            self._list_dialog = QDialog(self)
+            self._list_dialog.setWindowTitle("Curve List")
+            self._list_dialog.setModal(False)
 
         # Curves List
-        headerLabels = [
+        header_labels = [
             "Plot Name",
             "Label",
             "X Label",
@@ -252,24 +252,24 @@ class Plotter(QMainWindow):
             "Sina Record ID",
         ]
         rows = len(self._pydvcmd.plotlist)
-        cols = len(headerLabels)
+        cols = len(header_labels)
 
         # Create or clear table
-        if self._tableWidget is None:
-            self._tableWidget = QTableWidget(rows, cols, self)
-            self._tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-            self._tableWidget.setHorizontalHeaderLabels(headerLabels)
-            self._tableWidget.setAlternatingRowColors(True)
-            self._tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        if self._table_widget is None:
+            self._table_widget = QTableWidget(rows, cols, self)
+            self._table_widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            self._table_widget.setHorizontalHeaderLabels(header_labels)
+            self._table_widget.setAlternatingRowColors(True)
+            self._table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
             # Setup Right-click menu
-            self._tableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
-            deleteCurveAction = QAction("Delete selected curve(s)", self._tableWidget)
-            deleteCurveAction.triggered.connect(self.__deleteCurve)
-            self._tableWidget.addAction(deleteCurveAction)
+            self._table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+            delete_curve_action = QAction("Delete selected curve(s)", self._table_widget)
+            delete_curve_action.triggered.connect(self.__delete_curve)
+            self._table_widget.addAction(delete_curve_action)
         else:
-            self._tableWidget.clearContents()
-            self._tableWidget.setRowCount(rows)
+            self._table_widget.clearContents()
+            self._table_widget.setRowCount(rows)
 
         # Populate table with curves
         for row, c in enumerate(self._pydvcmd.plotlist):
@@ -279,54 +279,54 @@ class Plotter(QMainWindow):
             prefix = ""
             if c.edited:
                 prefix = "*"
-            plotnameItem = QTableWidgetItem(self.tr(f"{prefix}{c.plotname}"))
-            plotnameItem.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
-            self._tableWidget.setItem(row, col, plotnameItem)
+            plot_name_item = QTableWidgetItem(self.tr(f"{prefix}{c.plotname}"))
+            plot_name_item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+            self._table_widget.setItem(row, col, plot_name_item)
             col += 1
 
             # Label
-            labelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.name, self._pydvcmd.namewidth)))
-            self._tableWidget.setItem(row, col, labelItem)
+            label_item = QTableWidgetItem(self.tr(pdvutil.truncate(c.name, self._pydvcmd.namewidth)))
+            self._table_widget.setItem(row, col, label_item)
             col += 1
 
             # X Label
-            xlabelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.xlabel, self._pydvcmd.namewidth)))
-            self._tableWidget.setItem(row, col, xlabelItem)
+            x_label_item = QTableWidgetItem(self.tr(pdvutil.truncate(c.xlabel, self._pydvcmd.namewidth)))
+            self._table_widget.setItem(row, col, x_label_item)
             col += 1
 
             # Y Label
-            ylabelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.ylabel, self._pydvcmd.namewidth)))
-            self._tableWidget.setItem(row, col, ylabelItem)
+            y_label_item = QTableWidgetItem(self.tr(pdvutil.truncate(c.ylabel, self._pydvcmd.namewidth)))
+            self._table_widget.setItem(row, col, y_label_item)
             col += 1
 
             # xmin
-            xminItem = QTableWidgetItem(self.tr(f"{min(c.x):.2e}"))
-            self._tableWidget.setItem(row, col, xminItem)
+            xmin_item = QTableWidgetItem(self.tr(f"{min(c.x):.2e}"))
+            self._table_widget.setItem(row, col, xmin_item)
             col += 1
 
             # xmax
-            xmaxItem = QTableWidgetItem(self.tr(f"{max(c.x):.2e}"))
-            self._tableWidget.setItem(row, col, xmaxItem)
+            xmax_item = QTableWidgetItem(self.tr(f"{max(c.x):.2e}"))
+            self._table_widget.setItem(row, col, xmax_item)
             col += 1
 
             # ymin
-            yminItem = QTableWidgetItem(self.tr(f"{min(c.y):.2e}"))
-            self._tableWidget.setItem(row, col, yminItem)
+            ymin_item = QTableWidgetItem(self.tr(f"{min(c.y):.2e}"))
+            self._table_widget.setItem(row, col, ymin_item)
             col += 1
 
             # ymax
-            ymaxItem = QTableWidgetItem(self.tr(f"{max(c.y):.2e}"))
-            self._tableWidget.setItem(row, col, ymaxItem)
+            ymax_item = QTableWidgetItem(self.tr(f"{max(c.y):.2e}"))
+            self._table_widget.setItem(row, col, ymax_item)
             col += 1
 
             # File Name
-            fnameItem = QTableWidgetItem(self.tr(c.filename))
-            self._tableWidget.setItem(row, col, fnameItem)
+            fname_item = QTableWidgetItem(self.tr(c.filename))
+            self._table_widget.setItem(row, col, fname_item)
             col += 1
 
             # Sina Record ID
-            recidItem = QTableWidgetItem(self.tr(c.record_id))
-            self._tableWidget.setItem(row, col, recidItem)
+            rec_id_item = QTableWidgetItem(self.tr(c.record_id))
+            self._table_widget.setItem(row, col, rec_id_item)
 
         maxrows = rows
         if rows > 10:
@@ -334,117 +334,117 @@ class Plotter(QMainWindow):
 
         if not refresh:
             # Layout
-            vbox = QVBoxLayout(self._listDialog)
+            vbox = QVBoxLayout(self._list_dialog)
 
             # Scroll Bar
-            scroll = QScrollArea(self._listDialog)
+            scroll = QScrollArea(self._list_dialog)
             scroll.setGeometry(QRect(10, 20, cols * 115, maxrows * 50))
             scroll.setMinimumSize(150, 150)
-            scroll.setWidget(self._tableWidget)
+            scroll.setWidget(self._table_widget)
             scroll.setWidgetResizable(True)
             vbox.addWidget(scroll)
 
-            hbox = QHBoxLayout(self._listDialog)
+            hbox = QHBoxLayout(self._list_dialog)
             hbox.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             # Dismiss Button
-            okButton = QPushButton(self._listDialog)
-            okButton.clicked.connect(self._listDialog.close)
-            okButton.setMinimumSize(100, 20)
-            okButton.setMaximumSize(100, 20)
-            okButton.setText("Dismiss")
-            hbox.addWidget(okButton)
+            ok_button = QPushButton(self._list_dialog)
+            ok_button.clicked.connect(self._list_dialog.close)
+            ok_button.setMinimumSize(100, 20)
+            ok_button.setMaximumSize(100, 20)
+            ok_button.setText("Dismiss")
+            hbox.addWidget(ok_button)
 
             vbox.addLayout(hbox)
 
-        self._listDialog.resize(cols * 115, maxrows * 50)
-        if not self._listDialog.isVisible():
-            self._listDialog.show()
+        self._list_dialog.resize(cols * 115, maxrows * 50)
+        if not self._list_dialog.isVisible():
+            self._list_dialog.show()
 
     @Slot()
-    def showMenuDialog(self):
+    def show_menu_dialog(self):
         """Show a dialog with the output of the menu command in a table."""
         refresh = True
 
-        if self._menuDialog is None:
+        if self._menu_dialog is None:
             refresh = False
-            self._menuDialog = QDialog(self)
-            self._menuDialog.setWindowTitle("Menu")
-            self._menuDialog.setModal(False)
+            self._menu_dialog = QDialog(self)
+            self._menu_dialog.setWindowTitle("Menu")
+            self._menu_dialog.setModal(False)
 
         # Available Curves
-        headerLabels = ["Label", "X Label", "Y Label", "XMIN", "XMAX", "YMIN", "YMAX", "File Name", "Sina Record ID"]
+        header_labels = ["Label", "X Label", "Y Label", "XMIN", "XMAX", "YMIN", "YMAX", "File Name", "Sina Record ID"]
         rows = len(self._pydvcmd.curvelist)
-        cols = len(headerLabels)
+        cols = len(header_labels)
 
         # Create or clear table
-        if self._menuTableWidget is None:
-            self._menuTableWidget = QTableWidget(rows, cols, self)
-            self._menuTableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-            self._menuTableWidget.setHorizontalHeaderLabels(headerLabels)
-            self._menuTableWidget.setAlternatingRowColors(True)
-            self._menuTableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        if self._menu_table_widget is None:
+            self._menu_table_widget = QTableWidget(rows, cols, self)
+            self._menu_table_widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            self._menu_table_widget.setHorizontalHeaderLabels(header_labels)
+            self._menu_table_widget.setAlternatingRowColors(True)
+            self._menu_table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
             # Setup Right-click menu
-            self._menuTableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
-            plotCurveAction = QAction("Plot selected curve(s)", self._menuTableWidget)
-            plotCurveAction.triggered.connect(self.__plotMenuCurve)
-            self._menuTableWidget.addAction(plotCurveAction)
+            self._menu_table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+            plot_curve_action = QAction("Plot selected curve(s)", self._menu_table_widget)
+            plot_curve_action.triggered.connect(self.__plot_menu_curve)
+            self._menu_table_widget.addAction(plot_curve_action)
 
-            deleteCurveAction = QAction("Delete selected curve(s)", self._menuTableWidget)
-            deleteCurveAction.triggered.connect(self.__deleteMenuCurve)
-            self._menuTableWidget.addAction(deleteCurveAction)
+            delete_curve_action = QAction("Delete selected curve(s)", self._menu_table_widget)
+            delete_curve_action.triggered.connect(self.__delete_menu_curve)
+            self._menu_table_widget.addAction(delete_curve_action)
         else:
-            self._menuTableWidget.clearContents()
-            self._menuTableWidget.setRowCount(rows)
+            self._menu_table_widget.clearContents()
+            self._menu_table_widget.setRowCount(rows)
 
         # Populate table with curves
         for row, c in enumerate(self._pydvcmd.curvelist):
             col = 0
 
             # Label
-            labelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.name, self._pydvcmd.namewidth)))
-            self._menuTableWidget.setItem(row, col, labelItem)
+            label_item = QTableWidgetItem(self.tr(pdvutil.truncate(c.name, self._pydvcmd.namewidth)))
+            self._menu_table_widget.setItem(row, col, label_item)
             col += 1
 
             # X Label
-            xlabelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.xlabel, self._pydvcmd.namewidth)))
-            self._menuTableWidget.setItem(row, col, xlabelItem)
+            x_label_item = QTableWidgetItem(self.tr(pdvutil.truncate(c.xlabel, self._pydvcmd.namewidth)))
+            self._menu_table_widget.setItem(row, col, x_label_item)
             col += 1
 
             # Y Label
-            ylabelItem = QTableWidgetItem(self.tr(pdvutil.truncate(c.ylabel, self._pydvcmd.namewidth)))
-            self._menuTableWidget.setItem(row, col, ylabelItem)
+            y_label_item = QTableWidgetItem(self.tr(pdvutil.truncate(c.ylabel, self._pydvcmd.namewidth)))
+            self._menu_table_widget.setItem(row, col, y_label_item)
             col += 1
 
             # xmin
-            xminItem = QTableWidgetItem(self.tr(f"{min(c.x):.2e}"))
-            self._menuTableWidget.setItem(row, col, xminItem)
+            xmin_item = QTableWidgetItem(self.tr(f"{min(c.x):.2e}"))
+            self._menu_table_widget.setItem(row, col, xmin_item)
             col += 1
 
             # xmax
-            xmaxItem = QTableWidgetItem(self.tr(f"{max(c.x):.2e}"))
-            self._menuTableWidget.setItem(row, col, xmaxItem)
+            xmax_item = QTableWidgetItem(self.tr(f"{max(c.x):.2e}"))
+            self._menu_table_widget.setItem(row, col, xmax_item)
             col += 1
 
             # ymin
-            yminItem = QTableWidgetItem(self.tr(f"{min(c.y):.2e}"))
-            self._menuTableWidget.setItem(row, col, yminItem)
+            ymin_item = QTableWidgetItem(self.tr(f"{min(c.y):.2e}"))
+            self._menu_table_widget.setItem(row, col, ymin_item)
             col += 1
 
             # ymax
-            ymaxItem = QTableWidgetItem(self.tr(f"{max(c.y):.2e}"))
-            self._menuTableWidget.setItem(row, col, ymaxItem)
+            ymax_item = QTableWidgetItem(self.tr(f"{max(c.y):.2e}"))
+            self._menu_table_widget.setItem(row, col, ymax_item)
             col += 1
 
             # File Name
-            fnameItem = QTableWidgetItem(self.tr(c.filename))
-            self._menuTableWidget.setItem(row, col, fnameItem)
+            fname_item = QTableWidgetItem(self.tr(c.filename))
+            self._menu_table_widget.setItem(row, col, fname_item)
             col += 1
 
             # Sina Record ID
-            recidItem = QTableWidgetItem(self.tr(c.record_id))
-            self._menuTableWidget.setItem(row, col, recidItem)
+            rec_id_item = QTableWidgetItem(self.tr(c.record_id))
+            self._menu_table_widget.setItem(row, col, rec_id_item)
 
         maxrows = rows
         if rows > 10:
@@ -452,34 +452,34 @@ class Plotter(QMainWindow):
 
         if not refresh:
             # Layout
-            vbox = QVBoxLayout(self._menuDialog)
+            vbox = QVBoxLayout(self._menu_dialog)
 
             # Scroll Bar
-            scroll = QScrollArea(self._menuDialog)
+            scroll = QScrollArea(self._menu_dialog)
             scroll.setGeometry(QRect(10, 20, cols * 115, maxrows * 50))
             scroll.setMinimumSize(150, 150)
-            scroll.setWidget(self._menuTableWidget)
+            scroll.setWidget(self._menu_table_widget)
             scroll.setWidgetResizable(True)
             vbox.addWidget(scroll)
 
-            hbox = QHBoxLayout(self._menuDialog)
+            hbox = QHBoxLayout(self._menu_dialog)
             hbox.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             # Dismiss Button
-            okButton = QPushButton(self._menuDialog)
-            okButton.clicked.connect(self._menuDialog.close)
-            okButton.setMinimumSize(100, 20)
-            okButton.setMaximumSize(100, 20)
-            okButton.setText("Dismiss")
-            hbox.addWidget(okButton)
+            ok_button = QPushButton(self._menu_dialog)
+            ok_button.clicked.connect(self._menu_dialog.close)
+            ok_button.setMinimumSize(100, 20)
+            ok_button.setMaximumSize(100, 20)
+            ok_button.setText("Dismiss")
+            hbox.addWidget(ok_button)
 
             vbox.addLayout(hbox)
 
-        self._menuDialog.resize(cols * 115, maxrows * 50)
-        if not self._menuDialog.isVisible():
-            self._menuDialog.show()
+        self._menu_dialog.resize(cols * 115, maxrows * 50)
+        if not self._menu_dialog.isVisible():
+            self._menu_dialog.show()
 
-    def __viewCopyright(self):
+    def __view_copyright(self):
         msg = self.tr(
             '<b> \
                       <p style="font-family:verdana;">Copyright &copy; Lawrence Livermore National Security, LLC.</p> \
@@ -564,21 +564,21 @@ class Plotter(QMainWindow):
 
         # OK Button
         hbox = QHBoxLayout(copy_dialog)
-        okButton = QPushButton(copy_dialog)
-        okButton.clicked.connect(copy_dialog.close)
-        okButton.setMinimumSize(100, 20)
-        okButton.setMaximumSize(100, 20)
-        okButton.setText("OK")
-        hbox.addWidget(okButton, Qt.AlignmentFlag.AlignCenter)
+        ok_button = QPushButton(copy_dialog)
+        ok_button.clicked.connect(copy_dialog.close)
+        ok_button.setMinimumSize(100, 20)
+        ok_button.setMaximumSize(100, 20)
+        ok_button.setText("OK")
+        hbox.addWidget(ok_button, Qt.AlignmentFlag.AlignCenter)
         vbox.addLayout(hbox)
 
         copy_dialog.resize(300, 500)
         copy_dialog.show()
 
-    def __aboutQt(self):
+    def __about_qt(self):
         QMessageBox.aboutQt(self)
 
-    def __aboutPyDV(self):
+    def __about_pydv(self):
         QMessageBox.about(
             self,
             self.tr("About PyDV"),
@@ -596,8 +596,8 @@ class Plotter(QMainWindow):
             ),
         )
 
-    def __deleteCurve(self):
-        rowcnt = len(self._tableWidget.selectionModel().selectedRows())
+    def __delete_curve(self):
+        rowcnt = len(self._table_widget.selectionModel().selectedRows())
 
         if rowcnt > 0:
             if rowcnt == len(self._pydvcmd.plotlist):
@@ -605,17 +605,17 @@ class Plotter(QMainWindow):
                 self._pydvcmd.do_erase("erase")
             else:
                 plotnames = ""
-                for index in self._tableWidget.selectionModel().selectedRows():
+                for index in self._table_widget.selectionModel().selectedRows():
                     row = index.row()
                     plotnames += f"{self._pydvcmd.plotlist[row].plotname} "
 
                 print(f"delete {plotnames}")
                 self._pydvcmd.do_delete(f"{plotnames}")
 
-            self._pydvcmd.updateplot  # noqa: B018
+            self._pydvcmd.updateplot()
 
-    def __deleteMenuCurve(self):
-        rowcnt = len(self._menuTableWidget.selectionModel().selectedRows())
+    def __delete_menu_curve(self):
+        rowcnt = len(self._menu_table_widget.selectionModel().selectedRows())
 
         if rowcnt > 0:
             if rowcnt == len(self._pydvcmd.curvelist):
@@ -623,26 +623,26 @@ class Plotter(QMainWindow):
                 self._pydvcmd.do_kill("all")
             else:
                 menuindexes = ""
-                for index in self._menuTableWidget.selectionModel().selectedRows():
+                for index in self._menu_table_widget.selectionModel().selectedRows():
                     row = index.row()
                     menuindexes += f"{row + 1} "
 
                 print(f"kill {menuindexes}")
                 self._pydvcmd.do_kill(f"{menuindexes}")
 
-    def __plotMenuCurve(self):
-        rowcnt = len(self._menuTableWidget.selectionModel().selectedRows())
+    def __plot_menu_curve(self):
+        rowcnt = len(self._menu_table_widget.selectionModel().selectedRows())
 
         if rowcnt > 0:
             plotnames = ""
 
-            for index in self._menuTableWidget.selectionModel().selectedRows():
+            for index in self._menu_table_widget.selectionModel().selectedRows():
                 row = index.row()
                 plotnames += f" {row + 1}"
 
             print(f"curve{plotnames}")
             self._pydvcmd.do_curve(f"{plotnames}")
-            self._pydvcmd.updateplot  # noqa: B018
+            self._pydvcmd.updateplot()
 
     def __setgeometry(self):
         geometry = self._geometry
@@ -651,7 +651,7 @@ class Plotter(QMainWindow):
         else:
             self.setGeometry(50, 50, 600, 500)
 
-    def closeEvent(self, event):
+    def close_event(self, event):
         """Close the plotter."""
         if hasattr(self, "plot_updater") and self.plot_updater.is_alive():
             self.plot_updater.stop()

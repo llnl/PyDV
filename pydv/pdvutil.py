@@ -71,7 +71,7 @@ class CurveIndexError(ValueError):
     """Index Error for Curves."""
 
 
-def getCurveIndex(plotname, plotlist):
+def getCurveIndex(plotname, plotlist):  # noqa: N802
     """Return integer index to curve in plotlist from plotname."""
     for j in range(len(plotlist)):
         if plotname.upper() == plotlist[j].plotname:

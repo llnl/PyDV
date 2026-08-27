@@ -69,6 +69,7 @@ import re
 import sys
 import warnings
 from importlib.metadata import version
+from pathlib import Path
 from threading import Thread
 
 import matplotlib as mpl
@@ -108,9 +109,9 @@ else:
 try:
     from matplotlib import style
 
-    stylesLoaded = True
+    styles_loaded = True
 except:
-    stylesLoaded = False
+    styles_loaded = False
 
 from enum import Enum
 
@@ -124,9 +125,9 @@ if __package__:
 else:
     import tomllib
 
-    PYDV_DIR = os.path.dirname(os.path.abspath(__file__))
-    toml_file = os.path.join(PYDV_DIR, "pyproject.toml")
-    with open(toml_file, "rb") as fp:
+    PYDV_DIR = Path(__file__).resolve().parent
+    toml_file = PYDV_DIR / "pyproject.toml"
+    with toml_file.open("rb") as fp:
         pydv_version = tomllib.load(fp)["project"]["version"]
 
 
@@ -428,7 +429,7 @@ class Command(cmd.Cmd):
         if self.showkey and plt.gca().get_legend() is not None:
             self.key_loc = plt.gca().get_legend()._loc  # noqa: SLF001
 
-        if self.plotter is not None and self.plotter.plotChanged:
+        if self.plotter is not None and self.plotter.plot_changed:
             self.apply_uichanges()
 
         return line
@@ -781,32 +782,32 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 print("error - NOT HANDLING RANGES YET, not even sure what that would mean yet")
                 return 0
-            else:  # ok, got through input error checking, let's get to work
-                newline = line  # copy the original line, we need the original for labeling
+            # ok, got through input error checking, let's get to work
+            newline = line  # copy the original line, we need the original for labeling
 
-                # replace all the *.x and *.y entries in the line with
-                # their actual data arrays in the plotlist.
-                import re  # we are going to need regex!
+            # replace all the *.x and *.y entries in the line with
+            # their actual data arrays in the plotlist.
+            import re  # we are going to need regex!
 
-                arrayMarkers = [".x", ".y"]
-                for arrayMarker in arrayMarkers:
-                    arrayInsts = re.findall(rf"\w\{arrayMarker}", line)  # finds [a-z].x then [a-z].y
-                    for aInst in arrayInsts:
-                        plotname = aInst[0]  # BLAGO!! hard wired for single-letter labels
-                        cID = pdvutil.getCurveIndex(plotname, self.plotlist)
-                        newline = re.sub(rf"{plotname}\{arrayMarker}", f"self.plotlist[{cID}]{arrayMarker}", newline)
+            array_markers = [".x", ".y"]
+            for array_marker in array_markers:
+                array_insts = re.findall(rf"\w\{array_marker}", line)  # finds [a-z].x then [a-z].y
+                for a_inst in array_insts:
+                    plotname = a_inst[0]  # BLAGO!! hard wired for single-letter labels
+                    c_id = pdvutil.getCurveIndex(plotname, self.plotlist)
+                    newline = re.sub(rf"{plotname}\{array_marker}", f"self.plotlist[{c_id}]{array_marker}", newline)
 
-                # now newline holds a string that can be evaluated by Python
-                newYArray = eval(newline)  # line returns a new np.array
+            # now newline holds a string that can be evaluated by Python
+            new_y_array = eval(newline)  # line returns a new np.array
 
-                # make newYArray into a legitimate curve
-                c = pydvpy.makecurve(
-                    x=self.plotlist[cID].x,  # x-values from one of the curves used in the expression
-                    y=newYArray,
-                    name=line,  # we name the curve with the input 'line'
-                    plotname=self.getcurvename(),
-                )  # get the next available data ID label
-                self.addtoplot(c)
+            # make new_y_array into a legitimate curve
+            c = pydvpy.makecurve(
+                x=self.plotlist[c_id].x,  # x-values from one of the curves used in the expression
+                y=new_y_array,
+                name=line,  # we name the curve with the input 'line'
+                plotname=self.getcurvename(),
+            )  # get the next available data ID label
+            self.addtoplot(c)
 
             self.plotedit = True
         except:
@@ -948,10 +949,9 @@ class Command(cmd.Cmd):
                 if len(line.split(":")) > 1:
                     self.do_add(pdvutil.getletterargs(line))
                     return 0
-                else:
-                    line = line.split()
-                    line = " + ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self)
+                line = line.split()
+                line = " + ".join(line)
+                pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
 
         except:
@@ -991,10 +991,9 @@ class Command(cmd.Cmd):
                 if len(line.split(":")) > 1:
                     self.do_subtract(pdvutil.getletterargs(line))
                     return 0
-                else:
-                    line = line.split()
-                    line = "-" + line[0] if len(line) == 1 else " - ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self)
+                line = line.split()
+                line = "-" + line[0] if len(line) == 1 else " - ".join(line)
+                pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
@@ -1029,10 +1028,9 @@ class Command(cmd.Cmd):
                 if len(line.split(":")) > 1:
                     self.do_multiply(pdvutil.getletterargs(line))
                     return 0
-                else:
-                    line = line.split()
-                    line = " * ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self)
+                line = line.split()
+                line = " * ".join(line)
+                pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
@@ -1067,10 +1065,9 @@ class Command(cmd.Cmd):
                 if len(line.split(":")) > 1:
                     self.do_divide(pdvutil.getletterargs(line))
                     return 0
-                else:
-                    line = line.split()
-                    line = " / ".join(line)
-                    pdvutil.parsemath(line, self.plotlist, self)
+                line = line.split()
+                line = " / ".join(line)
+                pdvutil.parsemath(line, self.plotlist, self)
                 self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
@@ -1097,10 +1094,10 @@ class Command(cmd.Cmd):
             if line[-1].endswith(".csv"):
                 self.do_readcsv(" ".join(line))
                 return
-            elif line[-1].endswith(".json"):
+            if line[-1].endswith(".json"):
                 self.do_readsina(" ".join(line))
                 return
-            elif line[-1].endswith(".hdf5") or line[-1].endswith(".h5") or line[-1].endswith(".hdf"):
+            if line[-1].endswith(".hdf5") or line[-1].endswith(".h5") or line[-1].endswith(".hdf"):
                 self.do_readsinahdf5(" ".join(line))
                 return
 
@@ -1131,7 +1128,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
-            self.plotter.updateDialogs()
+            self.plotter.update_dialogs()
 
     def do_readcsv(self, line):
         """Read CSV data file.
@@ -1160,7 +1157,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
-            self.plotter.updateDialogs()
+            self.plotter.update_dialogs()
 
     def do_readsina(self, line):
         """Read all curves from Sina data file.
@@ -1182,7 +1179,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
-            self.plotter.updateDialogs()
+            self.plotter.update_dialogs()
 
     def do_readsinahdf5(self, line):
         """Read all curves from Sina hdf5 data file.
@@ -1204,7 +1201,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
-            self.plotter.updateDialogs()
+            self.plotter.update_dialogs()
 
     def do_setxcolumn(self, line):
         """Set x column for reading column formatted data files (.gnu or .csv).
@@ -1231,44 +1228,41 @@ class Command(cmd.Cmd):
     def __menu_curve_math(self, operation, line):
         if len(line.split(":")) > 1:  # check for list notation
             return self.__menu_curve_math(operation, pdvutil.getnumberargs(line, self.filelist))
-        else:
-            line = line.split()
-            curvelist = []
-            for i in range(len(line)):
-                curvedex = 0
-                if ord("A") <= ord(line[i][0].upper()) <= ord("Z"):  # check for a.% b.% file index notation
-                    filedex = ord(line[i][0].upper()) - ord("A")  # file index we want
-                    prevfile = ""  # set prevfile to impossible value
-                    filecounter = 0
-                    while filecounter <= filedex:  # count files up to the one we want
-                        if self.curvelist[curvedex].filename != prevfile:  # inc count if name changes
-                            prevfile = self.curvelist[curvedex].filename
-                            filecounter += 1
-                        curvedex += 1  # this will end up being one past what we want
-                        if curvedex >= len(self.curvelist):
-                            raise RuntimeError(f"error: in curve list did not find matching file for {line[i]}")
-                    curvedex -= 1  # back curvedex up to point to start of file's curves
-                    curvedex += int(line[i].split(".")[-1]) - 1
-                elif 0 < int(line[i]) <= len(self.curvelist):
-                    curvedex = int(line[i]) - 1
-                else:
-                    raise RuntimeError("error: curve index out of bounds: " + line[i])
+        line = line.split()
+        curvelist = []
+        for i in range(len(line)):
+            curvedex = 0
+            if ord("A") <= ord(line[i][0].upper()) <= ord("Z"):  # check for a.% b.% file index notation
+                filedex = ord(line[i][0].upper()) - ord("A")  # file index we want
+                prevfile = ""  # set prevfile to impossible value
+                filecounter = 0
+                while filecounter <= filedex:  # count files up to the one we want
+                    if self.curvelist[curvedex].filename != prevfile:  # inc count if name changes
+                        prevfile = self.curvelist[curvedex].filename
+                        filecounter += 1
+                    curvedex += 1  # this will end up being one past what we want
+                    if curvedex >= len(self.curvelist):
+                        raise RuntimeError(f"error: in curve list did not find matching file for {line[i]}")
+                curvedex -= 1  # back curvedex up to point to start of file's curves
+                curvedex += int(line[i].split(".")[-1]) - 1
+            elif 0 < int(line[i]) <= len(self.curvelist):
+                curvedex = int(line[i]) - 1
+            else:
+                raise RuntimeError("error: curve index out of bounds: " + line[i])
 
-                curvelist.append(self.curvelist[curvedex].copy())
+            curvelist.append(self.curvelist[curvedex].copy())
 
         if len(curvelist) > 1:
             if operation == "add":
                 return pydvpy.add(curvelist)
-            elif operation == "subtract":
+            if operation == "subtract":
                 return pydvpy.subtract(curvelist)
-            elif operation == "multiply":
+            if operation == "multiply":
                 return pydvpy.multiply(curvelist)
-            elif operation == "divide":
+            if operation == "divide":
                 return pydvpy.divide(curvelist)
-            else:
-                raise ValueError(f"error: Unknown operation: {operation}")
-        else:
-            raise RuntimeError("error: Expecting more than 1 curve")
+            raise ValueError(f"error: Unknown operation: {operation}")
+        raise RuntimeError("error: Expecting more than 1 curve")
 
     def do_add_h(self, line):
         """Add curves that have been read from a file but not yet plotted.
@@ -1437,63 +1431,62 @@ class Command(cmd.Cmd):
                     else:
                         self.do_curve(temp_line)
                 return 0
-            elif len(line.split(":")) > 1:  # check for list notation
+            if len(line.split(":")) > 1:  # check for list notation
                 # call curve again with list expanded
                 self.do_curve(pdvutil.getnumberargs(line, self.filelist))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    curvedex = 0
-                    skip = False
+            line = line.split()
+            for i in range(len(line)):
+                curvedex = 0
+                skip = False
 
-                    # check for a.% b.% @#. file index notation
-                    if ord("A") <= ord(line[i][0].upper()) <= ord("Z") or "@" in line[i]:
-                        if ord("A") <= ord(line[i][0].upper()) <= ord("Z"):
-                            filedex = ord(line[i][0].upper()) - ord("A")  # file index we want
-                        else:
-                            filedex = int(line[i].split(".")[0].replace("@", "")) - 1  # 0 index
-
-                        prevfile = ""  # set prevfile to impossible value
-                        filecounter = 0
-                        fileend = 0
-                        while filecounter <= filedex:  # count files up to the one we want
-                            if self.curvelist[curvedex].filename != prevfile:  # inc count if name changes
-                                prevfile = self.curvelist[curvedex].filename
-                                fileend += self.filelist[filecounter][1]
-                                filecounter += 1
-                            curvedex += 1  # this will end up being one past what we want
-                            if curvedex >= len(self.curvelist):
-                                print(f"error: in curve list did not find matching file for {line[i]}")
-                        curvedex -= 1  # back curvedex up to point to start of file's curves
-                        curvedex += int(line[i].split(".")[-1]) - 1
-                        if curvedex + 1 > fileend:
-                            filestart = fileend - self.filelist[filedex][1] + 1
-                            print(f"File {filedex + 1}: {self.filelist[filedex]}: Start {filestart}, End {fileend}")
-                            print(f"\tRequested Curve {line[i]}: {curvedex + 1}")
-                            print("\tError: curve index out of bounds")
-                            skip = True
-                    elif 0 < int(line[i]) <= len(self.curvelist):
-                        curvedex = int(line[i]) - 1
+                # check for a.% b.% @#. file index notation
+                if ord("A") <= ord(line[i][0].upper()) <= ord("Z") or "@" in line[i]:
+                    if ord("A") <= ord(line[i][0].upper()) <= ord("Z"):
+                        filedex = ord(line[i][0].upper()) - ord("A")  # file index we want
                     else:
-                        print("error: curve index out of bounds: " + line[i])
+                        filedex = int(line[i].split(".")[0].replace("@", "")) - 1  # 0 index
+
+                    prevfile = ""  # set prevfile to impossible value
+                    filecounter = 0
+                    fileend = 0
+                    while filecounter <= filedex:  # count files up to the one we want
+                        if self.curvelist[curvedex].filename != prevfile:  # inc count if name changes
+                            prevfile = self.curvelist[curvedex].filename
+                            fileend += self.filelist[filecounter][1]
+                            filecounter += 1
+                        curvedex += 1  # this will end up being one past what we want
+                        if curvedex >= len(self.curvelist):
+                            print(f"error: in curve list did not find matching file for {line[i]}")
+                    curvedex -= 1  # back curvedex up to point to start of file's curves
+                    curvedex += int(line[i].split(".")[-1]) - 1
+                    if curvedex + 1 > fileend:
+                        filestart = fileend - self.filelist[filedex][1] + 1
+                        print(f"File {filedex + 1}: {self.filelist[filedex]}: Start {filestart}, End {fileend}")
+                        print(f"\tRequested Curve {line[i]}: {curvedex + 1}")
+                        print("\tError: curve index out of bounds")
                         skip = True
-                    if not skip:
-                        # Deep copy
-                        current = copy.deepcopy(self.curvelist[curvedex])
-                        try:
-                            current.step = self.curvelist[curvedex].step
-                        except:
-                            current.step = False
-                        try:
-                            current.xticks_labels = self.curvelist[curvedex].xticks_labels
-                        except:
-                            current.xticks_labels = None
-                        self.addtoplot(current)
-                        if len(current.x) == 1 and len(current.y) == 1:
-                            current.markerstyle = "o"
-                            current.linestyle = "None"
-                self.plotedit = True
+                elif 0 < int(line[i]) <= len(self.curvelist):
+                    curvedex = int(line[i]) - 1
+                else:
+                    print("error: curve index out of bounds: " + line[i])
+                    skip = True
+                if not skip:
+                    # Deep copy
+                    current = copy.deepcopy(self.curvelist[curvedex])
+                    try:
+                        current.step = self.curvelist[curvedex].step
+                    except:
+                        current.step = False
+                    try:
+                        current.xticks_labels = self.curvelist[curvedex].xticks_labels
+                    except:
+                        current.xticks_labels = None
+                    self.addtoplot(current)
+                    if len(current.x) == 1 and len(current.y) == 1:
+                        current.markerstyle = "o"
+                        current.linestyle = "None"
+            self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
@@ -1530,18 +1523,17 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_delete(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        self.plotlist.pop(idx)
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    self.plotlist.pop(idx)
+                except pdvutil.CurveIndexError:
+                    pass
 
-                self.reset_xticks_labels()
+            self.reset_xticks_labels()
 
-                self.plotedit = True
+            self.plotedit = True
 
         except:
             pdvutil.print_own_docstring(self)
@@ -1576,20 +1568,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_color(pdvutil.getletterargs(line) + color)
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    for j in range(len(self.plotlist)):
-                        name = self.plotlist[j].plotname
-                        if name == line[i].upper():
-                            if mclr.is_color_like(color):
-                                self.plotlist[j].color = color
-                                self.plotlist[j].markeredgecolor = color
-                                self.plotlist[j].markerfacecolor = color
-                            else:
-                                print("error: invalid color " + color)
-                                return 0
-                            break
+            line = line.split()
+            for i in range(len(line)):
+                for j in range(len(self.plotlist)):
+                    name = self.plotlist[j].plotname
+                    if name == line[i].upper():
+                        if mclr.is_color_like(color):
+                            self.plotlist[j].color = color
+                            self.plotlist[j].markeredgecolor = color
+                            self.plotlist[j].markerfacecolor = color
+                        else:
+                            print("error: invalid color " + color)
+                            return 0
+                        break
             self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
@@ -1612,23 +1603,22 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_stats(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
-                        pydvpy.stats(cur)
+        try:
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
+                    pydvpy.stats(cur)
 
-                    except pdvutil.CurveIndexError:
-                        pass
+                except pdvutil.CurveIndexError:
+                    pass
 
-                print("\n")
-            except:
-                pdvutil.print_own_docstring(self)
-            finally:
-                self.redraw = False
+            print("\n")
+        except:
+            pdvutil.print_own_docstring(self)
+        finally:
+            self.redraw = False
 
     def do_deltax(self, line):
         """Create new curve that calculates difference between its own X points. Delta X vs # of points - 1.
@@ -1647,28 +1637,27 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_deltax(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
+        try:
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
 
-                        c = pydvpy.makecurve(
-                            x=range(len(cur.x) - 1),
-                            y=cur.x[1:] - cur.x[:-1],
-                            name=f"{cur.name} Delta X",  # we name the curve with the input 'line'
-                            plotname=self.getcurvename(),
-                        )  # get the next available data ID label
-                        self.addtoplot(c)
+                    c = pydvpy.makecurve(
+                        x=range(len(cur.x) - 1),
+                        y=cur.x[1:] - cur.x[:-1],
+                        name=f"{cur.name} Delta X",  # we name the curve with the input 'line'
+                        plotname=self.getcurvename(),
+                    )  # get the next available data ID label
+                    self.addtoplot(c)
 
-                    except pdvutil.CurveIndexError:
-                        pass
-            except:
-                pdvutil.print_own_docstring(self)
-            finally:
-                self.redraw = True
+                except pdvutil.CurveIndexError:
+                    pass
+        except:
+            pdvutil.print_own_docstring(self)
+        finally:
+            self.redraw = True
 
     def do_deltay(self, line):
         """Create new curve that calculates difference between its own Y points. Delta Y vs # of points - 1.
@@ -1687,28 +1676,27 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_deltay(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
+        try:
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
 
-                        c = pydvpy.makecurve(
-                            x=range(len(cur.y) - 1),
-                            y=cur.y[1:] - cur.y[:-1],
-                            name=f"{cur.name} Delta Y",  # we name the curve with the input 'line'
-                            plotname=self.getcurvename(),
-                        )  # get the next available data ID label
-                        self.addtoplot(c)
+                    c = pydvpy.makecurve(
+                        x=range(len(cur.y) - 1),
+                        y=cur.y[1:] - cur.y[:-1],
+                        name=f"{cur.name} Delta Y",  # we name the curve with the input 'line'
+                        plotname=self.getcurvename(),
+                    )  # get the next available data ID label
+                    self.addtoplot(c)
 
-                    except pdvutil.CurveIndexError:
-                        pass
-            except:
-                pdvutil.print_own_docstring(self)
-            finally:
-                self.redraw = True
+                except pdvutil.CurveIndexError:
+                    pass
+        except:
+            pdvutil.print_own_docstring(self)
+        finally:
+            self.redraw = True
 
     def do_getattributes(self, line):
         """Return a curve's attributes, such as: color, style, width, etc.
@@ -1725,55 +1713,54 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_getattributes(pdvutil.getletterargs(line))
             return 0
-        else:
-            if not line:
-                return 0
-            try:
-                line = line.split()
-                for c in line:
-                    idx = pdvutil.getCurveIndex(c, self.plotlist)
-                    cur = self.plotlist[idx]
-                    try:
-                        cur.step = self.curvelist[idx].step
-                    except:
-                        cur.step = False
-                    try:
-                        cur.xticks_labels = self.curvelist[idx].xticks_labels
-                    except:
-                        cur.xticks_labels = None
-                    print("\n")
-                    print(f"    Plot name = {cur.plotname}")
-                    print(f"    Color = {cur.color}")
-                    if cur.linestyle == "-":
-                        pp_linestyle = "solid"
-                    elif cur.linestyle == ":":
-                        pp_linestyle = "dot"
-                    elif cur.linestyle == "--":
-                        pp_linestyle = "dash"
-                    elif cur.linestyle == "-.":
-                        pp_linestyle = "dashdot"
-                    print(f"    Style = {pp_linestyle}")
-                    print(f"    Curve width = {cur.linewidth} ")
-                    print(f"    Edited = {cur.edited}")
-                    print(f"    Scatter = {cur.scatter}")
-                    print(f"    Linespoints = {cur.linespoints}")
-                    print(f"    Drawstyle = {cur.drawstyle}")
-                    print(f"    Dashes = {cur.dashes}")
-                    print(f"    Hidden = {cur.hidden}")
-                    print(f"    Marker = {cur.marker}")
-                    print(f"    Markersize = {cur.markersize}")
-                    print(f"    Markeredgecolor = {cur.markeredgecolor}")
-                    print(f"    Markerfacecolor = {cur.markerfacecolor}")
-                    print(f"    Ebar = {cur.ebar}")
-                    print(f"    Erange = {cur.erange}")
-                    print(f"    Plotprecedence = {cur.plotprecedence}")
-                    print(f"    Step Function = {cur.step}")
-                    print(f"    X-ticks Labels = {cur.xticks_labels}")
-                    print("\n")
-            except:
-                pdvutil.print_own_docstring(self)
-            finally:
-                self.redraw = False
+        if not line:
+            return 0
+        try:
+            line = line.split()
+            for c in line:
+                idx = pdvutil.getCurveIndex(c, self.plotlist)
+                cur = self.plotlist[idx]
+                try:
+                    cur.step = self.curvelist[idx].step
+                except:
+                    cur.step = False
+                try:
+                    cur.xticks_labels = self.curvelist[idx].xticks_labels
+                except:
+                    cur.xticks_labels = None
+                print("\n")
+                print(f"    Plot name = {cur.plotname}")
+                print(f"    Color = {cur.color}")
+                if cur.linestyle == "-":
+                    pp_linestyle = "solid"
+                elif cur.linestyle == ":":
+                    pp_linestyle = "dot"
+                elif cur.linestyle == "--":
+                    pp_linestyle = "dash"
+                elif cur.linestyle == "-.":
+                    pp_linestyle = "dashdot"
+                print(f"    Style = {pp_linestyle}")
+                print(f"    Curve width = {cur.linewidth} ")
+                print(f"    Edited = {cur.edited}")
+                print(f"    Scatter = {cur.scatter}")
+                print(f"    Linespoints = {cur.linespoints}")
+                print(f"    Drawstyle = {cur.drawstyle}")
+                print(f"    Dashes = {cur.dashes}")
+                print(f"    Hidden = {cur.hidden}")
+                print(f"    Marker = {cur.marker}")
+                print(f"    Markersize = {cur.markersize}")
+                print(f"    Markeredgecolor = {cur.markeredgecolor}")
+                print(f"    Markerfacecolor = {cur.markerfacecolor}")
+                print(f"    Ebar = {cur.ebar}")
+                print(f"    Erange = {cur.erange}")
+                print(f"    Plotprecedence = {cur.plotprecedence}")
+                print(f"    Step Function = {cur.step}")
+                print(f"    X-ticks Labels = {cur.xticks_labels}")
+                print("\n")
+        except:
+            pdvutil.print_own_docstring(self)
+        finally:
+            self.redraw = False
 
     def do_markerfacecolor(self, line):
         """Set the markerface color of curves.
@@ -1805,19 +1792,18 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_markerfacecolor(pdvutil.getletterargs(line) + color)
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
-                        if mclr.is_color_like(color):
-                            cur.markerfacecolor = color
-                        else:
-                            print("error: invalid marker face color " + color)
-                            return 0
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
+                    if mclr.is_color_like(color):
+                        cur.markerfacecolor = color
+                    else:
+                        print("error: invalid marker face color " + color)
+                        return 0
+                except pdvutil.CurveIndexError:
+                    pass
 
             self.plotedit = True
 
@@ -1854,19 +1840,18 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_markeredgecolor(pdvutil.getletterargs(line) + color)
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
-                        if mclr.is_color_like(color):
-                            cur.markeredgecolor = color
-                        else:
-                            print("error: invalid marker edge color " + color)
-                            return 0
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
+                    if mclr.is_color_like(color):
+                        cur.markeredgecolor = color
+                    else:
+                        print("error: invalid marker edge color " + color)
+                        return 0
+                except pdvutil.CurveIndexError:
+                    pass
 
             self.plotedit = True
 
@@ -1881,7 +1866,7 @@ class Command(cmd.Cmd):
             [PyDV]: showstyles
         """
         try:
-            if stylesLoaded:
+            if styles_loaded:
                 ss = pydvpy.get_styles()
                 print("\n")
                 self.print_topics("Style Names (type style <style-name>):", ss, 15, 80)
@@ -2049,7 +2034,7 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_L2(self, line):
+    def do_L2(self, line):  # noqa: N802
         """Take L2 norm of two curves.
 
         The L2 norm is `integral( (curve1 - curve2)**2 )**(1/2)` over the interval [xmin,xmax].
@@ -2078,7 +2063,7 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_L1(self, line):
+    def do_L1(self, line):  # noqa: N802
         """Take L1 norm of two curves.
 
         The L1 norm is `integral( |curve1 - curve2| )` over the interval [xmin,xmax].
@@ -2130,8 +2115,8 @@ class Command(cmd.Cmd):
             c = a - b  # new np.array object
             c.y = abs(c.y)  # absolute value
             if args[2].lower() != "inf":
-                N = int(args[2])  # order of the norm
-                c = c**N
+                n = int(args[2])  # order of the norm
+                c = c**n
             if len(args) == 5:
                 xmin = float(args[3])
                 xmax = float(args[4])
@@ -2141,19 +2126,19 @@ class Command(cmd.Cmd):
                 xmin = min(c.x)
                 xmax = max(c.x)
             if args[2].lower() == "inf":
-                Linf = 0.0
+                l_inf = 0.0
                 for xi, yi in zip(c.x, c.y, strict=False):
                     if xmin <= xi <= xmax:
-                        Linf = max(Linf, yi)
-                print(f"Linf norm = {Linf:.4f}")
+                        l_inf = max(l_inf, yi)
+                print(f"Linf norm = {l_inf:.4f}")
                 d = c
-                d.y = np.array([Linf] * c.y.shape[0])
+                d.y = np.array([l_inf] * c.y.shape[0])
                 d.name = "Linf of " + a.plotname + " and " + b.plotname
             else:
                 d = pydvpy.integrate(c, xmin, xmax)[0]  # d = integral( c**N )
-                d = d ** (1.0 / N)
-                print(f"L{N:d} norm = {max(d.y):.4f}")
-                d.name = f"L{N} of " + a.plotname + " and " + b.plotname
+                d = d ** (1.0 / n)
+                print(f"L{n:d} norm = {max(d.y):.4f}")
+                d.name = f"L{n} of " + a.plotname + " and " + b.plotname
             self.addtoplot(d)
         except:
             pdvutil.print_own_docstring(self)
@@ -2176,25 +2161,24 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_max(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
+            line = line.split()
 
-                if len(line) < 2:
-                    return
+            if len(line) < 2:
+                return None
 
-                curves = []
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curves.append(self.plotlist[curvidx])
-                    except pdvutil.CurveIndexError:
-                        pass
+            curves = []
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curves.append(self.plotlist[curvidx])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                nc = pydvpy.max_curve(curves)
+            nc = pydvpy.max_curve(curves)
 
-                if nc is not None:
-                    self.addtoplot(nc)
-                    self.plotedit = True
+            if nc is not None:
+                self.addtoplot(nc)
+                self.plotedit = True
 
         except:
             pdvutil.print_own_docstring(self)
@@ -2217,25 +2201,24 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_min(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
+        try:
+            line = line.split()
 
-                if len(line) < 2:
-                    return
+            if len(line) < 2:
+                return None
 
-                curves = []
-                for i in range(len(line)):
-                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    curves.append(self.plotlist[curvidx])
+            curves = []
+            for i in range(len(line)):
+                curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                curves.append(self.plotlist[curvidx])
 
-                nc = pydvpy.min_curve(curves)
+            nc = pydvpy.min_curve(curves)
 
-                if nc is not None:
-                    self.addtoplot(nc)
-                    self.plotedit = True
-            except:
-                pdvutil.print_own_docstring(self)
+            if nc is not None:
+                self.addtoplot(nc)
+                self.plotedit = True
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_average(self, line):
         """Average the specified curvelist over the intersection of their domains.
@@ -2255,27 +2238,26 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_average(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
+        try:
+            line = line.split()
 
-                if len(line) < 2:
-                    return
+            if len(line) < 2:
+                return None
 
-                curves = []
-                for i in range(len(self.plotlist)):
-                    for j in range(len(line)):
-                        if self.plotlist[i].plotname == line[j].upper():
-                            curves.append(self.plotlist[i])
-                            break
+            curves = []
+            for i in range(len(self.plotlist)):
+                for j in range(len(line)):
+                    if self.plotlist[i].plotname == line[j].upper():
+                        curves.append(self.plotlist[i])
+                        break
 
-                nc = pydvpy.average_curve(curves)
+            nc = pydvpy.average_curve(curves)
 
-                if nc is not None:
-                    self.addtoplot(nc)
-                    self.plotedit = True
-            except:
-                pdvutil.print_own_docstring(self)
+            if nc is not None:
+                self.addtoplot(nc)
+                self.plotedit = True
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_fit(self, line):
         """Make new curve that is polynomial fit to argument.
@@ -2372,24 +2354,23 @@ class Command(cmd.Cmd):
                 [PyDV]: getrange c d
         """
         if not line:
-            return
+            return None
         try:
             if len(line.split(":")) > 1:
                 self.do_getrange(pdvutil.getletterargs(line))
                 return 0
-            else:
-                print("\n   Get Range")
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[idx]
-                        plotname, miny, maxy = pydvpy.getrange(cur)[0]
-                        print("\nCurve " + plotname)
-                        print(f"    ymin: {miny:.6e}    ymax: {maxy:.6e}")
-                    except pdvutil.CurveIndexError:
-                        pass
-                print()
+            print("\n   Get Range")
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[idx]
+                    plotname, miny, maxy = pydvpy.getrange(cur)[0]
+                    print("\nCurve " + plotname)
+                    print(f"    ymin: {miny:.6e}    ymax: {maxy:.6e}")
+                except pdvutil.CurveIndexError:
+                    pass
+            print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2411,20 +2392,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_getdomain(pdvutil.getletterargs(line))
                 return 0
-            else:
-                print("\n   Get Domain")
-                line = line.split()
+            print("\n   Get Domain")
+            line = line.split()
 
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[idx]
-                        plotname, minx, maxx = pydvpy.getdomain(cur)[0]
-                        print("\nCurve " + plotname)
-                        print(f"    xmin: {minx:.6e}    xmax: {maxx:.6e}")
-                    except pdvutil.CurveIndexError:
-                        pass
-                print()
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[idx]
+                    plotname, minx, maxx = pydvpy.getdomain(cur)[0]
+                    print("\nCurve " + plotname)
+                    print(f"    xmin: {minx:.6e}    xmax: {maxx:.6e}")
+                except pdvutil.CurveIndexError:
+                    pass
+            print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2446,20 +2426,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_sum(pdvutil.getletterargs(line))
                 return 0
-            else:
-                print("\nSum:")
-                line = line.split()
+            print("\nSum:")
+            line = line.split()
 
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[idx]
-                        plotname, sumx, sumy = pydvpy.sums(cur)[0]
-                        print(f"\nCurve {cur.plotname}: {plotname}")
-                        print(f"\tsumx: {sumx:.6e}, sumy: {sumy:.6e}")
-                    except pdvutil.CurveIndexError:
-                        pass
-                print()
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[idx]
+                    plotname, sumx, sumy = pydvpy.sums(cur)[0]
+                    print(f"\nCurve {cur.plotname}: {plotname}")
+                    print(f"\tsumx: {sumx:.6e}, sumy: {sumy:.6e}")
+                except pdvutil.CurveIndexError:
+                    pass
+            print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2481,20 +2460,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_area(pdvutil.getletterargs(line))
                 return 0
-            else:
-                print("\nArea:")
-                line = line.split()
+            print("\nArea:")
+            line = line.split()
 
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[idx]
-                        plotname, area = pydvpy.area(cur)[0]
-                        print(f"\nCurve {cur.plotname}: {plotname}")
-                        print(f"\tarea: {area:.6e}")
-                    except pdvutil.CurveIndexError:
-                        pass
-                print()
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[idx]
+                    plotname, area = pydvpy.area(cur)[0]
+                    print(f"\nCurve {cur.plotname}: {plotname}")
+                    print(f"\tarea: {area:.6e}")
+                except pdvutil.CurveIndexError:
+                    pass
+            print()
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2523,33 +2501,32 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_getymax(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                xlow = None
+            line = line.split()
+            xlow = None
+            xhi = None
+
+            try:
+                xhi = float(line[-1])
+                line.pop(-1)
+            except:
                 xhi = None
 
-                try:
-                    xhi = float(line[-1])
-                    line.pop(-1)
-                except:
-                    xhi = None
+            try:
+                xlow = float(line[-1])
+                line.pop(-1)
+            except:
+                xlow = None
 
-                try:
-                    xlow = float(line[-1])
-                    line.pop(-1)
-                except:
-                    xlow = None
+            if (xlow is None and xhi is not None) or (xlow is not None and xhi is None):
+                raise RuntimeError("<xmin> and <xmax> must BOTH be specified")
 
-                if (xlow is None and xhi is not None) or (xlow is not None and xhi is None):
-                    raise RuntimeError("<xmin> and <xmax> must BOTH be specified")
-
-                for i in line:
-                    idx = pdvutil.getCurveIndex(i, self.plotlist)
-                    cur = self.plotlist[idx]
-                    plotname, xy_values = pydvpy.getymax(cur, xlow, xhi)
-                    print(f" \n{i.upper()} Curve {plotname}")
-                    for x, y in xy_values:
-                        print(f"    x: {x:.6e}    y: {y:.6e}\n")
+            for i in line:
+                idx = pdvutil.getCurveIndex(i, self.plotlist)
+                cur = self.plotlist[idx]
+                plotname, xy_values = pydvpy.getymax(cur, xlow, xhi)
+                print(f" \n{i.upper()} Curve {plotname}")
+                for x, y in xy_values:
+                    print(f"    x: {x:.6e}    y: {y:.6e}\n")
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2578,33 +2555,32 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_getymin(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                xlow = None
+            line = line.split()
+            xlow = None
+            xhi = None
+
+            try:
+                xhi = float(line[-1])
+                line.pop(-1)
+            except:
                 xhi = None
 
-                try:
-                    xhi = float(line[-1])
-                    line.pop(-1)
-                except:
-                    xhi = None
+            try:
+                xlow = float(line[-1])
+                line.pop(-1)
+            except:
+                xlow = None
 
-                try:
-                    xlow = float(line[-1])
-                    line.pop(-1)
-                except:
-                    xlow = None
+            if (xlow is None and xhi is not None) or (xlow is not None and xhi is None):
+                raise RuntimeError("<xmin> and <xmax> must BOTH be specified")
 
-                if (xlow is None and xhi is not None) or (xlow is not None and xhi is None):
-                    raise RuntimeError("<xmin> and <xmax> must BOTH be specified")
-
-                for i in line:
-                    idx = pdvutil.getCurveIndex(i, self.plotlist)
-                    cur = self.plotlist[idx]
-                    plotname, xy_values = pydvpy.getymin(cur, xlow, xhi)
-                    print(f" \n{i.upper()} Curve {plotname}")
-                    for x, y in xy_values:
-                        print(f"    x: {x:.6e}    y: {y:.6e}\n")
+            for i in line:
+                idx = pdvutil.getCurveIndex(i, self.plotlist)
+                cur = self.plotlist[idx]
+                plotname, xy_values = pydvpy.getymin(cur, xlow, xhi)
+                print(f" \n{i.upper()} Curve {plotname}")
+                for x, y in xy_values:
+                    print(f"    x: {x:.6e}    y: {y:.6e}\n")
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2628,16 +2604,15 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_cumsum(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
+            line = line.split()
 
-                for i in line:
-                    idx = pdvutil.getCurveIndex(i, self.plotlist)
-                    cur = self.plotlist[idx]
-                    nc = pydvpy.cumsum(cur)
-                    self.addtoplot(nc)
+            for i in line:
+                idx = pdvutil.getCurveIndex(i, self.plotlist)
+                cur = self.plotlist[idx]
+                nc = pydvpy.cumsum(cur)
+                self.addtoplot(nc)
 
-                    self.plotedit = True
+                self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
@@ -2657,14 +2632,13 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_getlabel(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
+            line = line.split()
 
-                for i in range(len(self.plotlist)):
-                    cur = self.plotlist[i]
-                    for j in range(len(line)):
-                        if cur.plotname == line[j].upper():
-                            print(f"\n {line[j].upper()} Label = {cur.name}")
+            for i in range(len(self.plotlist)):
+                cur = self.plotlist[i]
+                for j in range(len(line)):
+                    if cur.plotname == line[j].upper():
+                        print(f"\n {line[j].upper()} Label = {cur.name}")
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2686,15 +2660,14 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_sort(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        j = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[j]
-                        pydvpy.sort(cur)
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    j = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[j]
+                    pydvpy.sort(cur)
+                except pdvutil.CurveIndexError:
+                    pass
 
             self.plotedit = True
 
@@ -2717,15 +2690,14 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_rev(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        j = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[j]
-                        pydvpy.rev(cur)
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    j = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[j]
+                    pydvpy.rev(cur)
+                except pdvutil.CurveIndexError:
+                    pass
             self.plotedit = True
 
         except:
@@ -2747,15 +2719,14 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_random(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        j = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[j]
-                        pydvpy.random(cur)
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    j = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[j]
+                    pydvpy.random(cur)
+                except pdvutil.CurveIndexError:
+                    pass
             self.plotedit = True
 
         except:
@@ -2780,20 +2751,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_disp(pdvutil.getletterargs(line))
                 return 0
-            else:
-                print("\n")
-                line = line.split()
-                if "format" in line:
-                    form = line[-1]
-                    line = line[:-2]  # remove ['format', 'FORMAT']
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[idx]
-                        ss = pydvpy.disp(cur, False, form=form)
-                        self.print_topics(f"Curve {cur.plotname}: {cur.name}", ss, 15, 100)
-                    except pdvutil.CurveIndexError:
-                        pass
+            print("\n")
+            line = line.split()
+            if "format" in line:
+                form = line[-1]
+                line = line[:-2]  # remove ['format', 'FORMAT']
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[idx]
+                    ss = pydvpy.disp(cur, False, form=form)
+                    self.print_topics(f"Curve {cur.plotname}: {cur.name}", ss, 15, 100)
+                except pdvutil.CurveIndexError:
+                    pass
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2818,20 +2788,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_dispx(pdvutil.getletterargs(line))
                 return 0
-            else:
-                print("\n")
-                line = line.split()
-                if "format" in line:
-                    form = line[-1]
-                    line = line[:-2]  # remove ['format', 'FORMAT']
-                for i in range(len(line)):
-                    try:
-                        idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[idx]
-                        ss = pydvpy.disp(cur, form=form)
-                        self.print_topics(f"Curve {cur.plotname}: {cur.name}", ss, 15, 100)
-                    except pdvutil.CurveIndexError:
-                        pass
+            print("\n")
+            line = line.split()
+            if "format" in line:
+                form = line[-1]
+                line = line[:-2]  # remove ['format', 'FORMAT']
+            for i in range(len(line)):
+                try:
+                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[idx]
+                    ss = pydvpy.disp(cur, form=form)
+                    self.print_topics(f"Curve {cur.plotname}: {cur.name}", ss, 15, 100)
+                except pdvutil.CurveIndexError:
+                    pass
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -2855,12 +2824,11 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_getnumpoints(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    cur = self.plotlist[idx]
-                    print(f"\n    {line[i].upper()} Number of points = {pydvpy.getnumpoints(cur)}")
+            line = line.split()
+            for i in range(len(line)):
+                idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                cur = self.plotlist[idx]
+                print(f"\n    {line[i].upper()} Number of points = {pydvpy.getnumpoints(cur)}")
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -4346,9 +4314,9 @@ class Command(cmd.Cmd):
         """
         try:
             line = line.split()
-            new_file = line[0]
+            new_file = Path(line[0]).expanduser()
 
-            if os.path.exists(new_file):
+            if new_file.exists():
                 ans = input(f"{new_file} already exists. Overwrite? [y/n]: ")
 
                 if ans.upper() in ["YES", "Y"]:
@@ -4361,10 +4329,11 @@ class Command(cmd.Cmd):
                     return
 
             other_files = line[1:]
-            with open(new_file, "w") as f1:
+            with new_file.open("w") as f1:
                 lines = []
                 for other_file in other_files:
-                    with open(other_file) as f2:
+                    other_path = Path(other_file).expanduser()
+                    with other_path.open() as f2:
                         lines += f2.readlines()
                         lines += "\n"
                 f1.writelines(lines)
@@ -4408,7 +4377,7 @@ class Command(cmd.Cmd):
                 [PyDV]: gridstyle dashdot
         """
         if not line:
-            return 0
+            return
 
         style = line.strip()
 
@@ -4422,7 +4391,9 @@ class Command(cmd.Cmd):
             self.gridstyle = "-."
         else:
             pdvutil.print_own_docstring(self)
-            return 0
+            return
+
+        return
 
     def do_gridwidth(self, line):
         """Set the grid line width in points.
@@ -4808,9 +4779,8 @@ class Command(cmd.Cmd):
             self.do_color(curves_ + " " + colors[i % len(colors)].replace("'", ""))
 
         for cur in self.plotlist:
-            path = os.path.normpath(cur.filename)
-            path_parts = path.split(os.sep)
-            path_section = os.path.join(*path_parts[-self.slashes :])
+            path_parts = Path(cur.filename).parts
+            path_section = Path(*path_parts[-self.slashes :])
 
             if len(curve_names) == 1 and (title_update or self.title == curve_names[0]):
                 self.do_label(f"{cur.plotname} {path_section}")
@@ -4960,26 +4930,18 @@ class Command(cmd.Cmd):
                     return 0
 
             print(
-                "{:<5} {:<{namewidth}.{namewidth}} {:<{xlabelwidth}.{xlabelwidth}} {:<{ylabelwidth}.{ylabelwidth}} ".format(  # noqa: E501
-                    "curve",
-                    "curve_name",
-                    "xlabel",
-                    "ylabel",
-                    namewidth=self.namewidth,
-                    xlabelwidth=self.xlabelwidth,
-                    ylabelwidth=self.ylabelwidth,
-                )
-                + "{:<9} {:<9} {:<9} {:<9} {:<{filenamewidth}.{filenamewidth}} {:<{recordidwidth}.{recordidwidth}}".format(  # noqa: E501
-                    "xmin",
-                    "xmax",
-                    "ymin",
-                    "ymax",
-                    "fname",
-                    "record_id",
-                    filenamewidth=self.filenamewidth,
-                    recordidwidth=self.recordidwidth,
-                )
+                f"{'curve':<5} "
+                f"{'curve_name':<{self.namewidth}.{self.namewidth}} "
+                f"{'xlabel':<{self.xlabelwidth}.{self.xlabelwidth}} "
+                f"{'ylabel':<{self.ylabelwidth}.{self.ylabelwidth}} "
+                f"{'xmin':<9} "
+                f"{'xmax':<9} "
+                f"{'ymin':<9} "
+                f"{'ymax':<9} "
+                f"{'fname':<{self.filenamewidth}.{self.filenamewidth}} "
+                f"{'record_id':<{self.recordidwidth}.{self.recordidwidth}}"
             )
+
             print(
                 "".join(
                     ["-"]
@@ -5024,8 +4986,18 @@ class Command(cmd.Cmd):
                     ymin = f"{min(cur.y):.2e}"
                     ymax = f"{max(cur.y):.2e}"
                     print(
-                        f"{plotname:>5} {name} {xlabel} {ylabel} {xmin:9} {xmax:9} {ymin:9} {ymax:9} {fname} {record_id}"  # noqa: E501
+                        f"{plotname:>5} "
+                        f"{name} "
+                        f"{xlabel} "
+                        f"{ylabel} "
+                        f"{xmin:9} "
+                        f"{xmax:9} "
+                        f"{ymin:9} "
+                        f"{ymax:9} "
+                        f"{fname} "
+                        f"{record_id}"
                     )
+
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -5071,26 +5043,18 @@ class Command(cmd.Cmd):
                 stop = pllen
 
             print(
-                "{:<5} {:<{namewidth}.{namewidth}} {:<{xlabelwidth}.{xlabelwidth}} {:<{ylabelwidth}.{ylabelwidth}} ".format(  # noqa: E501
-                    "curve",
-                    "curve_name",
-                    "xlabel",
-                    "ylabel",
-                    namewidth=self.namewidth,
-                    xlabelwidth=self.xlabelwidth,
-                    ylabelwidth=self.ylabelwidth,
-                )
-                + "{:<9} {:<9} {:<9} {:<9} {:<{filenamewidth}.{filenamewidth}} {:<{recordidwidth}.{recordidwidth}}".format(  # noqa: E501
-                    "xmin",
-                    "xmax",
-                    "ymin",
-                    "ymax",
-                    "fname",
-                    "record_id",
-                    filenamewidth=self.filenamewidth,
-                    recordidwidth=self.recordidwidth,
-                )
+                f"{'curve':<5} "
+                f"{'curve_name':<{self.namewidth}.{self.namewidth}} "
+                f"{'xlabel':<{self.xlabelwidth}.{self.xlabelwidth}} "
+                f"{'ylabel':<{self.ylabelwidth}.{self.ylabelwidth}} "
+                f"{'xmin':<9} "
+                f"{'xmax':<9} "
+                f"{'ymin':<9} "
+                f"{'ymax':<9} "
+                f"{'fname':<{self.filenamewidth}.{self.filenamewidth}} "
+                f"{'record_id':<{self.recordidwidth}.{self.recordidwidth}}"
             )
+
             print(
                 "".join(
                     ["-"]
@@ -5169,7 +5133,7 @@ class Command(cmd.Cmd):
             pdvutil.print_own_docstring(self)
         finally:
             self.redraw = False
-            self.plotter.updateDialogs()
+            self.plotter.update_dialogs()
 
     def do_menur(self, line):
         """List the curves available for plotting in the range from start to stop.
@@ -5206,26 +5170,18 @@ class Command(cmd.Cmd):
                 stop = len(self.curvelist)
 
             print(
-                "{:>5} {:<{namewidth}.{namewidth}} {:<{xlabelwidth}.{xlabelwidth}} {:<{ylabelwidth}.{ylabelwidth}} ".format(  # noqa: E501
-                    "index",
-                    "curve_name",
-                    "xlabel",
-                    "ylabel",
-                    namewidth=self.namewidth,
-                    xlabelwidth=self.xlabelwidth,
-                    ylabelwidth=self.ylabelwidth,
-                )
-                + "{:<9} {:<9} {:<9} {:<9} {:<{filenamewidth}.{filenamewidth}} {:<{recordidwidth}.{recordidwidth}}".format(  # noqa: E501
-                    "xmin",
-                    "xmax",
-                    "ymin",
-                    "ymax",
-                    "fname",
-                    "record_id",
-                    filenamewidth=self.filenamewidth,
-                    recordidwidth=self.recordidwidth,
-                )
+                f"{'index':>5} "
+                f"{'curve_name':<{self.namewidth}.{self.namewidth}} "
+                f"{'xlabel':<{self.xlabelwidth}.{self.xlabelwidth}} "
+                f"{'ylabel':<{self.ylabelwidth}.{self.ylabelwidth}} "
+                f"{'xmin':<9} "
+                f"{'xmax':<9} "
+                f"{'ymin':<9} "
+                f"{'ymax':<9} "
+                f"{'fname':<{self.filenamewidth}.{self.filenamewidth}} "
+                f"{'record_id':<{self.recordidwidth}.{self.recordidwidth}}"
             )
+
             print(
                 "".join(
                     ["-"]
@@ -5302,26 +5258,18 @@ class Command(cmd.Cmd):
                     return 0
 
             print(
-                "{:>5} {:<{namewidth}.{namewidth}} {:<{xlabelwidth}.{xlabelwidth}} {:<{ylabelwidth}.{ylabelwidth}} ".format(  # noqa: E501
-                    "index",
-                    "curve_name",
-                    "xlabel",
-                    "ylabel",
-                    namewidth=self.namewidth,
-                    xlabelwidth=self.xlabelwidth,
-                    ylabelwidth=self.ylabelwidth,
-                )
-                + "{:<9} {:<9} {:<9} {:<9} {:<{filenamewidth}.{filenamewidth}} {:<{recordidwidth}.{recordidwidth}}".format(  # noqa: E501
-                    "xmin",
-                    "xmax",
-                    "ymin",
-                    "ymax",
-                    "fname",
-                    "record_id",
-                    filenamewidth=self.filenamewidth,
-                    recordidwidth=self.recordidwidth,
-                )
+                f"{'index':>5} "
+                f"{'curve_name':<{self.namewidth}.{self.namewidth}} "
+                f"{'xlabel':<{self.xlabelwidth}.{self.xlabelwidth}} "
+                f"{'ylabel':<{self.ylabelwidth}.{self.ylabelwidth}} "
+                f"{'xmin':<9} "
+                f"{'xmax':<9} "
+                f"{'ymin':<9} "
+                f"{'ymax':<9} "
+                f"{'fname':<{self.filenamewidth}.{self.filenamewidth}} "
+                f"{'record_id':<{self.recordidwidth}.{self.recordidwidth}}"
             )
+
             print(
                 "".join(
                     ["-"]
@@ -5443,14 +5391,15 @@ class Command(cmd.Cmd):
 
         .. code::
 
-            [PyDV]: image [filename=plot] [filetype=pdf: png | ps | pdf | svg] [transparent=False: True | False] [dpi] [width] [height]
+            [PyDV]: image [filename=plot] [filetype=pdf: png | ps | pdf | svg]
+            [transparent=False: True | False] [dpi] [width] [height]
 
             Ex:
                 [PyDV]: image my_plot png
                 [PyDV]: image my_plot png True
                 [PyDV]: image my_plot png True 100
                 [PyDV]: image my_plot png True 100 1920 1080
-        """  # noqa: E501
+        """
         try:
             line = line.split()
             optcnt = len(line)
@@ -5507,25 +5456,22 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_save(filename + " " + pdvutil.getletterargs(line))
                 return 0
-            else:
-                with open(filename, "w") as f:
-                    save_labels = False
-                    if "savelabels" in line:
-                        save_labels = True
-                    line = line.split()
-                    for i in range(len(line)):
-                        try:
-                            curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                            cur = self.plotlist[curvidx]
-                            if save_labels:
-                                f.write("# " + cur.name + " # xlabel " + cur.xlabel + " # ylabel " + cur.ylabel + "\n")
-                            else:
-                                f.write("# " + cur.name + "\n")
-                            f.writelines(
-                                " " + str(cur.x[dex]) + " " + str(cur.y[dex]) + "\n" for dex in range(len(cur.x))
-                            )
-                        except RuntimeError as rte:
-                            print(f"I/O error: {rte}")
+            with Path(filename).open("w") as f:
+                save_labels = False
+                if "savelabels" in line:
+                    save_labels = True
+                line = line.split()
+                for i in range(len(line)):
+                    try:
+                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                        cur = self.plotlist[curvidx]
+                        if save_labels:
+                            f.write("# " + cur.name + " # xlabel " + cur.xlabel + " # ylabel " + cur.ylabel + "\n")
+                        else:
+                            f.write("# " + cur.name + "\n")
+                        f.writelines(" " + str(cur.x[dex]) + " " + str(cur.y[dex]) + "\n" for dex in range(len(cur.x)))
+                    except RuntimeError as rte:
+                        print(f"I/O error: {rte}")
         except:
             pdvutil.print_own_docstring(self)
         finally:
@@ -5552,26 +5498,25 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_savecsv(filename + " " + pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                cols = []
-                names = []
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
-                        cols.append(cur.x.tolist())
-                        cols.append(cur.y.tolist())
-                        names.append(cur.name + " [x]")
-                        names.append(cur.name + " [y]")
-                    except RuntimeError as rte:
-                        print(f"I/O error: {rte}")
+            line = line.split()
+            cols = []
+            names = []
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
+                    cols.append(cur.x.tolist())
+                    cols.append(cur.y.tolist())
+                    names.append(cur.name + " [x]")
+                    names.append(cur.name + " [y]")
+                except RuntimeError as rte:
+                    print(f"I/O error: {rte}")
 
-                with open(filename, "w+") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(names)
-                    for values in zip_longest(*cols):
-                        writer.writerow(values)
+            with Path(filename).open("w+") as f:
+                writer = csv.writer(f)
+                writer.writerow(names)
+                for values in zip_longest(*cols):
+                    writer.writerow(values)
 
         except:
             pdvutil.print_own_docstring(self)
@@ -5641,12 +5586,11 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:  # check for list notation
                 self.do_delannot(pdvutil.getnumberargs(line, self.filelist))
                 return 0
-            else:
-                print(line)
-                line = line.split()
-                rmlist = [self.usertexts[int(line[i]) - 1] for i in range(len(line))]
-                for text in rmlist:
-                    self.usertexts.remove(text)
+            print(line)
+            line = line.split()
+            rmlist = [self.usertexts[int(line[i]) - 1] for i in range(len(line))]
+            for text in rmlist:
+                self.usertexts.remove(text)
         except:
             pdvutil.print_own_docstring(self)
 
@@ -5820,36 +5764,35 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_xminmax(pdvutil.getletterargs(line))
             return
-        else:
-            try:
-                line = line.split()
-                xmax = line.pop(-1)
-                xmin = line.pop(-1)
-                curves = []
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curves.append(self.plotlist[curvidx])
-                    except pdvutil.CurveIndexError:
-                        pass
+        try:
+            line = line.split()
+            xmax = line.pop(-1)
+            xmin = line.pop(-1)
+            curves = []
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curves.append(self.plotlist[curvidx])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                for cur in curves:
-                    curve_new = cur.copy()  # new curve
-                    curve_new.name = "Extract " + cur.name.upper()  # ULTRA naming
-                    curve_new.plotname = self.getcurvename()
-                    curve_new.color = ""  # PyDV will pick a color on its own
-                    self.addtoplot(curve_new)
-                    minline = " ".join(curve_new.plotname) + " " + xmin
-                    maxline = " ".join(curve_new.plotname) + " " + xmax
-                    self.do_xmin(minline)
-                    self.do_xmax(maxline)
-                    # don't mark the new curve as having been edited by min and max; user doesn't care how we did it.
-                    curve_new.edited = False
+            for cur in curves:
+                curve_new = cur.copy()  # new curve
+                curve_new.name = "Extract " + cur.name.upper()  # ULTRA naming
+                curve_new.plotname = self.getcurvename()
+                curve_new.color = ""  # PyDV will pick a color on its own
+                self.addtoplot(curve_new)
+                minline = " ".join(curve_new.plotname) + " " + xmin
+                maxline = " ".join(curve_new.plotname) + " " + xmax
+                self.do_xmin(minline)
+                self.do_xmax(maxline)
+                # don't mark the new curve as having been edited by min and max; user doesn't care how we did it.
+                curve_new.edited = False
 
-                self.plotedit = True
+            self.plotedit = True
 
-            except:
-                pdvutil.print_own_docstring(self)
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_yminmax(self, line):
         """Trim the selected curves.
@@ -5866,29 +5809,28 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_yminmax(pdvutil.getletterargs(line))
             return
-        else:
-            try:
-                line = line.split()
-                ymax = line.pop(-1)
-                ymin = line.pop(-1)
-                good_lines = []
-                for i in range(len(line)):
-                    try:
-                        pdvutil.getCurveIndex(line[i], self.plotlist)
-                        good_lines.append(line[i])
-                    except pdvutil.CurveIndexError:
-                        pass
+        try:
+            line = line.split()
+            ymax = line.pop(-1)
+            ymin = line.pop(-1)
+            good_lines = []
+            for i in range(len(line)):
+                try:
+                    pdvutil.getCurveIndex(line[i], self.plotlist)
+                    good_lines.append(line[i])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                for curve_letter in good_lines:
-                    minline = " ".join(curve_letter) + " " + ymin
-                    maxline = " ".join(curve_letter) + " " + ymax
-                    self.do_ymin(minline)
-                    self.do_ymax(maxline)
+            for curve_letter in good_lines:
+                minline = " ".join(curve_letter) + " " + ymin
+                maxline = " ".join(curve_letter) + " " + ymax
+                self.do_ymin(minline)
+                self.do_ymax(maxline)
 
-                self.plotedit = True
+            self.plotedit = True
 
-            except:
-                pdvutil.print_own_docstring(self)
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_filter(self, line):
         """Filter out points in the x and y axis.
@@ -5905,35 +5847,34 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_filter(pdvutil.getletterargs(line))
             return
-        else:
-            try:
-                line = line.split()
-                ymax = line.pop(-1)
-                ymin = line.pop(-1)
-                xmax = line.pop(-1)
-                xmin = line.pop(-1)
-                good_lines = []
-                for i in range(len(line)):
-                    try:
-                        pdvutil.getCurveIndex(line[i], self.plotlist)
-                        good_lines.append(line[i])
-                    except pdvutil.CurveIndexError:
-                        pass
+        try:
+            line = line.split()
+            ymax = line.pop(-1)
+            ymin = line.pop(-1)
+            xmax = line.pop(-1)
+            xmin = line.pop(-1)
+            good_lines = []
+            for i in range(len(line)):
+                try:
+                    pdvutil.getCurveIndex(line[i], self.plotlist)
+                    good_lines.append(line[i])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                for curve_letter in good_lines:
-                    x_minline = " ".join(curve_letter) + " " + xmin
-                    x_maxline = " ".join(curve_letter) + " " + xmax
-                    y_minline = " ".join(curve_letter) + " " + ymin
-                    y_maxline = " ".join(curve_letter) + " " + ymax
+            for curve_letter in good_lines:
+                x_minline = " ".join(curve_letter) + " " + xmin
+                x_maxline = " ".join(curve_letter) + " " + xmax
+                y_minline = " ".join(curve_letter) + " " + ymin
+                y_maxline = " ".join(curve_letter) + " " + ymax
 
-                    self.do_xmin(x_minline)
-                    self.do_xmax(x_maxline)
-                    self.do_ymin(y_minline)
-                    self.do_ymax(y_maxline)
+                self.do_xmin(x_minline)
+                self.do_xmax(x_maxline)
+                self.do_ymin(y_minline)
+                self.do_ymax(y_maxline)
 
-                self.plotedit = True
-            except:
-                pdvutil.print_own_docstring(self)
+            self.plotedit = True
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_derivative(self, line):
         """Take the derivative of curves.
@@ -5953,15 +5894,14 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_derivative(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    cur = self.plotlist[idx]
-                    nc = self.derivative(cur)
-                    self.addtoplot(nc)
+            line = line.split()
+            for i in range(len(line)):
+                idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                cur = self.plotlist[idx]
+                nc = self.derivative(cur)
+                self.addtoplot(nc)
 
-                self.plotedit = True
+            self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
@@ -5984,37 +5924,36 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_integrate(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                xlow = None
+            line = line.split()
+            xlow = None
+            xhi = None
+            subtrahend = 0
+
+            try:
+                xhi = float(line[-1])
+                subtrahend = -1
+            except:
                 xhi = None
-                subtrahend = 0
 
-                try:
-                    xhi = float(line[-1])
-                    subtrahend = -1
-                except:
-                    xhi = None
+            try:
+                xlow = float(line[-2])
+                subtrahend = -2
+            except:
+                xlow = None
 
-                try:
-                    xlow = float(line[-2])
-                    subtrahend = -2
-                except:
-                    xlow = None
+            if (xlow is None and xhi is not None) or (xlow is not None and xhi is None):
+                raise RuntimeError("<low-limit> and <high-limit> must BOTH be specified")
 
-                if (xlow is None and xhi is not None) or (xlow is not None and xhi is None):
-                    raise RuntimeError("<low-limit> and <high-limit> must BOTH be specified")
+            stop = len(line) + subtrahend
+            for i in range(stop):
+                for j in range(len(self.plotlist)):
+                    cur = self.plotlist[j]
+                    if cur.plotname == line[i].upper():
+                        nc = pydvpy.integrate(cur, xlow, xhi)[0]
+                        self.addtoplot(nc)
+                        break
 
-                stop = len(line) + subtrahend
-                for i in range(stop):
-                    for j in range(len(self.plotlist)):
-                        cur = self.plotlist[j]
-                        if cur.plotname == line[i].upper():
-                            nc = pydvpy.integrate(cur, xlow, xhi)[0]
-                            self.addtoplot(nc)
-                            break
-
-                self.plotedit = True
+            self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
@@ -6041,7 +5980,7 @@ class Command(cmd.Cmd):
 
             if fidx1 >= 0 and fidx2 >= 0:
                 self.__vs_variant(line[0], line[1])
-                return
+                return None
 
             idx = pdvutil.getCurveIndex(line[0], self.plotlist)
             c1 = self.plotlist[idx]
@@ -6075,10 +6014,10 @@ class Command(cmd.Cmd):
                     return 0
                 icurve += int(arg.split(".")[-1]) - 1
                 return icurve
-            elif int(arg) > 0 and int(arg) <= len(self.curvelist):
+            if int(arg) > 0 and int(arg) <= len(self.curvelist):
                 return int(arg) - 1
-            else:
-                print("error: curve index out of bounds: ", arg)
+            print("error: curve index out of bounds: ", arg)
+            return 0
 
         icur1, icur2 = _extract_curvelist_number(arg0), _extract_curvelist_number(arg1)
         xc1, yc1 = np.array(self.curvelist[icur1].x), np.array(self.curvelist[icur1].y)
@@ -6221,27 +6160,26 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_linemarker(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                ultra_markers = {"circle": "o", "square": "s", "diamond": "d"}
+            line = line.split()
+            ultra_markers = {"circle": "o", "square": "s", "diamond": "d"}
 
-                try:
-                    markersize = float(line[-1])
-                    marker = line[-2]
-                except:
-                    markersize = None
-                    marker = line[-1]
-                if marker in ultra_markers:
-                    marker = ultra_markers[marker]
+            try:
+                markersize = float(line[-1])
+                marker = line[-2]
+            except:
+                markersize = None
+                marker = line[-1]
+            if marker in ultra_markers:
+                marker = ultra_markers[marker]
 
-                for i in range(len(line)):
-                    for j in range(len(self.plotlist)):
-                        cur = self.plotlist[j]
-                        if cur.plotname == line[i].upper():
-                            cur.markerstyle = marker
-                            if markersize:
-                                cur.markersize = markersize
-                            break
+            for i in range(len(line)):
+                for j in range(len(self.plotlist)):
+                    cur = self.plotlist[j]
+                    if cur.plotname == line[i].upper():
+                        cur.markerstyle = marker
+                        if markersize:
+                            cur.markersize = markersize
+                        break
             self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
@@ -6271,23 +6209,22 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_mathinterpparams(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                left = line[-3]
-                right = line[-2]
-                period = line[-1]
-                left = None if left.lower() == "none" else float(left)
-                right = None if right.lower() == "none" else float(right)
-                period = None if period.lower() == "none" else float(period)
+            line = line.split()
+            left = line[-3]
+            right = line[-2]
+            period = line[-1]
+            left = None if left.lower() == "none" else float(left)
+            right = None if right.lower() == "none" else float(right)
+            period = None if period.lower() == "none" else float(period)
 
-                for i in range(len(line)):
-                    for j in range(len(self.plotlist)):
-                        cur = self.plotlist[j]
-                        if cur.plotname == line[i].upper():
-                            cur.math_interp_left = left
-                            cur.math_interp_right = right
-                            cur.math_interp_period = period
-                            break
+            for i in range(len(line)):
+                for j in range(len(self.plotlist)):
+                    cur = self.plotlist[j]
+                    if cur.plotname == line[i].upper():
+                        cur.math_interp_left = left
+                        cur.math_interp_right = right
+                        cur.math_interp_period = period
+                        break
             self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
@@ -6321,16 +6258,15 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_smooth(pdvutil.getletterargs(line) + str(factor))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
-                        pydvpy.smooth(cur, factor)
-                        cur.edited = True
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
+                    pydvpy.smooth(cur, factor)
+                    cur.edited = True
+                except pdvutil.CurveIndexError:
+                    pass
 
             self.plotedit = True
 
@@ -6355,19 +6291,18 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_fft(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
-                for item in line:
-                    idx = pdvutil.getCurveIndex(item, self.plotlist)
-                    c1 = self.plotlist[idx]
-                    nc1, nc2 = pydvpy.fft(c1, norm="ortho")
-                    self.addtoplot(nc1)
-                    self.addtoplot(nc2)
+        try:
+            line = line.split()
+            for item in line:
+                idx = pdvutil.getCurveIndex(item, self.plotlist)
+                c1 = self.plotlist[idx]
+                nc1, nc2 = pydvpy.fft(c1, norm="ortho")
+                self.addtoplot(nc1)
+                self.addtoplot(nc2)
 
-                self.plotedit = True
-            except:
-                pdvutil.print_own_docstring(self)
+            self.plotedit = True
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_appendcurves(self, line):
         """Merge a list of curves over the union of their domains.
@@ -6388,27 +6323,26 @@ class Command(cmd.Cmd):
         if len(line.split(":")) > 1:
             self.do_appendcurves(pdvutil.getletterargs(line))
             return 0
-        else:
-            try:
-                line = line.split()
+        try:
+            line = line.split()
 
-                if len(line) < 2:
-                    return
+            if len(line) < 2:
+                return None
 
-                curves = []
-                for i in range(len(self.plotlist)):
-                    for j in range(len(line)):
-                        if self.plotlist[i].plotname == line[j].upper():
-                            curves.append(self.plotlist[i])
-                            break
+            curves = []
+            for i in range(len(self.plotlist)):
+                for j in range(len(line)):
+                    if self.plotlist[i].plotname == line[j].upper():
+                        curves.append(self.plotlist[i])
+                        break
 
-                nc = pydvpy.appendcurves(curves)
+            nc = pydvpy.appendcurves(curves)
 
-                if nc is not None:
-                    self.addtoplot(nc)
-                    self.plotedit = True
-            except:
-                pdvutil.print_own_docstring(self)
+            if nc is not None:
+                self.addtoplot(nc)
+                self.plotedit = True
+        except:
+            pdvutil.print_own_docstring(self)
 
     def do_alpha(self, line):
         """Find the alpha.
@@ -6538,7 +6472,7 @@ class Command(cmd.Cmd):
         except:
             pdvutil.print_own_docstring(self)
 
-    def do_diffMeasure(self, line):
+    def do_diffMeasure(self, line):  # noqa: N802
         """Compare two curves by computing a fractional difference measure and its average.
 
         .. code::
@@ -6807,7 +6741,8 @@ class Command(cmd.Cmd):
 
         .. code::
 
-            [PyDV]: fontsize [<component: title | xlabel | ylabel | key | tick | curve | annotation>] <numerical-size | small | medium | large | default>
+            [PyDV]: fontsize [<component: title | xlabel | ylabel | key | tick | curve | annotation>]
+            <numerical-size | small | medium | large | default>
 
             Ex:
                 [PyDV]: fontsize title 12
@@ -6817,7 +6752,7 @@ class Command(cmd.Cmd):
                 [PyDV]: fontsize tick default
                 [PyDV]: fontsize curve 12
                 [PyDV]: fontsize annotation small
-        """  # noqa: E501
+        """
         try:
             line = line.split()
             size = line[-1]
@@ -6927,7 +6862,7 @@ class Command(cmd.Cmd):
                 raise RuntimeError(f"Wrong number of arguments, expecting 4 but received {len(line)}.")
 
             self.geometry = int(line[0]), int(line[1]), int(line[2]), int(line[3])
-            self.plotter.updatePlotGeometry(self.geometry)
+            self.plotter.update_plot_geometry(self.geometry)
         except:
             self.redraw = False
             pdvutil.print_own_docstring(self)
@@ -6963,16 +6898,16 @@ class Command(cmd.Cmd):
                     left=float(line[0]), bottom=float(line[3]), right=float(line[1]), top=float(line[2])
                 )
             elif paramcnt == 1 and line[0].lower() == "de":
-                defaultPlotLayout = self.plotter.defaultPlotLayout
+                default_plot_layout = self.plotter.default_plot_layout
 
-                if defaultPlotLayout is not None:
+                if default_plot_layout is not None:
                     plt.subplots_adjust(
-                        left=defaultPlotLayout["left"],
-                        bottom=defaultPlotLayout["bottom"],
-                        right=defaultPlotLayout["right"],
-                        top=defaultPlotLayout["top"],
-                        wspace=defaultPlotLayout["wspace"],
-                        hspace=defaultPlotLayout["hspace"],
+                        left=default_plot_layout["left"],
+                        bottom=default_plot_layout["bottom"],
+                        right=default_plot_layout["right"],
+                        top=default_plot_layout["top"],
+                        wspace=default_plot_layout["wspace"],
+                        hspace=default_plot_layout["hspace"],
                     )
             elif paramcnt == 0:
                 paramlist = []
@@ -7028,22 +6963,21 @@ class Command(cmd.Cmd):
                 else:  # extra logic specifically for single label w/ :
                     self.do_label(pdvutil.getletterargs("PYDV_LABEL" + line))
                 return 0
-            else:
-                self.do_label_done = False
-                line_labels = line.split("`")[1:]  # First entry will be curves
+            self.do_label_done = False
+            line_labels = line.split("`")[1:]  # First entry will be curves
 
-                if line_labels:  # Multiple curves and labels
-                    curves = line.split("`")[0].split()
-                else:  # single curve and label
-                    curves = [line.split()[0]]
-                    line_labels = [" ".join(line.split()[1:])]
+            if line_labels:  # Multiple curves and labels
+                curves = line.split("`")[0].split()
+            else:  # single curve and label
+                curves = [line.split()[0]]
+                line_labels = [" ".join(line.split()[1:])]
 
-                for i in range(len(curves)):
-                    idx = pdvutil.getCurveIndex(curves[i], self.plotlist)
-                    cur = self.plotlist[idx]
-                    cur.name = line_labels[i]
+            for i in range(len(curves)):
+                idx = pdvutil.getCurveIndex(curves[i], self.plotlist)
+                cur = self.plotlist[idx]
+                cur.name = line_labels[i]
 
-                self.plotedit = True
+            self.plotedit = True
         except:
             self.do_label_done = False
             pdvutil.print_own_docstring(self)
@@ -7127,10 +7061,8 @@ class Command(cmd.Cmd):
                 [PyDV]: run my_file
         """
         try:
-            fname = line.strip()
-            if fname[0] == "~":
-                fname = os.getenv("HOME") + fname[1:]
-            with open(fname) as f:
+            fname = Path(line.strip()).expanduser()
+            with fname.open() as f:
                 for fline in f:
                     try:
                         if len(fline.strip()) == 0:
@@ -7174,22 +7106,21 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_movefront(pdvutil.getletterargs(line))
                 return 0
-            else:
-                highest = 0
-                for c in self.plotlist:
-                    if c.plotprecedence > highest:
-                        highest = c.plotprecedence
+            highest = 0
+            for c in self.plotlist:
+                if c.plotprecedence > highest:
+                    highest = c.plotprecedence
 
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        cur = self.plotlist[curvidx]
-                        cur.plotprecedence = highest + 1
-                    except pdvutil.CurveIndexError:
-                        pass
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    cur = self.plotlist[curvidx]
+                    cur.plotprecedence = highest + 1
+                except pdvutil.CurveIndexError:
+                    pass
 
-                self.plotedit = True
+            self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
@@ -7341,18 +7272,15 @@ class Command(cmd.Cmd):
 
         """
         try:
-            fname = line.strip()
+            fname = Path(line.strip()).expanduser()
             try:
-                if fname.startswith("~"):
-                    fname = os.path.expanduser(fname)
-
-                with open(fname) as f:
+                with fname.open() as f:
                     funcfile = f.read()
 
                 ns = {
                     "self": self,
                     "pydvpy": pydvpy,
-                    "__file__": fname,
+                    "__file__": str(fname),
                 }
 
                 exec(funcfile, ns)
@@ -7410,17 +7338,16 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_copy(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
-                for i in range(len(line)):
-                    plotidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    cur = self.plotlist[plotidx]
-                    curout = cur.copy()
-                    curout.plotname = ""
-                    curout.color = ""
-                    self.addtoplot(curout)
+            line = line.split()
+            for i in range(len(line)):
+                plotidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                cur = self.plotlist[plotidx]
+                curout = cur.copy()
+                curout.plotname = ""
+                curout.color = ""
+                self.addtoplot(curout)
 
-                self.plotedit = True
+            self.plotedit = True
         except:
             pdvutil.print_own_docstring(self)
 
@@ -7440,20 +7367,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_makeextensive(pdvutil.getletterargs(line))
                 return 0
-            else:
-                curves = []
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curves.append(self.plotlist[curvidx])
-                    except pdvutil.CurveIndexError:
-                        pass
+            curves = []
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curves.append(self.plotlist[curvidx])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                if len(curves) > 0:
-                    pydvpy.makeextensive(curves)
-                else:
-                    raise RuntimeError("Need to specify a valid curve or curves")
+            if len(curves) > 0:
+                pydvpy.makeextensive(curves)
+            else:
+                raise RuntimeError("Need to specify a valid curve or curves")
 
         except:
             pdvutil.print_own_docstring(self)
@@ -7474,20 +7400,19 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_makeintensive(pdvutil.getletterargs(line))
                 return 0
-            else:
-                curves = []
-                line = line.split()
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curves.append(self.plotlist[curvidx])
-                    except pdvutil.CurveIndexError:
-                        pass
+            curves = []
+            line = line.split()
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curves.append(self.plotlist[curvidx])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                if len(curves) > 0:
-                    pydvpy.makeintensive(curves)
-                else:
-                    raise RuntimeError("Need to specify a valid curve or curves")
+            if len(curves) > 0:
+                pydvpy.makeintensive(curves)
+            else:
+                raise RuntimeError("Need to specify a valid curve or curves")
 
         except:
             pdvutil.print_own_docstring(self)
@@ -7508,19 +7433,18 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_dupx(pdvutil.getletterargs(line))
                 return 0
-            else:
-                curves = []
-                line = line.split()
+            curves = []
+            line = line.split()
 
-                for i in range(len(line)):
-                    try:
-                        plotidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curves.append(self.plotlist[plotidx])
-                    except pdvutil.CurveIndexError:
-                        pass
+            for i in range(len(line)):
+                try:
+                    plotidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curves.append(self.plotlist[plotidx])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                if len(curves) > 0:
-                    pydvpy.dupx(curves)
+            if len(curves) > 0:
+                pydvpy.dupx(curves)
 
         except:
             pdvutil.print_own_docstring(self)
@@ -7541,21 +7465,20 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_xindex(pdvutil.getletterargs(line))
                 return 0
+            curves = []
+            line = line.split()
+
+            for i in range(len(line)):
+                try:
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curves.append(self.plotlist[curvidx])
+                except pdvutil.CurveIndexError:
+                    pass
+
+            if len(curves) > 0:
+                pydvpy.xindex(curves)
             else:
-                curves = []
-                line = line.split()
-
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curves.append(self.plotlist[curvidx])
-                    except pdvutil.CurveIndexError:
-                        pass
-
-                if len(curves) > 0:
-                    pydvpy.xindex(curves)
-                else:
-                    raise RuntimeError("Need to specify a valid curve or curves")
+                raise RuntimeError("Need to specify a valid curve or curves")
 
         except:
             pdvutil.print_own_docstring(self)
@@ -8081,28 +8004,27 @@ class Command(cmd.Cmd):
             if len(line.split(":")) > 1:
                 self.do_subsample(pdvutil.getletterargs(line))
                 return 0
-            else:
-                line = line.split()
+            line = line.split()
 
+            try:
+                stride = int(line[-1])
+                line.pop(-1)
+            except:
+                stride = 2
+            curvelist = []
+
+            for i in range(len(line)):
                 try:
-                    stride = int(line[-1])
-                    line.pop(-1)
-                except:
-                    stride = 2
-                curvelist = []
+                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                    curvelist.append(self.plotlist[curvidx])
+                except pdvutil.CurveIndexError:
+                    pass
 
-                for i in range(len(line)):
-                    try:
-                        curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                        curvelist.append(self.plotlist[curvidx])
-                    except pdvutil.CurveIndexError:
-                        pass
+            if len(curvelist) > 0:
+                print(f"\nSubsampling the data by stride {stride}...\n")
+                pydvpy.subsample(curvelist, stride, True)
 
-                if len(curvelist) > 0:
-                    print(f"\nSubsampling the data by stride {stride}...\n")
-                    pydvpy.subsample(curvelist, stride, True)
-
-                self.plotedit = True
+            self.plotedit = True
 
         except:
             pdvutil.print_own_docstring(self)
@@ -8269,478 +8191,476 @@ class Command(cmd.Cmd):
 
     def getcurvename(self):
         """Find the next available curve name for the plot."""
-        name = ""
         for i in range(len(self.plotlist)):
             if i < 26:
                 if self.plotlist[i].plotname != chr(ord("A") + i):
                     return "" + chr(ord("A") + i)
             else:
                 if self.plotlist[i].plotname != ("@" + str(i + 1)):
-                    name = "@" + str(i + 1)
-                    return name
+                    return "@" + str(i + 1)
         if len(self.plotlist) < 26:
             return "" + chr(ord("A") + len(self.plotlist))
-        else:
-            name = "@" + str(len(self.plotlist) + 1)
-            return name
+
+        return "@" + str(len(self.plotlist) + 1)
 
     def getclosest(self, array, value):
         """Find closest value in numpy array."""
-        i = (np.abs(array - value)).argmin()
-        return i
+        return (np.abs(array - value)).argmin()
 
     def modcurve(self, line, flag, arg):
         """Operate on given curves by constant value depending on given operation flag."""
         if not line:
-            return 0
+            return
         modvalue = arg
         if len(line.split(":")) > 1:
             self.modcurve(pdvutil.getletterargs(line), flag, arg)
-            return 0
-        else:
-            line = line.split()
-            for i in range(len(line)):
-                try:
-                    curidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    cur = self.plotlist[curidx]
+            return
+        line = line.split()
+        for i in range(len(line)):
+            try:
+                curidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                cur = self.plotlist[curidx]
 
-                    if flag == "my":
-                        cur.y *= float(modvalue)
-                        cur.edited = True
-                    elif flag == "mx":
-                        cur.x *= float(modvalue)
-                        cur.edited = True
-                    elif flag == "divy":
-                        if float(modvalue) == 0:
-                            modvalue = "1e-10"
-                        cur.y /= float(modvalue)
-                        cur.edited = True
-                    elif flag == "divx":
-                        if float(modvalue) == 0:
-                            modvalue = "1e-10"
-                        cur.x /= float(modvalue)
-                        cur.edited = True
-                    elif flag == "dy":
-                        cur.y += float(modvalue)
-                        cur.edited = True
-                    elif flag == "dx":
-                        cur.x += float(modvalue)
-                        cur.edited = True
-                    elif flag == "scatter":
-                        if modvalue == "0" or modvalue.upper() == "OFF":
-                            cur.scatter = False
-                        elif modvalue == "1" or modvalue.upper() == "ON":
-                            cur.scatter = True
-                    elif flag == "linespoints":
-                        if modvalue == "0" or modvalue.upper() == "OFF":
-                            cur.linespoints = False
-                        elif modvalue == "1" or modvalue.upper() == "ON":
-                            cur.linespoints = True
-                    elif flag == "lnwidth":
-                        cur.linewidth = float(modvalue)
-                    elif flag == "lnstyle":
-                        if modvalue == "solid":
-                            cur.linestyle = "-"
-                        elif modvalue == "dot":
-                            cur.linestyle = ":"
-                        elif modvalue == "dash":
-                            cur.linestyle = "--"
-                        elif modvalue == "dashdot":
-                            cur.linestyle = "-."
-                        elif modvalue == "loosely_dotted":
-                            cur.linestyle = (0, (1, 10))
-                        elif modvalue == "long_dash_with_offset":
-                            cur.linestyle = (5, (10, 3))
-                        elif modvalue == "loosely_dashed":
-                            cur.linestyle = (0, (5, 10))
-                        elif modvalue == "dashed":
-                            cur.linestyle = (0, (5, 5))
-                        elif modvalue == "loosely_dashdotted":
-                            cur.linestyle = (0, (3, 10, 1, 10))
-                        elif modvalue == "dashdotted":
-                            cur.linestyle = (0, (3, 5, 1, 5))
-                        elif modvalue == "densely_dashdotted":
-                            cur.linestyle = (0, (3, 1, 1, 1))
-                        elif modvalue == "dashdotdotted":
-                            cur.linestyle = (0, (3, 5, 1, 5, 1, 5))
-                        elif modvalue == "loosely_dashdotdotted":
-                            cur.linestyle = (0, (3, 10, 1, 10, 1, 10))
-                        elif modvalue == "densely_dashdotdotted":
-                            cur.linestyle = (0, (3, 1, 1, 1, 1, 1))
-                        cur.dashes = None  # Restore default dash behaviour
-                    elif flag == "drawstyle":
-                        # default, steps, steps-pre, steps-post
-                        cur.drawstyle = modvalue
-                    elif flag == "dashstyle":
-                        if modvalue[:2].upper() == "DE":
-                            cur.dashes = None
-                        else:
-                            val = eval(modvalue)
-                            assert isinstance(val, list)
-                            assert len(val) % 2 == 0
-                            assert min(val) > 0
-                            cur.dashes = val
-                    elif flag == "hide":
-                        if modvalue == "OFF":
-                            cur.hidden = False
-                        elif modvalue == "ON":
-                            cur.hidden = True
-                    elif flag == "getx":
-                        try:
-                            getxvalues = pydvpy.getx(cur, float(modvalue))
+                if flag == "my":
+                    cur.y *= float(modvalue)
+                    cur.edited = True
+                elif flag == "mx":
+                    cur.x *= float(modvalue)
+                    cur.edited = True
+                elif flag == "divy":
+                    if float(modvalue) == 0:
+                        modvalue = "1e-10"
+                    cur.y /= float(modvalue)
+                    cur.edited = True
+                elif flag == "divx":
+                    if float(modvalue) == 0:
+                        modvalue = "1e-10"
+                    cur.x /= float(modvalue)
+                    cur.edited = True
+                elif flag == "dy":
+                    cur.y += float(modvalue)
+                    cur.edited = True
+                elif flag == "dx":
+                    cur.x += float(modvalue)
+                    cur.edited = True
+                elif flag == "scatter":
+                    if modvalue == "0" or modvalue.upper() == "OFF":
+                        cur.scatter = False
+                    elif modvalue == "1" or modvalue.upper() == "ON":
+                        cur.scatter = True
+                elif flag == "linespoints":
+                    if modvalue == "0" or modvalue.upper() == "OFF":
+                        cur.linespoints = False
+                    elif modvalue == "1" or modvalue.upper() == "ON":
+                        cur.linespoints = True
+                elif flag == "lnwidth":
+                    cur.linewidth = float(modvalue)
+                elif flag == "lnstyle":
+                    if modvalue == "solid":
+                        cur.linestyle = "-"
+                    elif modvalue == "dot":
+                        cur.linestyle = ":"
+                    elif modvalue == "dash":
+                        cur.linestyle = "--"
+                    elif modvalue == "dashdot":
+                        cur.linestyle = "-."
+                    elif modvalue == "loosely_dotted":
+                        cur.linestyle = (0, (1, 10))
+                    elif modvalue == "long_dash_with_offset":
+                        cur.linestyle = (5, (10, 3))
+                    elif modvalue == "loosely_dashed":
+                        cur.linestyle = (0, (5, 10))
+                    elif modvalue == "dashed":
+                        cur.linestyle = (0, (5, 5))
+                    elif modvalue == "loosely_dashdotted":
+                        cur.linestyle = (0, (3, 10, 1, 10))
+                    elif modvalue == "dashdotted":
+                        cur.linestyle = (0, (3, 5, 1, 5))
+                    elif modvalue == "densely_dashdotted":
+                        cur.linestyle = (0, (3, 1, 1, 1))
+                    elif modvalue == "dashdotdotted":
+                        cur.linestyle = (0, (3, 5, 1, 5, 1, 5))
+                    elif modvalue == "loosely_dashdotdotted":
+                        cur.linestyle = (0, (3, 10, 1, 10, 1, 10))
+                    elif modvalue == "densely_dashdotdotted":
+                        cur.linestyle = (0, (3, 1, 1, 1, 1, 1))
+                    cur.dashes = None  # Restore default dash behaviour
+                elif flag == "drawstyle":
+                    # default, steps, steps-pre, steps-post
+                    cur.drawstyle = modvalue
+                elif flag == "dashstyle":
+                    if modvalue[:2].upper() == "DE":
+                        cur.dashes = None
+                    else:
+                        val = eval(modvalue)
+                        assert isinstance(val, list)
+                        assert len(val) % 2 == 0
+                        assert min(val) > 0
+                        cur.dashes = val
+                elif flag == "hide":
+                    if modvalue == "OFF":
+                        cur.hidden = False
+                    elif modvalue == "ON":
+                        cur.hidden = True
+                elif flag == "getx":
+                    try:
+                        getxvalues = pydvpy.getx(cur, float(modvalue))
 
-                            if getxvalues:
-                                print("\nCurve " + cur.plotname)
+                        if getxvalues:
+                            print("\nCurve " + cur.plotname)
 
-                                for i in range(len(getxvalues)):
-                                    x, y = getxvalues[i]
-                                    print(f"    x: {x:.6e}    y: {y:.6e}\n")
-                        except ValueError as detail:
-                            print(f"Error: {detail}")
+                            for i in range(len(getxvalues)):
+                                x, y = getxvalues[i]
+                                print(f"    x: {x:.6e}    y: {y:.6e}\n")
+                    except ValueError as detail:
+                        print(f"Error: {detail}")
 
-                    elif flag == "gety":
-                        try:
-                            getyvalues = pydvpy.gety(cur, float(modvalue))
+                elif flag == "gety":
+                    try:
+                        getyvalues = pydvpy.gety(cur, float(modvalue))
 
-                            if getyvalues:
-                                print("\nCurve " + cur.plotname)
+                        if getyvalues:
+                            print("\nCurve " + cur.plotname)
 
-                                for i in range(len(getyvalues)):
-                                    x, y = getyvalues[i]
-                                    print(f"    x: {x:.6e}    y: {y:.6e}")
-                        except ValueError as detail:
-                            print(f"Error: {detail}")
-                    elif flag == "xmin":
-                        nx = []
-                        ny = []
-                        for dex in range(len(cur.x)):
-                            if cur.x[dex] >= float(modvalue):
-                                nx.append(cur.x[dex])
-                                ny.append(cur.y[dex])
-                        if len(nx) > 0:
-                            cur.x = np.array(nx)
-                            cur.y = np.array(ny)
-                            cur.edited = True
-                            if len(nx) == 1:
-                                cur.marker = "o"
-                                cur.markersize = 3
-                        else:
-                            j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
-                            cur.plotname = ""
-                            self.plotlist.pop(j)
-                    elif flag == "xmax":
-                        nx = []
-                        ny = []
-                        for dex in range(len(cur.x)):
-                            if cur.x[dex] <= float(modvalue):
-                                nx.append(cur.x[dex])
-                                ny.append(cur.y[dex])
-                        if len(nx) > 0:
-                            cur.x = np.array(nx)
-                            cur.y = np.array(ny)
-                            cur.edited = True
-                            if len(nx) == 1:
-                                cur.marker = "o"
-                                cur.markersize = 3
-                        else:
-                            j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
-                            cur.plotname = ""
-                            self.plotlist.pop(j)
-                    elif flag == "ymin":
-                        nx = []
-                        ny = []
-                        for dex in range(len(cur.y)):
-                            if cur.y[dex] >= float(modvalue):
-                                nx.append(cur.x[dex])
-                                ny.append(cur.y[dex])
-                        if len(nx) > 0:
-                            cur.x = np.array(nx)
-                            cur.y = np.array(ny)
-                            cur.edited = True
-                            if len(nx) == 1:
-                                cur.marker = "o"
-                                cur.markersize = 3
-                        else:
-                            j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
-                            cur.plotname = ""
-                            self.plotlist.pop(j)
-                    elif flag == "ymax":
-                        nx = []
-                        ny = []
-                        for dex in range(len(cur.y)):
-                            if cur.y[dex] <= float(modvalue):
-                                nx.append(cur.x[dex])
-                                ny.append(cur.y[dex])
-                        if len(nx) > 0:
-                            cur.x = np.array(nx)
-                            cur.y = np.array(ny)
-                            cur.edited = True
-                            if len(nx) == 1:
-                                cur.marker = "o"
-                                cur.markersize = 3
-                        else:
-                            j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
-                            cur.plotname = ""
-                            self.plotlist.pop(j)
-                except:
-                    if self.debug:
-                        traceback.print_exc(file=sys.stdout)
+                            for i in range(len(getyvalues)):
+                                x, y = getyvalues[i]
+                                print(f"    x: {x:.6e}    y: {y:.6e}")
+                    except ValueError as detail:
+                        print(f"Error: {detail}")
+                elif flag == "xmin":
+                    nx = []
+                    ny = []
+                    for dex in range(len(cur.x)):
+                        if cur.x[dex] >= float(modvalue):
+                            nx.append(cur.x[dex])
+                            ny.append(cur.y[dex])
+                    if len(nx) > 0:
+                        cur.x = np.array(nx)
+                        cur.y = np.array(ny)
+                        cur.edited = True
+                        if len(nx) == 1:
+                            cur.marker = "o"
+                            cur.markersize = 3
+                    else:
+                        j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
+                        cur.plotname = ""
+                        self.plotlist.pop(j)
+                elif flag == "xmax":
+                    nx = []
+                    ny = []
+                    for dex in range(len(cur.x)):
+                        if cur.x[dex] <= float(modvalue):
+                            nx.append(cur.x[dex])
+                            ny.append(cur.y[dex])
+                    if len(nx) > 0:
+                        cur.x = np.array(nx)
+                        cur.y = np.array(ny)
+                        cur.edited = True
+                        if len(nx) == 1:
+                            cur.marker = "o"
+                            cur.markersize = 3
+                    else:
+                        j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
+                        cur.plotname = ""
+                        self.plotlist.pop(j)
+                elif flag == "ymin":
+                    nx = []
+                    ny = []
+                    for dex in range(len(cur.y)):
+                        if cur.y[dex] >= float(modvalue):
+                            nx.append(cur.x[dex])
+                            ny.append(cur.y[dex])
+                    if len(nx) > 0:
+                        cur.x = np.array(nx)
+                        cur.y = np.array(ny)
+                        cur.edited = True
+                        if len(nx) == 1:
+                            cur.marker = "o"
+                            cur.markersize = 3
+                    else:
+                        j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
+                        cur.plotname = ""
+                        self.plotlist.pop(j)
+                elif flag == "ymax":
+                    nx = []
+                    ny = []
+                    for dex in range(len(cur.y)):
+                        if cur.y[dex] <= float(modvalue):
+                            nx.append(cur.x[dex])
+                            ny.append(cur.y[dex])
+                    if len(nx) > 0:
+                        cur.x = np.array(nx)
+                        cur.y = np.array(ny)
+                        cur.edited = True
+                        if len(nx) == 1:
+                            cur.marker = "o"
+                            cur.markersize = 3
+                    else:
+                        j = pdvutil.getCurveIndex(cur.plotname, self.plotlist)
+                        cur.plotname = ""
+                        self.plotlist.pop(j)
+            except:
+                if self.debug:
+                    traceback.print_exc(file=sys.stdout)
+
+        return
 
     def func_curve(self, line, flag, do_x=0, arg=0):
         """Operate on given curves by a function."""
         if not line:
-            return 0
+            return
         if len(line.split(":")) > 1:
             self.func_curve(pdvutil.getletterargs(line), flag, do_x, arg)
-            return 0
-        else:
-            line = line.split()
-            for i in range(len(line)):
-                try:
-                    idx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    cur = self.plotlist[idx]
+            return
+        line = line.split()
+        for i in range(len(line)):
+            try:
+                idx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                cur = self.plotlist[idx]
 
-                    if flag == "abs":
-                        if do_x == 0:
-                            cur.y = np.abs(cur.y)
-                            cur.name = "abs(" + cur.name + ")"
-                            cur.edited = True
+                if flag == "abs":
+                    if do_x == 0:
+                        cur.y = np.abs(cur.y)
+                        cur.name = "abs(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.abs(cur.x)
+                        cur.name = "absx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "exp":
+                    if do_x == 0:
+                        cur.y = np.exp(cur.y)
+                        if cur.name[:3] == "log":
+                            # Pop off the log( from the front and the ) from the back
+                            cur.name = cur.name[4:-1]
                         else:
-                            cur.x = np.abs(cur.x)
-                            cur.name = "absx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "exp":
-                        if do_x == 0:
-                            cur.y = np.exp(cur.y)
-                            if cur.name[:3] == "log":
-                                # Pop off the log( from the front and the ) from the back
-                                cur.name = cur.name[4:-1]
-                            else:
-                                cur.name = "exp(" + cur.name + ")"
-                            cur.edited = True
+                            cur.name = "exp(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.exp(cur.x)
+                        if cur.name[:4] == "logx":
+                            # Pop off the logx( from the front and the ) from the back
+                            cur.name = cur.name[5:-1]
                         else:
-                            cur.x = np.exp(cur.x)
-                            if cur.name[:4] == "logx":
-                                # Pop off the logx( from the front and the ) from the back
-                                cur.name = cur.name[5:-1]
-                            else:
-                                cur.name = "expx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "sin":
-                        if do_x == 0:
-                            cur.y = np.sin(cur.y)
-                            cur.name = "sin(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.sin(cur.x)
-                            cur.name = "sinx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "cos":
-                        if do_x == 0:
-                            cur.y = np.cos(cur.y)
-                            cur.name = "cos(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.cos(cur.x)
-                            cur.name = "cosx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "tan":
-                        if do_x == 0:
-                            cur.y = np.tan(cur.y)
-                            cur.name = "tan(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.tan(cur.x)
-                            cur.name = "tanx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "asin":
-                        if do_x == 0:
-                            cur.y = np.arcsin(cur.y)
-                            cur.name = "asin(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.arcsin(cur.x)
-                            cur.name = "asinx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "acos":
-                        if do_x == 0:
-                            cur.y = np.arccos(cur.y)
-                            cur.name = "acos(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.arccos(cur.x)
-                            cur.name = "acosx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "atan":
-                        if do_x == 0:
-                            cur.y = np.arctan(cur.y)
-                            cur.name = "atan(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.arctan(cur.x)
-                            cur.name = "atanx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "sinh":
-                        if do_x == 0:
-                            cur.y = np.sinh(cur.y)
-                            cur.name = "sinh(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.sinh(cur.x)
-                            cur.name = "sinhx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "cosh":
-                        if do_x == 0:
-                            cur.y = np.cosh(cur.y)
-                            cur.name = "cosh(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.cosh(cur.x)
-                            cur.name = "coshx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "tanh":
-                        if do_x == 0:
-                            cur.y = np.tanh(cur.y)
-                            cur.name = "tanh(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.tanh(cur.x)
-                            cur.name = "tanhx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "asinh":
-                        if do_x == 0:
-                            cur.y = np.arcsinh(cur.y)
-                            cur.name = "asinh(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.arcsinh(cur.x)
-                            cur.name = "asinhx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "acosh":
-                        if do_x == 0:
-                            cur.y = np.arccosh(cur.y)
-                            cur.name = "acosh(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.arccosh(cur.x)
-                            cur.name = "acoshx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "atanh":
-                        if do_x == 0:
-                            cur.y = np.arctanh(cur.y)
-                            cur.name = "atanh(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.arctanh(cur.x)
-                            cur.name = "atanhx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "j0":
-                        if do_x == 0:
-                            cur.y = scipy.special.j0(cur.y)
-                            cur.name = "j0(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = scipy.special.j0(cur.x)
-                            cur.name = "j0x(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "j1":
-                        if do_x == 0:
-                            cur.y = scipy.special.j1(cur.y)
-                            cur.name = "j1(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = scipy.special.j1(cur.x)
-                            cur.name = "j1x(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "jn":
-                        if do_x == 0:
-                            cur.y = scipy.special.jn(float(arg), cur.y)
-                            cur.name = "jn(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = scipy.special.jn(float(arg), cur.x)
-                            cur.name = "jnx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "y0":
-                        if do_x == 0:
-                            cur.y = scipy.special.y0(cur.y)
-                            cur.name = "y0(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = scipy.special.y0(cur.x)
-                            cur.name = "y0x(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "y1":
-                        if do_x == 0:
-                            cur.y = scipy.special.y1(cur.y)
-                            cur.name = "y1(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = scipy.special.y1(cur.x)
-                            cur.name = "y1x(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "yn":
-                        if do_x == 0:
-                            cur.y = scipy.special.yn(int(arg), cur.y)
-                            cur.name = "yn(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = scipy.special.yn(int(arg), cur.x)
-                            cur.name = "ynx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "powa":
-                        if do_x == 0:
-                            cur.y = np.power(float(arg), cur.y)
-                            cur.name = "powa(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.power(float(arg), cur.x)
-                            cur.name = "powax(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "powr":
-                        if do_x == 0:
-                            cur.y = np.power(cur.y, float(arg))
-                            cur.name = "powr(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.power(cur.x, float(arg))
-                            cur.name = "powrx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "recip":
-                        if do_x == 0:
-                            cur.y = np.reciprocal(cur.y)
-                            cur.name = "recip(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.reciprocal(cur.x)
-                            cur.name = "recipx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "sqr":
-                        if do_x == 0:
-                            cur.y = np.square(cur.y)
-                            cur.name = "sqr(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.square(cur.x)
-                            cur.name = "sqrx(" + cur.name + ")"
-                            cur.edited = True
-                    elif flag == "sqrt":
-                        if do_x == 0:
-                            cur.y = np.sqrt(cur.y)
-                            cur.name = "sqrt(" + cur.name + ")"
-                            cur.edited = True
-                        else:
-                            cur.x = np.sqrt(cur.x)
-                            cur.name = "sqrtx(" + cur.name + ")"
-                            cur.edited = True
-                except:
-                    if self.debug:
-                        traceback.print_exc(file=sys.stdout)
+                            cur.name = "expx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "sin":
+                    if do_x == 0:
+                        cur.y = np.sin(cur.y)
+                        cur.name = "sin(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.sin(cur.x)
+                        cur.name = "sinx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "cos":
+                    if do_x == 0:
+                        cur.y = np.cos(cur.y)
+                        cur.name = "cos(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.cos(cur.x)
+                        cur.name = "cosx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "tan":
+                    if do_x == 0:
+                        cur.y = np.tan(cur.y)
+                        cur.name = "tan(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.tan(cur.x)
+                        cur.name = "tanx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "asin":
+                    if do_x == 0:
+                        cur.y = np.arcsin(cur.y)
+                        cur.name = "asin(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.arcsin(cur.x)
+                        cur.name = "asinx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "acos":
+                    if do_x == 0:
+                        cur.y = np.arccos(cur.y)
+                        cur.name = "acos(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.arccos(cur.x)
+                        cur.name = "acosx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "atan":
+                    if do_x == 0:
+                        cur.y = np.arctan(cur.y)
+                        cur.name = "atan(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.arctan(cur.x)
+                        cur.name = "atanx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "sinh":
+                    if do_x == 0:
+                        cur.y = np.sinh(cur.y)
+                        cur.name = "sinh(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.sinh(cur.x)
+                        cur.name = "sinhx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "cosh":
+                    if do_x == 0:
+                        cur.y = np.cosh(cur.y)
+                        cur.name = "cosh(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.cosh(cur.x)
+                        cur.name = "coshx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "tanh":
+                    if do_x == 0:
+                        cur.y = np.tanh(cur.y)
+                        cur.name = "tanh(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.tanh(cur.x)
+                        cur.name = "tanhx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "asinh":
+                    if do_x == 0:
+                        cur.y = np.arcsinh(cur.y)
+                        cur.name = "asinh(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.arcsinh(cur.x)
+                        cur.name = "asinhx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "acosh":
+                    if do_x == 0:
+                        cur.y = np.arccosh(cur.y)
+                        cur.name = "acosh(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.arccosh(cur.x)
+                        cur.name = "acoshx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "atanh":
+                    if do_x == 0:
+                        cur.y = np.arctanh(cur.y)
+                        cur.name = "atanh(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.arctanh(cur.x)
+                        cur.name = "atanhx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "j0":
+                    if do_x == 0:
+                        cur.y = scipy.special.j0(cur.y)
+                        cur.name = "j0(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = scipy.special.j0(cur.x)
+                        cur.name = "j0x(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "j1":
+                    if do_x == 0:
+                        cur.y = scipy.special.j1(cur.y)
+                        cur.name = "j1(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = scipy.special.j1(cur.x)
+                        cur.name = "j1x(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "jn":
+                    if do_x == 0:
+                        cur.y = scipy.special.jn(float(arg), cur.y)
+                        cur.name = "jn(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = scipy.special.jn(float(arg), cur.x)
+                        cur.name = "jnx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "y0":
+                    if do_x == 0:
+                        cur.y = scipy.special.y0(cur.y)
+                        cur.name = "y0(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = scipy.special.y0(cur.x)
+                        cur.name = "y0x(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "y1":
+                    if do_x == 0:
+                        cur.y = scipy.special.y1(cur.y)
+                        cur.name = "y1(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = scipy.special.y1(cur.x)
+                        cur.name = "y1x(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "yn":
+                    if do_x == 0:
+                        cur.y = scipy.special.yn(int(arg), cur.y)
+                        cur.name = "yn(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = scipy.special.yn(int(arg), cur.x)
+                        cur.name = "ynx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "powa":
+                    if do_x == 0:
+                        cur.y = np.power(float(arg), cur.y)
+                        cur.name = "powa(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.power(float(arg), cur.x)
+                        cur.name = "powax(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "powr":
+                    if do_x == 0:
+                        cur.y = np.power(cur.y, float(arg))
+                        cur.name = "powr(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.power(cur.x, float(arg))
+                        cur.name = "powrx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "recip":
+                    if do_x == 0:
+                        cur.y = np.reciprocal(cur.y)
+                        cur.name = "recip(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.reciprocal(cur.x)
+                        cur.name = "recipx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "sqr":
+                    if do_x == 0:
+                        cur.y = np.square(cur.y)
+                        cur.name = "sqr(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.square(cur.x)
+                        cur.name = "sqrx(" + cur.name + ")"
+                        cur.edited = True
+                elif flag == "sqrt":
+                    if do_x == 0:
+                        cur.y = np.sqrt(cur.y)
+                        cur.name = "sqrt(" + cur.name + ")"
+                        cur.edited = True
+                    else:
+                        cur.x = np.sqrt(cur.x)
+                        cur.name = "sqrtx(" + cur.name + ")"
+                        cur.edited = True
+            except:
+                if self.debug:
+                    traceback.print_exc(file=sys.stdout)
+
+        return
 
     def apply_uichanges(self):
         """Apply the changes made by the user from the GUI."""
         # this attribute value never gets updated... apply_uichanges() never gets called
-        self.plotter.plotChanged = False
+        self.plotter.plot_changed = False
         cur_axes = plt.gca()  # Get current axes
 
         # Save Logscale
@@ -8790,7 +8710,7 @@ class Command(cmd.Cmd):
             self.do_group("")
 
         try:
-            if stylesLoaded and self.updatestyle:
+            if styles_loaded and self.updatestyle:
                 styles = pydvpy.get_styles()
 
                 try:
@@ -8933,8 +8853,8 @@ class Command(cmd.Cmd):
             )
             yaxis = cur_axes.yaxis
             xaxis = cur_axes.xaxis
-            self.tickFormat(yaxis, self.ylogscale, self.yticks, self.ytickformat)
-            self.tickFormat(xaxis, self.xlogscale, self.xticks, self.xtickformat)
+            self.tick_format(yaxis, self.ylogscale, self.yticks, self.ytickformat)
+            self.tick_format(xaxis, self.xlogscale, self.xticks, self.xtickformat)
             plt.setp(cur_axes.get_xticklabels(), horizontalalignment=self.xtickha, verticalalignment=self.xtickva)
             plt.setp(cur_axes.get_yticklabels(), horizontalalignment=self.ytickha, verticalalignment=self.ytickva)
 
@@ -9116,7 +9036,7 @@ class Command(cmd.Cmd):
             if self.debug:
                 traceback.print_exc(file=sys.stdout)
         finally:
-            self.plotter.updateDialogs()
+            self.plotter.update_dialogs()
 
     def load(self, fname, gnu=False, pattern=None, matches=None):
         """Load an ultra file and add parsed curves to the curvelist."""
@@ -9149,7 +9069,8 @@ class Command(cmd.Cmd):
     def loadrc(self):
         """Read in a resource definition file."""
         try:
-            with open(os.getenv("HOME") + "/.pdvrc") as f:
+            pdvrc_path = Path.home() / ".pdvrc"
+            with pdvrc_path.open() as f:
                 for line in f:
                     try:
                         line = line.split("=")
@@ -9214,7 +9135,7 @@ class Command(cmd.Cmd):
         except:
             return 0
 
-    def tickFormat(self, axis, logscale, ticks, tickformat):
+    def tick_format(self, axis, logscale, ticks, tickformat):
         """Set tick format and locations."""
         if logscale:
             if tickformat == "de" or tickformat == "sci":
@@ -9276,7 +9197,7 @@ class Command(cmd.Cmd):
                 f"\tDocumentation can be found here:\n"
                 f"\t\tLLNL:   https://lc.llnl.gov/weave/pydv/html/index.html\n"
                 f"\t\tGitHub: https://pydv.readthedocs.io/en/latest/\n"
-                f"\tRunning from {os.path.abspath(__file__)}\n\n"
+                f"\tRunning from {Path(__file__).resolve()}\n\n"
             )
             print("\n   Starting Python Console...\n   Ctrl-D to return to PyDV\n")
             console = code.InteractiveConsole(locals())
@@ -9288,44 +9209,45 @@ class Command(cmd.Cmd):
 
     def __log(self, line, log_type=LogEnum.LOG):
         if not line:
-            return 0
+            return
 
         if len(line.split(":")) > 1:
             self.__log(pdvutil.getletterargs(line))
-            return 0
-        else:
-            line = line.split()
+            return
+        line = line.split()
+        keepnegs = False
+
+        if line[-1].upper() == "TRUE":
+            keepnegs = True
+            line.pop(-1)
+        elif line[-1].upper() == "FALSE":
             keepnegs = False
+            line.pop(-1)
 
-            if line[-1].upper() == "TRUE":
-                keepnegs = True
-                line.pop(-1)
-            elif line[-1].upper() == "FALSE":
-                keepnegs = False
-                line.pop(-1)
+        curves = []
+        for i in range(len(line)):
+            try:
+                curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
+                curves.append(self.plotlist[curvidx])
+            except pdvutil.CurveIndexError:
+                pass
+            except:
+                print("error - usage: log <curve-list> [keep-neg-vals: True | False]")
+                if self.debug:
+                    traceback.print_exc(file=sys.stdout)
 
-            curves = []
-            for i in range(len(line)):
-                try:
-                    curvidx = pdvutil.getCurveIndex(line[i], self.plotlist)
-                    curves.append(self.plotlist[curvidx])
-                except pdvutil.CurveIndexError:
-                    pass
-                except:
-                    print("error - usage: log <curve-list> [keep-neg-vals: True | False]")
-                    if self.debug:
-                        traceback.print_exc(file=sys.stdout)
+        if log_type == LogEnum.LOG:
+            pydvpy.log(curves, keepnegs)
+        elif log_type == LogEnum.LOGX:
+            pydvpy.logx(curves, keepnegs)
+        elif log_type == LogEnum.LOG10:
+            pydvpy.log10(curves, keepnegs)
+        elif log_type == LogEnum.LOG10X:
+            pydvpy.log10x(curves, keepnegs)
+        else:
+            raise RuntimeError(f"Unknown log type: {log_type}")
 
-            if log_type == LogEnum.LOG:
-                pydvpy.log(curves, keepnegs)
-            elif log_type == LogEnum.LOGX:
-                pydvpy.logx(curves, keepnegs)
-            elif log_type == LogEnum.LOG10:
-                pydvpy.log10(curves, keepnegs)
-            elif log_type == LogEnum.LOG10X:
-                pydvpy.log10x(curves, keepnegs)
-            else:
-                raise RuntimeError(f"Unknown log type: {log_type}")
+        return
 
     def __mod_curve(self, line, func, idx=-1):
         if not line:
@@ -9358,7 +9280,7 @@ class Command(cmd.Cmd):
 
         self.func_curve(line, func, do_x, value)
 
-    def __qtMsgHandler(self, msgtype, context, msg):
+    def __qt_msg_handler(self, msgtype, context, msg):
         if self.debug:
             if msgtype == QtMsgType.QtDebugMsg:
                 qt_msgtype = "Qt Debug"
@@ -9387,18 +9309,18 @@ class Command(cmd.Cmd):
         mpl.rc("font", family="sans-serif")
         self.loadrc()
 
-        qInstallMessageHandler(self.__qtMsgHandler)
+        qInstallMessageHandler(self.__qt_msg_handler)
 
         self.app = QApplication(sys.argv)
         self.plotter = pdvplot.Plotter(self)
-        self.plotter.updatePlotGeometry(self.geometry)
+        self.plotter.update_plot_geometry(self.geometry)
         self.quit_helper = QuitHelper(self.app)
 
+        history_path = Path.home() / ".pdvhistory"
         try:
-            readline.read_history_file(os.getenv("HOME") + "/.pdvhistory")
+            readline.read_history_file(str(history_path))
         except:
-            with open(os.getenv("HOME") + "/.pdvhistory", "w"):
-                pass
+            history_path.touch()
 
         # throw into column format mode if there is a -gnu or -csv arg
         gnu = False

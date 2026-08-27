@@ -1,32 +1,32 @@
 """Tests for the pdv module using the plot."""
 
-import os
 import shutil
 import subprocess
+from pathlib import Path
 
 import imageio
 import pytest
 from skimage import color, io
 from skimage.metrics import structural_similarity
 
-TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PYDV_DIR = os.path.dirname(TEST_DIR)
-BASELINE_DIR = os.path.join(TEST_DIR, "baseline")
+TEST_DIR = Path(__file__).resolve().parent
+PYDV_DIR = TEST_DIR.parent
+BASELINE_DIR = TEST_DIR / "baseline"
 
 # ------------------------ #
 # --- Prepare the data --- #
 # ------------------------ #
 
 # The output directory will store the generated images to compare against the baseline
-output_dir = os.path.join(TEST_DIR, "output")
-if os.path.exists(output_dir):
+output_dir = TEST_DIR / "output"
+if output_dir.exists():
     shutil.rmtree(output_dir)
-os.makedirs(output_dir)
+output_dir.mkdir(parents=True)
 
-diff_dir = os.path.join(TEST_DIR, "diff")
-if os.path.exists(diff_dir):
+diff_dir = TEST_DIR / "diff"
+if diff_dir.exists():
     shutil.rmtree(diff_dir)
-os.makedirs(diff_dir)
+diff_dir.mkdir(parents=True)
 
 # Generate a list of commands for PyDV to process. Between each command, we will
 # place an "image" statement, which will cause PyDV to save the current state of
@@ -35,7 +35,7 @@ commands = [
     # 1
     f"""
     debug on
-    rd {os.path.join(TEST_DIR, "testData.txt")}
+    rd {TEST_DIR / "testData.txt"}
     cur 1 2
     """,
     # 2
@@ -297,8 +297,8 @@ commands = [
     """,
     # 61
     f"""
-    readsina {os.path.join(TEST_DIR, "testSinaData.json")}
-    readsina {os.path.join(TEST_DIR, "testSinaData2.json")}
+    readsina {TEST_DIR / "testSinaData.json"}
+    readsina {TEST_DIR / "testSinaData2.json"}
     cur 3 4 5 6
     labelcurve on
     """,
@@ -310,7 +310,7 @@ commands = [
     # 63
     f"""
     labelrecordids off
-    read {os.path.join(TEST_DIR, "testData.ult")}
+    read {TEST_DIR / "testData.ult"}
     cur 7 8
     group slashes 0
     """,
@@ -326,7 +326,7 @@ commands = [
     # 66
     f"""
     erase
-    read {os.path.join(TEST_DIR, "testDataLog.ult")}
+    read {TEST_DIR / "testDataLog.ult"}
     cur 8 9 10
     """,
     # 67
@@ -340,7 +340,7 @@ commands = [
     kill all
     xls off
     yls off
-    read {os.path.join(TEST_DIR, "step.ult")}
+    read {TEST_DIR / "step.ult"}
     cur 1 2
     + a a
     - a a
@@ -360,14 +360,14 @@ commands = [
     f"""
     erase
     kill all
-    readsina {os.path.join(TEST_DIR, "sina_with_library_data.json")}
+    readsina {TEST_DIR / "sina_with_library_data.json"}
     cur 1 2 3
     """,
     # 70
     f"""
     erase
     kill all
-    custom {os.path.join(TEST_DIR, "my_custom_functions.py")}
+    custom {TEST_DIR / "my_custom_functions.py"}
     mycustomfunction
     myothercustomfunction
     cur 1 2 3 4 5 6 7 8
@@ -380,8 +380,8 @@ commands = [
     f"""
     erase
     kill all
-    read {os.path.join(TEST_DIR, "single_point.ult")}
-    read {os.path.join(TEST_DIR, "step.ult")}
+    read {TEST_DIR / "single_point.ult"}
+    read {TEST_DIR / "step.ult"}
     cur 1 2 3
     """,
     # 72
@@ -445,9 +445,9 @@ commands = [
     f"""
     erase
     kill all
-    read {os.path.join(TEST_DIR, "curve.ult")}
-    read {os.path.join(TEST_DIR, "curve_x_tick_data.ult")}
-    read {os.path.join(TEST_DIR, "curve_x_tick_data2.ult")}
+    read {TEST_DIR / "curve.ult"}
+    read {TEST_DIR / "curve_x_tick_data.ult"}
+    read {TEST_DIR / "curve_x_tick_data2.ult"}
     cur 1:7
     marker b:g circle 10
     legend on ul
@@ -484,17 +484,17 @@ commands = [
     f"""
     erase
     kill all
-    read {os.path.join(TEST_DIR, "diff_formats.txt")}
+    read {TEST_DIR / "diff_formats.txt"}
     cur 1:17
     xmax a:z 1
     """,
 ]
 
-commands_file = os.path.join(output_dir, "pydv_commands")
+commands_file = output_dir / "pydv_commands"
 
-with open(commands_file, "w") as fp:
+with commands_file.open("w") as fp:
     for i, command in enumerate(commands):
-        image_file = os.path.join(output_dir, f"test_image_{i + 1:02d}")
+        image_file = output_dir / f"test_image_{i + 1:02d}"
         fp.write(command)
         fp.write(f"\nimage {image_file} png\n\n")
     fp.write("\nquit")
@@ -512,8 +512,8 @@ def test_image(i):
     """Compare plots between updates."""
     test_image = f"test_image_{i:02d}.png"
     # Load images and convert to grayscale
-    baseline = color.rgb2gray(imageio.v2.imread(os.path.join(BASELINE_DIR, test_image))[:, :, :3])
-    output = color.rgb2gray(imageio.v2.imread(os.path.join(output_dir, test_image))[:, :, :3])
+    baseline = color.rgb2gray(imageio.v2.imread(BASELINE_DIR / test_image)[:, :, :3])
+    output = color.rgb2gray(imageio.v2.imread(output_dir / test_image)[:, :, :3])
 
     # Image 64 contains file paths
     score_to_beat = 0.85 if i == 64 else 0.9
@@ -521,6 +521,6 @@ def test_image(i):
     (score, diff) = structural_similarity(baseline, output, full=True, data_range=1.0)
     print(f"Image Similarity {i}: {score * 100:.4f}%")
 
-    io.imsave(os.path.join(diff_dir, test_image), (diff * 255).astype("uint8"))
+    io.imsave(diff_dir / test_image, (diff * 255).astype("uint8"))
 
     assert score > score_to_beat
