@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.11.0
+------
+* Save curves to Apache Parquet file or return as Apache Arrow format.
+
 3.10.5
 ------
 * Bugfix: More ruff

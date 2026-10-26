@@ -72,6 +72,7 @@ from pathlib import Path
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import pyarrow as pa
 import scipy
 import scipy.integrate
 import scipy.interpolate
@@ -503,7 +504,7 @@ def savecsv(fname, curvelist, verbose=False):
 
     >>> pydvpy.savecsv('myfile.csv', curves)
 
-    :param fname: ULTRA filename
+    :param fname: CSV filename
     :type fname: str
     :param curvelist: The Curve or list of Curves to save
     :type curvelist: list
@@ -529,6 +530,50 @@ def savecsv(fname, curvelist, verbose=False):
         print("Error: Can not write to: " + fname)
         if verbose:
             traceback.print_exc(file=sys.stdout)
+
+
+def save_parquet(fname, curvelist, return_table=False):
+    """Save the Curve or list of Curves to file in Apache Parquet format or return Apache Arrow table.
+
+    >>> curves = []
+
+    >>> curves.append(pydvpy.makecurve([1, 2, 3, 4], [5, 10, 15, 20]))
+
+    >>> pydvpy.save_parquet('myfile.parquet', curves)
+
+    :param fname: Parquet filename
+    :type fname: str
+    :param curvelist: The Curve or list of Curves to save
+    :type curvelist: list
+    :param return_table: Only return PyArrow table. Defaults to False.
+    :type return_table: bool
+    """
+    curves = _convert_to_curvelist(curvelist)
+
+    # Matches _get_curve_from_text_ultra_perproc().
+    arrays = [
+        pa.table(
+            {
+                "x": cur.x,
+                "y": cur.y,
+                "name": [cur.name] * len(cur.x),
+                "filename": [cur.filename] * len(cur.x),
+                "xlabel": [cur.xlabel] * len(cur.x),
+                "ylabel": [cur.ylabel] * len(cur.x),
+                "index": list(range(len(cur.x))),  # for Ultra Duck to return timeseries in order
+            }
+        )
+        for cur in curves
+    ]
+
+    table = pa.concat_tables(arrays)
+
+    if return_table:
+        return table
+
+    pa.parquet.write_table(table, fname, compression="zstd")
+
+    return None
 
 
 def read(fname, gnu=False, xcol=0, verbose=False, pattern=None, matches=None):  # noqa: ARG001
