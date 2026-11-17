@@ -550,10 +550,11 @@ def save_parquet(fname, curvelist, return_table=False):
     """
     curves = _convert_to_curvelist(curvelist)
 
-    # Matches _get_curve_from_text_ultra_perproc().
+    # Matches Ultra Duck curves table.
     arrays = [
         pa.table(
             {
+                "record_id": [cur.record_id] * len(cur.x),
                 "x": cur.x,
                 "y": cur.y,
                 "name": [cur.name] * len(cur.x),
