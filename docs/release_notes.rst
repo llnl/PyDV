@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.11.1
+------
+* Added `record_id` to Parquet table for Ultra Duck.
+
 3.11.0
 ------
 * Save curves to Apache Parquet file or return as Apache Arrow format.
