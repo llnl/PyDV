@@ -886,7 +886,7 @@ def readsina(fname, verbose=False, hdf5_path=None):
     return curves_lst
 
 
-def readsinahdf5(hdf5_path):
+def readsinahdf5(hdf5_path, return_record=False):
     """Retrieve records and relationships from HDF5."""
     # def load_document_hdf5(hdf5_path): Taken from sina/utils.py
     reconstructed_doc = {}
@@ -903,7 +903,7 @@ def readsinahdf5(hdf5_path):
         elif isinstance(val, np.floating):
             val = float(val)
         elif isinstance(val, np.ndarray):
-            is_word = len(np.shape(val)) == 1 and isinstance(val[0], bytes)
+            is_word = len(np.shape(val)) > 1 and isinstance(val[0], bytes)
             val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in val.tolist()]
             if is_word:
                 val = "".join(val)
@@ -946,6 +946,13 @@ def readsinahdf5(hdf5_path):
     # reconstructed_doc["relationships"] = ([x for x in reconstructed_doc["relationships"].values()]
     #                                       if "relationships" in reconstructed_doc else [])
 
+    for rec in reconstructed_doc["records"]:
+        rec["id"] = rec.get("id", rec.get("local_id"))
+        if isinstance(rec["id"], list):
+            rec["id"] = "".join(rec["id"])
+
+    if return_record:
+        return reconstructed_doc
     return readsina(reconstructed_doc, hdf5_path=hdf5_path)
 
 
