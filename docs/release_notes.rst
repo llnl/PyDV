@@ -2,6 +2,10 @@
 
 Release Notes
 =============
+3.11.2
+------
+* Return record from hdf5.
+
 3.11.1
 ------
 * Added `record_id` to Parquet table for Ultra Duck.
